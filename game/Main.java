@@ -18,6 +18,8 @@ public class Main extends Application{
     private Scene mainScene;
     private Scene overworldScene;
 
+    int zoom = values.mapZoomMax /2;
+
     public static void main(String[] args){
         launch(args);
     }
@@ -41,27 +43,36 @@ public class Main extends Application{
         primaryStage.show();
 
         Button playButton = new Button("Play");
-        playButton.relocate(values.screenWidth / 2, values.screenHeight / 2);
+        playButton.relocate(values.screenWidth / 4, values.screenHeight / 4);
         layout.getChildren().add(playButton);
         playButton.setOnAction(event -> {
             System.out.println("Loading overworld");
-            loadOverworld(primaryStage);
+            overworldMap = new OverworldMap();
+            primaryStage.setScene(loadOverworld());
             //primaryStage.setFullScreen(true);
         });
     }
 
-    private void loadOverworld(Stage stage){
-        overworldMap = new OverworldMap();
-        layout = overworldMap.getLayout(10);
+    public static void sleep(int time){
+        long startTime = System.currentTimeMillis();
+        while(System.currentTimeMillis() - startTime < time);
+    }
+
+    private Scene loadOverworld(){
+        layout = overworldMap.getLayout(zoom); // max is max zoom /2
         overworldScene = new Scene(layout, values.screenWidth, values.screenHeight);
         overworldScene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if(event.getCode() == KeyCode.Z){ // for zooming
-
+            if(event.getCode() == KeyCode.Z && zoom > 0){ // for zooming in
+                zoom--;
+                System.out.println("Zoom in");
+                loadOverworld();
             }
-            else if(event.getCode() == KeyCode.X){ // for zooming
-
+            else if(event.getCode() == KeyCode.X && zoom < values.mapZoomMax){ // for zooming out
+                zoom++;
+                System.out.println("Zoom out");
+                loadOverworld();
             }
         });
-        stage.setScene(overworldScene);
+        return overworldScene;
     }
 }

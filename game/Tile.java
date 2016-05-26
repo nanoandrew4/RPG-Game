@@ -10,6 +10,6 @@ public class Tile {
 
     Tile(String tileType, boolean tresspassable){
         this.tresspassable = tresspassable;
-        tileImage = new ImageView(new Image("/media/graphics/" + tileType + ".png", values.mapTileSize, values.mapTileSize, true, true));
+        tileImage = new ImageView(new Image("/media/graphics/" + tileType + ".png"));
     }
 }
