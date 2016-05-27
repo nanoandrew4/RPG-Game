@@ -91,7 +91,7 @@ public class OverworldMap{
     }
 
     public Pane getLayout(int zoomLevel){
-        camera = new Camera(mapArr, xPos, yPos);
-        return camera.zoomLevels[zoomLevel];
+        camera = new Camera(mapArr, xPos, yPos, zoomLevel);
+        return camera.overworldLayout;
     }
 }
