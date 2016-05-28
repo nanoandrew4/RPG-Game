@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,8 +16,10 @@ class loadMap extends Thread{ // thread has to be able to run in parallel to reg
 
     Values values = Main.values;
     int xPos = 0, yPos = 0;
+    Tile[][] map;
+    Random rand = new Random();
 
-    loadMap(){}
+    loadMap(Tile[][] map){this.map = map;}
 
     private void getPlayerVals(){
         List<String> lines = null;
@@ -42,16 +45,33 @@ class loadMap extends Thread{ // thread has to be able to run in parallel to reg
     public void run(){
         getPlayerVals();
 
+        /*
         for(int a = 0; a < values.mapSize; a++){ // WIP
             if(a > values.mapZoomMax)
                 OverworldMap.minAreaLoaded = true;
             System.out.println(((float)a / (float)values.mapSize) * 100f + "% done");
+
             for(int x = xPos - a; x < xPos + a; x++){
                 for(int y = yPos - a; y < yPos + a; y++)
                     if(OverworldMap.mapArr[(x > 0 ? (x < values.mapSize ? x : values.mapSize -1) : 0)][(y > 0 ? (y < values.mapSize ? y : values.mapSize -1) : 0)] == null)
                         OverworldMap.mapArr[(x > 0 ? (x < values.mapSize ? x : values.mapSize -1) : 0)][(y > 0 ? (y < values.mapSize ? y : values.mapSize -1) : 0)] = new Tile("Village", false);
             }
+
+
         }
+        */
+        for(int y = 0; y < values.mapSize; y++){
+            for (int x = 0; x < values.mapSize; x++){
+                int randNum = rand.nextInt(2);
+                String name = "";
+                if(randNum == 0)
+                    name = "ForestTest";
+                if(randNum == 1)
+                    name = "Village";
+                map[x][y] = new Tile(name, true, false);
+            }
+        }
+        OverworldMap.minAreaLoaded = true;
     }
 }
 
@@ -59,7 +79,7 @@ public class OverworldMap{
 
     private Values values = Main.values;
 
-    public static Tile[][] mapArr;
+    public Tile[][] mapArr;
     public static boolean minAreaLoaded = false;
 
     int xPos, yPos;
@@ -71,14 +91,7 @@ public class OverworldMap{
     OverworldMap(){
         mapArr = new Tile[values.mapSize][values.mapSize];
 
-        if(values.screenWidth > values.screenHeight){
-            values.mapTileSize = (int)(values.screenHeight / values.mapSize);
-        }
-        else {
-            values.mapTileSize = (int)(values.screenWidth / values.mapSize);
-        }
-
-        threadPool.execute(new loadMap());
+        threadPool.execute(new loadMap(mapArr));
         threadPool.shutdown();
 
         xPos = values.initxPos;

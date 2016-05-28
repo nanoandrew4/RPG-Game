@@ -48,7 +48,7 @@ public class Main extends Application{
         playButton.setOnAction(event -> {
             System.out.println("Loading overworld");
             overworldMap = new OverworldMap();
-            primaryStage.setScene(loadOverworld());
+            loadOverworld(primaryStage);
             //primaryStage.setFullScreen(true);
         });
     }
@@ -58,21 +58,22 @@ public class Main extends Application{
         while(System.currentTimeMillis() - startTime < time);
     }
 
-    private Scene loadOverworld(){
+    private void loadOverworld(Stage primaryStage){
         layout = overworldMap.getLayout(zoom); // max is max zoom /2
         overworldScene = new Scene(layout, values.screenWidth, values.screenHeight);
         overworldScene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if(event.getCode() == KeyCode.Z && zoom > 0){ // for zooming in
                 zoom--;
                 System.out.println("Zoom in");
-                loadOverworld();
+                loadOverworld(primaryStage);
             }
             else if(event.getCode() == KeyCode.X && zoom < values.mapZoomMax){ // for zooming out
                 zoom++;
                 System.out.println("Zoom out");
-                loadOverworld();
+                loadOverworld(primaryStage);
             }
         });
-        return overworldScene;
+        primaryStage.setScene(overworldScene);
+        //return overworldScene;
     }
 }

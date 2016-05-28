@@ -1,15 +1,16 @@
 package game;
 
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-
 public class Tile {
-    ImageView tileImage;
     boolean tresspassable;
+    boolean accesible; // for entering cities
+    String name;
+
     private Values values = Main.values;
 
-    Tile(String tileType, boolean tresspassable){
+    Tile(String tileType, boolean tresspassable, boolean accesible){
         this.tresspassable = tresspassable;
-        tileImage = new ImageView(new Image("/media/graphics/" + tileType + ".png"));
+        this.name = tileType;
+        this.accesible = accesible;
+        //new ImageView(new Image("/media/graphics/" + tileType + ".png"));
     }
 }
