@@ -15,7 +15,8 @@ public class Camera {
         overworldLayout = new Pane();
         this.map = map;
 
-        ImageView image;
+        ImageView imageView;
+        Image image = null;
 
         if(values.screenWidth > values.screenHeight){
             values.mapTileSize = (int)(values.screenHeight / zoomLevel);
@@ -26,15 +27,26 @@ public class Camera {
 
         // (x + c > 0 ? (x + c < values.mapSize ? x + c : values.mapSize -1) : 0), (y + b > 0 ? (y + b < values.mapSize ? y + b : values.mapSize -1) : 0)
 
-        for(int c = -zoomLevel; c < zoomLevel; c++) {
-            for (int b = -zoomLevel; b < zoomLevel; b++) {
-                double offset = (Math.abs(c) % 2 == 1 && Math.abs(b) % 2 == 1) ? values.mapTileSize / 2 : 0;
-                System.out.println(offset);
-                image = new ImageView(new Image("/media/graphics/" + map[(x + c > 0 ? (x + c < values.mapSize ? x + c : values.mapSize -1) : 0)][(y + b > 0 ? (y + b < values.mapSize ? y + b : values.mapSize -1) : 0)].name + ".png", values.mapTileSize, values.mapTileSize, false, false));
-                image.relocate(values.mapTileSize * (x + c) - offset, values.mapTileSize * (y + b) - (offset * 2));
-                overworldLayout.getChildren().add(image);
+        long start  = System.currentTimeMillis();
+
+        for(int b = -zoomLevel; b < zoomLevel; b++) {
+            for (int c = -zoomLevel; c < zoomLevel; c++) {
+                //System.out.println(offset);
+                int xPos = (x + c > 0 ? (x + c < values.mapSize ? x + c : values.mapSize -1) : 0);
+                int yPos = (y + b > 0 ? (y + b < values.mapSize ? y + b : values.mapSize -1) : 0);
+                if(map[xPos][yPos].name.equalsIgnoreCase("Village"))
+                    image = values.villageTile;
+                if(map[xPos][yPos].name.equalsIgnoreCase("ForestTest"))
+                    image = values.forestTile;
+
+                imageView = new ImageView(image); // needs resizing, can't do with preloaded
+                imageView.relocate(0.5 * values.mapTileSize * ((x + c) - (y + b)) + (values.screenWidth / 2) - (values.mapTileSize / 2), 0.25 * values.mapTileSize * ((x + c) + (y + b)) + (values.screenHeight / 2) - (values.mapTileSize / 2));
+                //map[(x + c > 0 ? (x + c < values.mapSize ? x + c : values.mapSize -1) : 0)][(y + b > 0 ? (y + b < values.mapSize ? y + b : values.mapSize -1) : 0)].tileImage.relocate(0.5 * values.mapTileSize * ((x + c) - (y + b)) + (values.screenWidth / 2) - (values.mapTileSize / 2), 0.25 * values.mapTileSize * ((x + c) + (y + b)) + (values.screenHeight / 2) - (values.mapTileSize / 2));
+                overworldLayout.getChildren().add(imageView);
             }
         }
+
+        System.out.println("Instantiating all images took " + (double)(System.currentTimeMillis() - start) / 1000);
     }
 
     public void scrollCamera(KeyCode keyCode){

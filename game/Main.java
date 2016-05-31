@@ -35,7 +35,7 @@ public class Main extends Application{
     public void start(Stage primaryStage) throws Exception{
 
         primaryStage.setTitle("RPG Game");
-        //primaryStage.setFullScreen(true);
+        primaryStage.setFullScreen(true);
 
         getScreenSize();
 
@@ -43,13 +43,13 @@ public class Main extends Application{
         primaryStage.show();
 
         Button playButton = new Button("Play");
-        playButton.relocate(values.screenWidth / 4, values.screenHeight / 4);
+        playButton.relocate(values.screenWidth / 2, values.screenHeight / 2);
         layout.getChildren().add(playButton);
         playButton.setOnAction(event -> {
             System.out.println("Loading overworld");
             overworldMap = new OverworldMap();
             loadOverworld(primaryStage);
-            //primaryStage.setFullScreen(true);
+            primaryStage.setFullScreen(true);
         });
     }
 

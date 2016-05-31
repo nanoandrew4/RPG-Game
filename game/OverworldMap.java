@@ -53,13 +53,16 @@ class loadMap extends Thread{ // thread has to be able to run in parallel to reg
 
             for(int x = xPos - a; x < xPos + a; x++){
                 for(int y = yPos - a; y < yPos + a; y++)
-                    if(OverworldMap.mapArr[(x > 0 ? (x < values.mapSize ? x : values.mapSize -1) : 0)][(y > 0 ? (y < values.mapSize ? y : values.mapSize -1) : 0)] == null)
-                        OverworldMap.mapArr[(x > 0 ? (x < values.mapSize ? x : values.mapSize -1) : 0)][(y > 0 ? (y < values.mapSize ? y : values.mapSize -1) : 0)] = new Tile("Village", false);
+                    if(map[(x > 0 ? (x < values.mapSize ? x : values.mapSize -1) : 0)][(y > 0 ? (y < values.mapSize ? y : values.mapSize -1) : 0)] == null)
+                        map[(x > 0 ? (x < values.mapSize ? x : values.mapSize -1) : 0)][(y > 0 ? (y < values.mapSize ? y : values.mapSize -1) : 0)] = new Tile("Village", true, true);
             }
-
-
         }
         */
+
+        long start = System.currentTimeMillis();
+
+        values.loadGraphics();
+
         for(int y = 0; y < values.mapSize; y++){
             for (int x = 0; x < values.mapSize; x++){
                 int randNum = rand.nextInt(2);
@@ -71,6 +74,9 @@ class loadMap extends Thread{ // thread has to be able to run in parallel to reg
                 map[x][y] = new Tile(name, true, false);
             }
         }
+
+        System.out.println("Loading world arr took " + (double)(System.currentTimeMillis() - start) / 1000);
+
         OverworldMap.minAreaLoaded = true;
     }
 }
