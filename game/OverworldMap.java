@@ -39,38 +39,27 @@ class loadMap extends Thread{ // thread has to be able to run in parallel to reg
                 yPos = values.inityPos;
             }
         }
+        values.currPos[0] = xPos; values.currPos[1] = yPos;
     }
 
     @Override
     public void run(){
         getPlayerVals();
 
-        /*
-        for(int a = 0; a < values.mapSize; a++){ // WIP
-            if(a > values.mapZoomMax)
-                OverworldMap.minAreaLoaded = true;
-            System.out.println(((float)a / (float)values.mapSize) * 100f + "% done");
-
-            for(int x = xPos - a; x < xPos + a; x++){
-                for(int y = yPos - a; y < yPos + a; y++)
-                    if(map[(x > 0 ? (x < values.mapSize ? x : values.mapSize -1) : 0)][(y > 0 ? (y < values.mapSize ? y : values.mapSize -1) : 0)] == null)
-                        map[(x > 0 ? (x < values.mapSize ? x : values.mapSize -1) : 0)][(y > 0 ? (y < values.mapSize ? y : values.mapSize -1) : 0)] = new Tile("Village", true, true);
-            }
-        }
-        */
-
         long start = System.currentTimeMillis();
-
-        values.loadGraphics();
 
         for(int y = 0; y < values.mapSize; y++){
             for (int x = 0; x < values.mapSize; x++){
-                int randNum = rand.nextInt(2);
+                int randNum = rand.nextInt(4);
                 String name = "";
                 if(randNum == 0)
                     name = "ForestTest";
                 if(randNum == 1)
                     name = "Village";
+                if(randNum == 2)
+                    name = "Grass";
+                if(randNum == 3)
+                    name = "Mountain";
                 map[x][y] = new Tile(name, true, false);
             }
         }

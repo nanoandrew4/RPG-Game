@@ -2,7 +2,7 @@
     Character class for Rising Legend.
  */
 
-package rlinmaptesting;
+package InMap;
 
 public class Character
 {

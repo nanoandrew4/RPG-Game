@@ -1,6 +1,7 @@
 package game;
 
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
@@ -17,8 +18,6 @@ public class Main extends Application{
     // will have multiple screens for offscreen rendering and so on
     private Scene mainScene;
     private Scene overworldScene;
-
-    int zoom = values.mapZoomMax /2;
 
     public static void main(String[] args){
         launch(args);
@@ -59,21 +58,38 @@ public class Main extends Application{
     }
 
     private void loadOverworld(Stage primaryStage){
-        layout = overworldMap.getLayout(zoom); // max is max zoom /2
+
+        layout = overworldMap.getLayout(values.zoom); // max is max zoom /2
         overworldScene = new Scene(layout, values.screenWidth, values.screenHeight);
+
+        // threading the movement might help with smoothing, by making bool check work without freeze
+
+        //overworldScene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
+        //    values.keyPressed = true;
+        //});
+
         overworldScene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if(event.getCode() == KeyCode.Z && zoom > 0){ // for zooming in
-                zoom--;
-                System.out.println("Zoom in");
-                loadOverworld(primaryStage);
+            if(event.getCode() == KeyCode.Z && values.zoom > 0){ // for zooming in
+                //while (!values.keyPressed) {
+                    values.zoom--;
+                    System.out.println("Zoom in");
+                    loadOverworld(primaryStage);
+                //}
             }
-            else if(event.getCode() == KeyCode.X && zoom < values.mapZoomMax){ // for zooming out
-                zoom++;
+            else if(event.getCode() == KeyCode.X && values.zoom < values.mapZoomMax){ // for zooming out
+                values.zoom++;
                 System.out.println("Zoom out");
                 loadOverworld(primaryStage);
             }
+            else if(event.getCode() == KeyCode.A || event.getCode() == KeyCode.S || event.getCode() == KeyCode.W || event.getCode() == KeyCode.D){
+                //while(!values.keyPressed) {
+                    overworldMap.camera.scrollCamera(event.getCode());
+                    loadOverworld(primaryStage);
+                //}
+            }
+            //values.keyPressed = false;
         });
+
         primaryStage.setScene(overworldScene);
-        //return overworldScene;
     }
 }

@@ -2,7 +2,7 @@
     Tile class for Rising Legend.
  */
 
-package rlinmaptesting;
+package InMap;
 
 public class Tile {
     boolean isWall, stairUp, stairDown, openable;

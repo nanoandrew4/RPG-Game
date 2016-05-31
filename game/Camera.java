@@ -19,18 +19,20 @@ public class Camera {
         Image image = null;
 
         if(values.screenWidth > values.screenHeight){
-            values.mapTileSize = (int)(values.screenHeight / zoomLevel);
+            values.mapTileSize = values.screenHeight / zoomLevel;
         }
         else {
-            values.mapTileSize = (int)(values.screenWidth / zoomLevel);
+            values.mapTileSize = values.screenWidth / zoomLevel;
         }
+
+        values.loadGraphics(values.mapTileSize, values.mapTileSize);
 
         // (x + c > 0 ? (x + c < values.mapSize ? x + c : values.mapSize -1) : 0), (y + b > 0 ? (y + b < values.mapSize ? y + b : values.mapSize -1) : 0)
 
         long start  = System.currentTimeMillis();
 
-        for(int b = -zoomLevel; b < zoomLevel; b++) {
-            for (int c = -zoomLevel; c < zoomLevel; c++) {
+        for(int b = -zoomLevel * 2; b < zoomLevel * 2; b++) {
+            for (int c = -zoomLevel * 2; c < zoomLevel * 2; c++) {
                 //System.out.println(offset);
                 int xPos = (x + c > 0 ? (x + c < values.mapSize ? x + c : values.mapSize -1) : 0);
                 int yPos = (y + b > 0 ? (y + b < values.mapSize ? y + b : values.mapSize -1) : 0);
@@ -38,42 +40,55 @@ public class Camera {
                     image = values.villageTile;
                 if(map[xPos][yPos].name.equalsIgnoreCase("ForestTest"))
                     image = values.forestTile;
+                if(map[xPos][yPos].name.equalsIgnoreCase("Grass"))
+                    image = values.grassTile;
+                if(map[xPos][yPos].name.equalsIgnoreCase("Mountain"))
+                    image = values.mountainTile;
 
                 imageView = new ImageView(image); // needs resizing, can't do with preloaded
-                imageView.relocate(0.5 * values.mapTileSize * ((x + c) - (y + b)) + (values.screenWidth / 2) - (values.mapTileSize / 2), 0.25 * values.mapTileSize * ((x + c) + (y + b)) + (values.screenHeight / 2) - (values.mapTileSize / 2));
+                imageView.relocate(0.5 * values.mapTileSize * ((x + c) - (y + b)) + (values.screenWidth / 2) - (values.mapTileSize / 2) + values.xOffset, 0.25 * values.mapTileSize * ((x + c) + (y + b)) + (values.screenHeight / 2) - (values.mapTileSize / 2) + values.yOffset);
                 //map[(x + c > 0 ? (x + c < values.mapSize ? x + c : values.mapSize -1) : 0)][(y + b > 0 ? (y + b < values.mapSize ? y + b : values.mapSize -1) : 0)].tileImage.relocate(0.5 * values.mapTileSize * ((x + c) - (y + b)) + (values.screenWidth / 2) - (values.mapTileSize / 2), 0.25 * values.mapTileSize * ((x + c) + (y + b)) + (values.screenHeight / 2) - (values.mapTileSize / 2));
                 overworldLayout.getChildren().add(imageView);
             }
         }
 
-        System.out.println("Instantiating all images took " + (double)(System.currentTimeMillis() - start) / 1000);
+        System.out.println("Loading/Reloading " + (double)(System.currentTimeMillis() - start) / 1000);
     }
 
     public void scrollCamera(KeyCode keyCode){
+        //System.out.println("WASD pressed");
+        // position on tiles needs work
         if(keyCode == KeyCode.A){
-
+            if(values.currPos[0] > 0){
+                values.currPos[0]--;
+                values.xOffset += 20;
+            }
+            else
+                return;
         }
         else if(keyCode == KeyCode.S){
-
+            if(values.currPos[1] < values.mapSize){
+                values.currPos[1]++;
+                values.yOffset -= 20;
+            }
+            else
+                return;
         }
         else if(keyCode == KeyCode.W){
-
+            if(values.currPos[1] > 0){
+                values.currPos[1]--;
+                values.yOffset += 20;
+            }
+            else
+                return;
         }
         else if(keyCode == KeyCode.D){
-
-        }
-    }
-    /*
-    public Pane zoomCamera(int zoomLevel, int x, int y){
-        for(int c = -zoomLevel; c < zoomLevel; c++) {
-            for (int b = -zoomLevel; b < zoomLevel; b++) {
-                map[(x + c > 0 ? (x < values.mapSize ? x : values.mapSize -1) : 0)][(y + b > 0 ? (y < values.mapSize ? y : values.mapSize -1) : 0)].tileImage.setFitWidth((values.screenWidth > values.screenHeight ? values.screenHeight / (zoomLevel + 1): values.screenWidth / (zoomLevel + 1)));
-                map[(x + c > 0 ? (x < values.mapSize ? x : values.mapSize -1) : 0)][(y + b > 0 ? (y < values.mapSize ? y : values.mapSize -1) : 0)].tileImage.setFitHeight((values.screenWidth > values.screenHeight ? values.screenHeight / (zoomLevel + 1) : values.screenWidth / (zoomLevel + 1)));
-                overworldLayout.getChildren().add(map[x + c][y + b].tileImage);
+            if(values.currPos[0] < values.mapSize){
+                values.currPos[0]++;
+                values.xOffset -= 20;
             }
+            else
+                return;
         }
-
-        return overworldLayout;
     }
-    */
 }

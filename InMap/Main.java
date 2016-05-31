@@ -2,11 +2,11 @@
     Rising Legend test program. :D
  */
 
-package rlinmaptesting;
+package InMap;
 
 import java.util.*;
 
-public class RLInMapTesting {
+public class Main {
     
     public static int mX = 20, mY = 10;
     
