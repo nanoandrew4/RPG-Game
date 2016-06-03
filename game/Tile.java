@@ -3,13 +3,17 @@ package game;
 public class Tile {
     boolean tresspassable;
     boolean accesible; // for entering cities
-    String name;
+    String type;
 
-    private Values values = Main.values;
+    Tile(){
+        tresspassable = false;
+        accesible = false;
+        type = "";
+    }
 
     Tile(String tileType, boolean tresspassable, boolean accesible){
         this.tresspassable = tresspassable;
-        this.name = tileType;
+        this.type = tileType;
         this.accesible = accesible;
     }
 }
