@@ -7,14 +7,16 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
 
-public class OverworldMap{
+public class OverworldModel {
+    public double mapTileSize, scrollOffset;
+    public int mapSize = 1000, mapZoomMax = 15 /* in each direction */, zoom = 8;
+    public int[] currPos = new int[2];
+    public double xOffset = 0, yOffset = 0; // from init pos, to calculate if you have moved to a different tile
 
-    private Values values = Controller.values;
+    public Tile[][] mapArr;
 
-    private static Tile[][] mapArr;
-
-    OverworldMap(){
-        mapArr = new Tile[values.mapSize][values.mapSize];
+    OverworldModel(){
+        mapArr = new Tile[mapSize][mapSize];
 
         List<String> lines = null;
         try {
@@ -25,12 +27,12 @@ public class OverworldMap{
         }
         for(int x = 0; x < lines.size(); x++){
             if(lines.get(x).contains("locationX"))
-                values.currPos[0] = (lines.get(x).charAt(lines.get(x).length()-2) - 48) * 10 + (lines.get(x).charAt(lines.get(x).length()-1) - 48);
+                currPos[0] = (lines.get(x).charAt(lines.get(x).length()-2) - 48) * 10 + (lines.get(x).charAt(lines.get(x).length()-1) - 48);
 
             if(lines.get(x).contains("locationY"))
-                values.currPos[0] = (lines.get(x).charAt(lines.get(x).length()-2) - 48) * 10 + (lines.get(x).charAt(lines.get(x).length()-1) - 48);
-
+                currPos[0] = (lines.get(x).charAt(lines.get(x).length()-2) - 48) * 10 + (lines.get(x).charAt(lines.get(x).length()-1) - 48);
         }
+
         loadMap();
     }
 
@@ -38,8 +40,8 @@ public class OverworldMap{
         Random rand = new Random();
         long start = System.currentTimeMillis();
 
-        for(int y = 0; y < values.mapSize; y++){
-            for (int x = 0; x < values.mapSize; x++){
+        for(int y = 0; y < mapSize; y++){
+            for (int x = 0; x < mapSize; x++){
                 int randNum = rand.nextInt(100);
                 if(randNum < 30)
                     mapArr[x][y] = new Tile("ForestTest", true, false);
@@ -53,9 +55,5 @@ public class OverworldMap{
         }
 
         System.out.println("Loading world arr took " + (double)(System.currentTimeMillis() - start) / 1000);
-    }
-
-    public static Tile[][] getMapArr(){
-        return mapArr;
     }
 }
