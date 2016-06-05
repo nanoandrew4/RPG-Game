@@ -24,6 +24,7 @@ public class Main extends Application {
 
     public void start(Stage stage){
         this.stage = stage;
+        stage.setTitle("Rising Legend");
 
         getScreenSize();
 

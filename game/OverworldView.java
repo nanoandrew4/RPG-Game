@@ -1,5 +1,10 @@
 package game;
 
+import javafx.animation.AnimationTimer;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
@@ -10,7 +15,20 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
 public class OverworldView{
+
+    public double speedXVal;
+    public double speedYVal;
+    public final DoubleProperty speedX = new SimpleDoubleProperty();
+    public final DoubleProperty speedY = new SimpleDoubleProperty();
+    public final LongProperty lastUpdateTime = new SimpleLongProperty();
+
+    private ImageView[][] imageViews;
+
+    public double xOffset = 0;
+    public double yOffset = 0;
     
+    public int mapLoadArea;
+
     private Image forestTile;
     private Image villageTile;
     private Image mountainTile;
@@ -18,51 +36,45 @@ public class OverworldView{
     
     OverworldView(){}
 
-    public Scene displayOverworld(Tile[][] map, int mapSize, double mapTileSize, double screenWidth, double screenHeight, double xOffset, double yOffset, int zoom, int[] currPos){
+    public Scene displayOverworld(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize){
 
-        System.out.println("Displaying overworld");
+        System.out.println("Reloading image array");
 
-        Pane overworldLayout = new Pane();
-        
         long start = System.currentTimeMillis();
+        
+        mapLoadArea = 100;
 
-        ImageView imageView;
-        Image image = null;
+        speedXVal = mapTileSize / 32;
+        speedYVal = mapTileSize / 64;
 
-        loadGraphics(mapTileSize, mapTileSize); // should not always redraw
+        imageViews = new ImageView[mapLoadArea][mapLoadArea];
+        Pane overworldLayout = new Pane();
 
-        System.out.println("Xoffset is: " + xOffset);
-        System.out.println("Yoffset is: " + yOffset);
+        loadGraphics(mapTileSize, mapTileSize);
 
-        // (x + c > 0 ? (x + c < mapSize ? x + c : mapSize -1) : 0), (y + b > 0 ? (y + b < mapSize ? y + b : mapSize -1) : 0)
+        for (int y = 0; y < imageViews.length; y++) {
+            for (int x = 0; x < imageViews.length; x++) {
 
-        for (int b = -zoom * 2; b < zoom * 2; b++) {
-            for (int c = -zoom * 2; c < zoom * 2; c++) {
-                //System.out.println(offset);
-                int xPos = (currPos[0] + c > 0 ? (currPos[0] + c < mapSize ? currPos[0] + c : mapSize - 1) : 0);
-                int yPos = (currPos[1] + b > 0 ? (currPos[1] + b < mapSize ? currPos[1] + b : mapSize - 1) : 0);
-                if (map[xPos][yPos].type.equalsIgnoreCase("Village"))
-                    image = villageTile;
-                if (map[xPos][yPos].type.equalsIgnoreCase("ForestTest"))
-                    image = forestTile;
-                if (map[xPos][yPos].type.equalsIgnoreCase("Grass"))
-                    image = grassTile;
-                if (map[xPos][yPos].type.equalsIgnoreCase("Mountain"))
-                    image = mountainTile;
+                int xPos = (currPos[0] + (x - (mapLoadArea / 2)) > 0 ? (currPos[0] + (x - (mapLoadArea / 2)) < mapSize ? currPos[0] + (x - (mapLoadArea / 2)) : mapSize - 1) : 0);
+                int yPos = (currPos[1] + (y - (mapLoadArea / 2)) > 0 ? (currPos[1] + (y - (mapLoadArea / 2)) < mapSize ? currPos[1] + (y - (mapLoadArea / 2)) : mapSize - 1) : 0);
 
-                imageView = new ImageView(image);
-                imageView.relocate(0.5 * mapTileSize * ((c) - (b)) + (screenWidth / 2) - (mapTileSize / 2) + xOffset, 0.25 * mapTileSize * ((c) + (b)) + (screenHeight / 2) - (mapTileSize / 2) + yOffset);
-                //map[(x + c > 0 ? (x + c < mapSize ? x + c : mapSize -1) : 0)][(y + b > 0 ? (y + b < mapSize ? y + b : mapSize -1) : 0)].tileImage.relocate(0.5 * mapTileSize * ((x + c) - (y + b)) + (screenWidth / 2) - (mapTileSize / 2), 0.25 * mapTileSize * ((x + c) + (y + b)) + (screenHeight / 2) - (mapTileSize / 2));
-                overworldLayout.getChildren().add(imageView);
+                if (tiles[xPos][yPos].type.equalsIgnoreCase("Village"))
+                    imageViews[x][y] = new ImageView(villageTile);
+                if (tiles[xPos][yPos].type.equalsIgnoreCase("ForestTest"))
+                    imageViews[x][y] = new ImageView(forestTile);
+                if (tiles[xPos][yPos].type.equalsIgnoreCase("Grass"))
+                    imageViews[x][y] = new ImageView(grassTile);
+                if (tiles[xPos][yPos].type.equalsIgnoreCase("Mountain"))
+                    imageViews[x][y] = new ImageView(mountainTile);
+
+                imageViews[x][y].relocate(0.5 * mapTileSize * ((x - (mapLoadArea / 2)) - (y - (mapLoadArea / 2))) + (screenWidth / 2) - (mapTileSize / 2), 0.25 * mapTileSize * ((x - (mapLoadArea / 2)) + (y - (mapLoadArea / 2))) + (screenHeight / 2) - (mapTileSize / 2));
+                overworldLayout.getChildren().add(imageViews[x][y]);
             }
         }
 
-        System.out.println("Frame drawn in " + (System.currentTimeMillis() - start) + "ms");
+        setMoveAnim();
 
-        if(System.currentTimeMillis() - start < 33){
-            System.out.println("Sleeping");
-            //Main.sleep(33 - (System.currentTimeMillis() - start));
-        }
+        System.out.println("Reloading took " + (System.currentTimeMillis() - start) + "ms");
 
         return new Scene(overworldLayout, screenWidth, screenHeight);
     }
@@ -72,5 +84,34 @@ public class OverworldView{
         villageTile = new Image("/media/graphics/Village.png", width, height, true, false);
         mountainTile = new Image("/media/graphics/Mountain.png", width, height, true, false);
         grassTile = new Image("/media/graphics/Grass.png", width, height, true, false);
+    }
+
+    public void setMoveAnim(){
+
+        for (int y = 0; y < imageViews.length; y++) {
+            for (int x = 0; x < imageViews.length; x++) {
+
+                final int fy = y;
+                final int fx = x;
+
+                new AnimationTimer() {
+                    @Override
+                    public void handle(long timestamp) {
+                        if (lastUpdateTime.get() > 0) {
+                            final double oldX = imageViews[fx][fy].getTranslateX();
+                            final double newX = oldX + speedX.get();
+                            final double oldY = imageViews[fx][fy].getTranslateY();
+                            final double newY = oldY + speedY.get();
+                            imageViews[fx][fy].setTranslateX(newX);
+                            imageViews[fx][fy].setTranslateY(newY);
+                            xOffset = imageViews[fx][fy].getTranslateX();
+                            yOffset = imageViews[fx][fy].getTranslateY();
+                            //System.out.println(xOffset);
+                        }
+                        lastUpdateTime.set(timestamp);
+                    }
+                }.start();
+            }
+        }
     }
 }

@@ -9,14 +9,13 @@ import java.util.Random;
 
 public class OverworldModel {
     public double mapTileSize, scrollOffset;
-    public int mapSize = 1000, mapZoomMax = 15 /* in each direction */, zoom = 8;
+    public int mapSize = 1000, mapZoomMax = 16 /* in each direction */, zoom = 8;
     public int[] currPos = new int[2];
-    public double xOffset = 0, yOffset = 0; // from init pos, to calculate if you have moved to a different tile
 
-    public Tile[][] mapArr;
+    public Tile[][] tiles;
 
     OverworldModel(){
-        mapArr = new Tile[mapSize][mapSize];
+        tiles = new Tile[mapSize][mapSize];
 
         List<String> lines = null;
         try {
@@ -44,13 +43,13 @@ public class OverworldModel {
             for (int x = 0; x < mapSize; x++){
                 int randNum = rand.nextInt(100);
                 if(randNum < 30)
-                    mapArr[x][y] = new Tile("ForestTest", true, false);
+                    tiles[x][y] = new Tile("ForestTest", true, false);
                 if(randNum >= 30 && randNum < 31)
-                    mapArr[x][y] = new settlementTile("Village", 'c');
+                    tiles[x][y] = new settlementTile("Village", 'c');
                 if(randNum >= 31 && randNum < 90)
-                    mapArr[x][y] = new Tile("Grass", true, false);
+                    tiles[x][y] = new Tile("Grass", true, false);
                 if(randNum >= 90 && randNum < 100)
-                    mapArr[x][y] = new Tile("Mountain", true, false);
+                    tiles[x][y] = new Tile("Mountain", true, false);
             }
         }
 
