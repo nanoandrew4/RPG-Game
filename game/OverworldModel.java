@@ -9,7 +9,7 @@ import java.util.Random;
 
 public class OverworldModel {
     public double mapTileSize, scrollOffset;
-    public int mapSize = 1000, mapZoomMax = 16 /* in each direction */, zoom = 8;
+    public int mapSize = 1000, zoom = 8;
     public int[] currPos = new int[2];
 
     public Tile[][] tiles;

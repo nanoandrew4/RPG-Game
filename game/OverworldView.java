@@ -24,55 +24,55 @@ public class OverworldView{
 
     private ImageView[][] imageViews;
 
+    private int initAreaMultiplier = 4;
+
     public double xOffset = 0;
     public double yOffset = 0;
-    
-    public int mapLoadArea;
 
     private Image forestTile;
     private Image villageTile;
     private Image mountainTile;
     private Image grassTile;
     
-    OverworldView(){}
+    OverworldView(int mapSize){imageViews = new ImageView[mapSize][mapSize];}
 
-    public Scene displayOverworld(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize){
+    public Scene initDisplay(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize){
 
         System.out.println("Reloading image array");
 
         long start = System.currentTimeMillis();
-        
-        mapLoadArea = 100;
 
-        speedXVal = mapTileSize / 32;
-        speedYVal = mapTileSize / 64;
+        speedXVal = mapTileSize / 16;
+        speedYVal = mapTileSize / 32;
 
-        imageViews = new ImageView[mapLoadArea][mapLoadArea];
         Pane overworldLayout = new Pane();
 
         loadGraphics(mapTileSize, mapTileSize);
 
-        for (int y = 0; y < imageViews.length; y++) {
-            for (int x = 0; x < imageViews.length; x++) {
+        for (int y = -zoom * initAreaMultiplier; y < zoom * initAreaMultiplier; y++) {
+            for (int x = -zoom * initAreaMultiplier; x < zoom * initAreaMultiplier; x++) {
 
-                int xPos = (currPos[0] + (x - (mapLoadArea / 2)) > 0 ? (currPos[0] + (x - (mapLoadArea / 2)) < mapSize ? currPos[0] + (x - (mapLoadArea / 2)) : mapSize - 1) : 0);
-                int yPos = (currPos[1] + (y - (mapLoadArea / 2)) > 0 ? (currPos[1] + (y - (mapLoadArea / 2)) < mapSize ? currPos[1] + (y - (mapLoadArea / 2)) : mapSize - 1) : 0);
+                if(!(currPos[0] + x < 0 || currPos[1] + y < 0 || currPos[0] + x > mapSize || currPos[1] + y > mapSize)) {
 
-                if (tiles[xPos][yPos].type.equalsIgnoreCase("Village"))
-                    imageViews[x][y] = new ImageView(villageTile);
-                if (tiles[xPos][yPos].type.equalsIgnoreCase("ForestTest"))
-                    imageViews[x][y] = new ImageView(forestTile);
-                if (tiles[xPos][yPos].type.equalsIgnoreCase("Grass"))
-                    imageViews[x][y] = new ImageView(grassTile);
-                if (tiles[xPos][yPos].type.equalsIgnoreCase("Mountain"))
-                    imageViews[x][y] = new ImageView(mountainTile);
+                    int xPos = currPos[0] + x;
+                    int yPos = currPos[1] + y;
 
-                imageViews[x][y].relocate(0.5 * mapTileSize * ((x - (mapLoadArea / 2)) - (y - (mapLoadArea / 2))) + (screenWidth / 2) - (mapTileSize / 2), 0.25 * mapTileSize * ((x - (mapLoadArea / 2)) + (y - (mapLoadArea / 2))) + (screenHeight / 2) - (mapTileSize / 2));
-                overworldLayout.getChildren().add(imageViews[x][y]);
+                    if (tiles[xPos][yPos].type.equalsIgnoreCase("Village"))
+                        imageViews[xPos][yPos] = new ImageView(villageTile);
+                    if (tiles[xPos][yPos].type.equalsIgnoreCase("ForestTest"))
+                        imageViews[xPos][yPos] = new ImageView(forestTile);
+                    if (tiles[xPos][yPos].type.equalsIgnoreCase("Grass"))
+                        imageViews[xPos][yPos] = new ImageView(grassTile);
+                    if (tiles[xPos][yPos].type.equalsIgnoreCase("Mountain"))
+                        imageViews[xPos][yPos] = new ImageView(mountainTile);
+
+                    imageViews[xPos][yPos].relocate(0.5 * mapTileSize * (x - y) + (screenWidth / 2) - (mapTileSize / 2), 0.25 * mapTileSize * (x + y) + (screenHeight / 2) - (mapTileSize / 2));
+                    overworldLayout.getChildren().add(imageViews[xPos][yPos]);
+
+                    setMoveAnim(xPos, yPos);
+                }
             }
         }
-
-        setMoveAnim();
 
         System.out.println("Reloading took " + (System.currentTimeMillis() - start) + "ms");
 
@@ -86,32 +86,24 @@ public class OverworldView{
         grassTile = new Image("/media/graphics/Grass.png", width, height, true, false);
     }
 
-    public void setMoveAnim(){
-
-        for (int y = 0; y < imageViews.length; y++) {
-            for (int x = 0; x < imageViews.length; x++) {
-
-                final int fy = y;
-                final int fx = x;
-
-                new AnimationTimer() {
-                    @Override
-                    public void handle(long timestamp) {
-                        if (lastUpdateTime.get() > 0) {
-                            final double oldX = imageViews[fx][fy].getTranslateX();
-                            final double newX = oldX + speedX.get();
-                            final double oldY = imageViews[fx][fy].getTranslateY();
-                            final double newY = oldY + speedY.get();
-                            imageViews[fx][fy].setTranslateX(newX);
-                            imageViews[fx][fy].setTranslateY(newY);
-                            xOffset = imageViews[fx][fy].getTranslateX();
-                            yOffset = imageViews[fx][fy].getTranslateY();
-                            //System.out.println(xOffset);
-                        }
-                        lastUpdateTime.set(timestamp);
-                    }
-                }.start();
+    public void setMoveAnim(int xPos, int yPos) {
+        final int fx = xPos;
+        final int fy = yPos;
+        new AnimationTimer() {
+            @Override
+            public void handle(long timestamp) {
+                if (lastUpdateTime.get() > 0) {
+                    final double oldX = imageViews[fx][fy].getTranslateX();
+                    final double newX = oldX + speedX.get();
+                    final double oldY = imageViews[fx][fy].getTranslateY();
+                    final double newY = oldY + speedY.get();
+                    imageViews[fx][fy].setTranslateX(newX);
+                    imageViews[fx][fy].setTranslateY(newY);
+                    xOffset = imageViews[fx][fy].getTranslateX();
+                    yOffset = imageViews[fx][fy].getTranslateY();
+                }
+                lastUpdateTime.set(timestamp);
             }
-        }
+        }.start();
     }
 }

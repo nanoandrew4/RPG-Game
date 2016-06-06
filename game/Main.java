@@ -14,7 +14,9 @@ public class Main extends Application {
 
     ExecutorService threadPool = Executors.newFixedThreadPool(1); // change later, only need 1 for overworld now
 
-    Stage stage; // might crash
+    OverworldController overworldController;
+
+    Stage stage;
 
     public double screenWidth, screenHeight;
 
@@ -44,7 +46,9 @@ public class Main extends Application {
 
     private void startControllers(){
         // if controllers need to talk, initialize objects and run instead of instance of new class
-        threadPool.execute(new OverworldController(this));
+        overworldController = new OverworldController(this);
+        overworldController.setDaemon(true);
+        threadPool.execute(overworldController);
 
         threadPool.shutdown();
     }

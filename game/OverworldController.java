@@ -3,21 +3,19 @@ package game;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.paint.Material;
 
 public class OverworldController extends Thread{
 
     Main main;
-    Scene[] scenes;
+    Scene scene;
     
     private OverworldView view;
     private OverworldModel model;
 
     OverworldController(Main main){
         this.main = main;
-        scenes = new Scene[5]; // 0 is current, 1 is top, 2 is right, 3 is down, 4 is left (clockwise with 0 in middle)
         model = new OverworldModel();
-        view = new OverworldView();
+        view = new OverworldView(model.mapSize);
 
         setTileSize(); // which runs get scene
     }
@@ -32,16 +30,9 @@ public class OverworldController extends Thread{
     }
 
     private void getScene(){
-        scenes[0] = view.displayOverworld(model.tiles,main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize);
-        setInput(scenes[0]);
-        main.setStage(scenes[0]);
-        prepareScenes();
-    }
-
-    public void prepareScenes(){
-        int tilesOffset = view.mapLoadArea; // for determining how many tiles above the next scene will be
-
-        //scenes[1] =
+        scene = view.initDisplay(model.tiles,main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize);
+        setInput(scene);
+        main.setStage(scene);
     }
 
     private void setInput(Scene scene){
@@ -53,16 +44,6 @@ public class OverworldController extends Thread{
             System.out.println("YPos: " + model.currPos[1]);
 
             KeyCode keyCode = event.getCode();
-            if(keyCode == KeyCode.Z && model.zoom > 0){ // for zooming in
-                model.zoom--;
-                setTileSize();
-                System.out.println("Zoom in");
-            }
-            else if(keyCode == KeyCode.X && model.zoom < model.mapZoomMax){ // for zooming out
-                model.zoom++;
-                setTileSize();
-                System.out.println("Zoom out");
-            }
             // position on tiles needs work
             if(keyCode == KeyCode.A){
                 if(model.currPos[0] > 0){
