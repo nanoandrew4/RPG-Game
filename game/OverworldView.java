@@ -6,13 +6,9 @@ import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
-import javafx.stage.Stage;
 
 public class OverworldView{
 
@@ -20,7 +16,7 @@ public class OverworldView{
     public double speedYVal;
     public final DoubleProperty speedX = new SimpleDoubleProperty();
     public final DoubleProperty speedY = new SimpleDoubleProperty();
-    public final LongProperty lastUpdateTime = new SimpleLongProperty();
+    private final LongProperty lastUpdateTime = new SimpleLongProperty();
 
     private ImageView[][] imageViews;
     private Pane overworldLayout;
@@ -87,12 +83,14 @@ public class OverworldView{
     public void addRow(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize, boolean top){
         System.out.println("Adding row");
         if((top && currPos[1] + (zoom * areaMultiplier * 2) + 1 < mapSize) || (!top && currPos[1] + (zoom * areaMultiplier * 2) - 1 > 0)) {
-            int yPos = (top ? currPos[1] - (zoom * areaMultiplier * 2) - 1 : currPos[1] + (zoom * areaMultiplier * 2) + 1);
+            int y = top ? -zoom * areaMultiplier : zoom * areaMultiplier;
+            int yPos = currPos[1] + y;
             for (int x = -zoom * areaMultiplier; x < zoom * areaMultiplier; x++) {
                 if (!(currPos[0] + x < 0 || currPos[0] + x > mapSize)) {
                     int xPos = currPos[0] + x;
                     genTile(xPos, yPos, tiles);
-                    imageViews[xPos][yPos].relocate(top ? imageViews[xPos][yPos + 1].getTranslateX() + 100 : imageViews[xPos][yPos - 1].getTranslateX() - 100, top ? imageViews[xPos][yPos + 1].getTranslateY() + 50 : imageViews[xPos][yPos - 1].getTranslateY() - 50);
+                    //imageViews[xPos][yPos].relocate(top ? imageViews[xPos][yPos + 1].getTranslateX() + 100 : imageViews[xPos][yPos - 1].getTranslateX() - 100, top ? imageViews[xPos][yPos + 1].getTranslateY() + 50 : imageViews[xPos][yPos - 1].getTranslateY() - 50);
+                    imageViews[xPos][yPos].relocate(0.5 * mapTileSize * (x - y) + (screenWidth) - (mapTileSize / 2), 0.25 * mapTileSize * (x + y)/* - (screenHeight / 2)*/ - (mapTileSize / 2));
                     overworldLayout.getChildren().add(imageViews[xPos][yPos]);
                     setMoveAnim(xPos, yPos);
                 }
@@ -104,12 +102,14 @@ public class OverworldView{
     public void addColumn(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize, boolean right){
         System.out.println("Adding column");
         if((right && currPos[0] + (zoom * areaMultiplier) + 1 < mapSize) || (!right && currPos[0] + (zoom * areaMultiplier) - 1 > 0)) {
-            int xPos = (right ? currPos[0] - (zoom * areaMultiplier) - 1 : currPos[0] + (zoom * areaMultiplier) + 1);
+            int x = right ? zoom * areaMultiplier / 2 : -zoom * areaMultiplier / 2;
+            int xPos = currPos[0] + x;
             for (int y = -zoom * areaMultiplier * 2; y < zoom * areaMultiplier * 2; y++) {
                 if (!(currPos[1] + y < 0 || currPos[1] + y > mapSize)) {
                     int yPos = currPos[1] + y;
                     genTile(xPos, yPos, tiles);
-                    imageViews[xPos][yPos].relocate(right ? imageViews[xPos - 1][yPos].getTranslateX() + 100 : imageViews[xPos + 1][yPos].getTranslateX() - 100, right ? imageViews[xPos - 1][yPos].getTranslateY() + 50 : imageViews[xPos + 1][yPos].getTranslateY() - 50);
+                    //imageViews[xPos][yPos].relocate(right ? imageViews[xPos - 1][yPos].getTranslateX() + 100 : imageViews[xPos + 1][yPos].getTranslateX() - 100, right ? imageViews[xPos - 1][yPos].getTranslateY() + 50 : imageViews[xPos + 1][yPos].getTranslateY() - 50);
+                    imageViews[xPos][yPos].relocate(0.5 * mapTileSize * (x - y) + (screenWidth) - (mapTileSize / 2), 0.25 * mapTileSize * (x + y)/* - (screenHeight / 2)*/ - (mapTileSize / 2));
                     overworldLayout.getChildren().add(imageViews[xPos][yPos]);
                     setMoveAnim(xPos, yPos);
                 }
@@ -120,7 +120,8 @@ public class OverworldView{
 
     private void removeRow(boolean top, int[] currPos, int zoom, int mapSize){
         if((top && currPos[1] + (zoom * areaMultiplier) + 1 < mapSize) || (!top && currPos[1] + (zoom * areaMultiplier) - 1 > 0)) {
-            int yPos = (top ? currPos[1] - (zoom * areaMultiplier) - 1 : currPos[1] + (zoom * areaMultiplier) + 1);
+            int y = top ? -zoom * areaMultiplier : zoom * areaMultiplier;
+            int yPos = currPos[1] + y;
             for (int x = -zoom * areaMultiplier; x < zoom * areaMultiplier; x++) {
                 if (!(currPos[0] + x < 0 || currPos[0] + x > mapSize)) {
                     int xPos = currPos[0] + x;
@@ -133,8 +134,9 @@ public class OverworldView{
 
     private void removeColumn(boolean right, int[] currPos, int zoom, int mapSize){
         if((right && currPos[0] + (zoom * areaMultiplier) + 1 < mapSize) || (!right && currPos[0] + (zoom * areaMultiplier) - 1 > 0)) {
-            int xPos = (right ? currPos[0] - (zoom * areaMultiplier) - 1 : currPos[0] + (zoom * areaMultiplier) + 1);
-            for (int y = -zoom * areaMultiplier; y < zoom * areaMultiplier; y++) {
+            int x = right ? zoom * areaMultiplier / 2 : -zoom * areaMultiplier / 2;
+            int xPos = currPos[0] + x;
+            for (int y = -zoom * areaMultiplier * 2; y < zoom * areaMultiplier * 2; y++) {
                 if (!(currPos[1] + y < 0 || currPos[1] + y > mapSize)) {
                     int yPos = currPos[1] + y;
                     overworldLayout.getChildren().remove(imageViews[xPos][yPos]);
@@ -151,7 +153,7 @@ public class OverworldView{
         grassTile = new Image("/media/graphics/Grass.png", width, height, true, false);
     }
 
-    public void setMoveAnim(int xPos, int yPos) {
+    private void setMoveAnim(int xPos, int yPos) {
         final int fx = xPos;
         final int fy = yPos;
         new AnimationTimer() {

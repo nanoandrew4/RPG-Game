@@ -1,3 +1,7 @@
+/*
+    Main controller for game, controller of controllers,
+ */
+
 package game;
 
 import javafx.application.Application;
@@ -37,14 +41,14 @@ public class Main extends Application {
         layout.getChildren().add(playButton);
         playButton.setOnAction(event -> {
             System.out.println("Initializing UI");
-            startControllers();
+            startOverworldController();
         });
 
         stage.setScene(new Scene(layout, screenWidth, screenHeight));
         stage.show();
     }
 
-    private void startControllers(){
+    private void startOverworldController(){
         // if controllers need to talk, initialize objects and run instead of instance of new class
         overworldController = new OverworldController(this);
         overworldController.setDaemon(true);

@@ -1,3 +1,7 @@
+/*
+    Data holder and handler for all non-graphical code
+ */
+
 package game;
 
 import java.io.IOException;
@@ -8,7 +12,7 @@ import java.util.List;
 import java.util.Random;
 
 public class OverworldModel {
-    public double mapTileSize, scrollOffset;
+    public double mapTileSize;
     public int mapSize = 1000, zoom = 8;
     public int[] currPos = new int[2];
 
@@ -29,7 +33,7 @@ public class OverworldModel {
                 currPos[0] = (lines.get(x).charAt(lines.get(x).length()-2) - 48) * 10 + (lines.get(x).charAt(lines.get(x).length()-1) - 48);
 
             if(lines.get(x).contains("locationY"))
-                currPos[0] = (lines.get(x).charAt(lines.get(x).length()-2) - 48) * 10 + (lines.get(x).charAt(lines.get(x).length()-1) - 48);
+                currPos[1] = (lines.get(x).charAt(lines.get(x).length()-2) - 48) * 10 + (lines.get(x).charAt(lines.get(x).length()-1) - 48);
         }
 
         loadMap();

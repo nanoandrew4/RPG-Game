@@ -1,3 +1,7 @@
+/*
+    Controls all interactions between non-graphical and graphical components for the Overworld
+ */
+
 package game;
 
 import javafx.scene.Scene;
@@ -6,8 +10,8 @@ import javafx.scene.input.KeyEvent;
 
 public class OverworldController extends Thread{
 
-    Main main;
-    Scene scene;
+    private Main main;
+    private Scene scene;
     
     private OverworldView view;
     private OverworldModel model;
@@ -39,12 +43,30 @@ public class OverworldController extends Thread{
 
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
 
-            System.out.println("Key pressed");
             System.out.println("XPos: " + model.currPos[0]);
             System.out.println("YPos: " + model.currPos[1]);
+            //System.out.println("Xoffset: " + view.xOffset);
+            //System.out.println("Yoffset: " + view.yOffset);
 
             KeyCode keyCode = event.getCode();
             // position on tiles needs work
+
+            if(keyCode == KeyCode.A || keyCode == KeyCode.D || keyCode == KeyCode.W || keyCode == KeyCode.S){
+                if(model.currPos[0] <= 0 || model.currPos[0] >= model.mapSize || model.currPos[1] <= 0 || model.currPos[1] >= model.mapSize)
+                    return;
+
+                double leftAngle = Math.toDegrees(Math.asin(((model.mapTileSize / 2) - view.xOffset) / ((model.mapTileSize / 4) + view.yOffset)));
+                double rightAngle = Math.toDegrees(Math.asin(((model.mapTileSize / 2) + view.xOffset) / ((model.mapTileSize / 4) + view.yOffset)));
+
+                System.out.println("Left side angle " + leftAngle);
+                System.out.println("Right side angle " + rightAngle);
+
+                if(leftAngle >= 45 || rightAngle >= 45){ // new tile
+                    System.out.println("Moved tile");
+                    view.xOffset -= view.xOffset >= model.mapTileSize ? model.mapTileSize : view.xOffset;
+                    view.yOffset -= view.yOffset >= model.mapTileSize / 2 ? model.mapTileSize / 2 : view.yOffset;
+                }
+            }
 
             if(keyCode == KeyCode.A){
                 view.speedX.set(view.speedXVal);
@@ -55,7 +77,7 @@ public class OverworldController extends Thread{
                         System.out.println("Next tile");
                         model.currPos[0]--;
                         //model.currPos[1]++;
-                        view.xOffset -= model.mapTileSize;
+                        //view.xOffset -= model.mapTileSize;
                         view.addColumn(model.tiles, main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize, false);
                     }
                 }
@@ -68,7 +90,7 @@ public class OverworldController extends Thread{
                         System.out.println("Next tile");
                         model.currPos[1]++;
                         //model.currPos[0]++;
-                        view.yOffset -= model.mapTileSize;
+                        //view.yOffset -= model.mapTileSize;
                         view.addRow(model.tiles, main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize, false);
                     }
                 }
@@ -81,7 +103,7 @@ public class OverworldController extends Thread{
                         System.out.println("Next tile");
                         model.currPos[1]--;
                         //model.currPos[0]--;
-                        view.yOffset -= model.mapTileSize;
+                        //view.yOffset -= model.mapTileSize;
                         view.addRow(model.tiles, main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize, true);
 
                     }
@@ -95,7 +117,7 @@ public class OverworldController extends Thread{
                         System.out.println("Next tile");
                         model.currPos[0]++;
                         //model.currPos[1]--;
-                        view.xOffset -= model.mapTileSize;
+                        //view.xOffset -= model.mapTileSize;
                         view.addColumn(model.tiles, main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize, true);
                     }
                 }
@@ -116,7 +138,7 @@ public class OverworldController extends Thread{
                         System.out.println("Next tile");
                         model.currPos[0]--;
                         model.currPos[1]++;
-                        view.xOffset -= model.mapTileSize;
+                        //view.xOffset -= model.mapTileSize;
                         //getScene();
                     }
                 }
@@ -127,7 +149,7 @@ public class OverworldController extends Thread{
                         System.out.println("Next tile");
                         model.currPos[1]++;
                         model.currPos[0]++;
-                        view.yOffset -= model.mapTileSize;
+                        //view.yOffset -= model.mapTileSize;
                         //getScene();
                     }
                 }
@@ -138,7 +160,7 @@ public class OverworldController extends Thread{
                         System.out.println("Next tile");
                         model.currPos[1]--;
                         model.currPos[0]--;
-                        view.yOffset -= model.mapTileSize;
+                        //view.yOffset -= model.mapTileSize;
                         //getScene();
                     }
                 }
@@ -149,7 +171,7 @@ public class OverworldController extends Thread{
                         System.out.println("Next tile");
                         model.currPos[0]++;
                         model.currPos[1]--;
-                        view.xOffset -= model.mapTileSize;
+                        //view.xOffset -= model.mapTileSize;
                         //getScene();
                     }
                 }

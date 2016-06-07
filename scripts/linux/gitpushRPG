@@ -1,0 +1,12 @@
+#!/bin/bash
+
+echo "Enter changes made"
+
+read message
+
+cd ~/IdeaProjects/RPG-Game/src/
+cp -r * ~/GitHub/Projects/RPG-Game/
+cd ~/GitHub/Projects/RPG-Game/
+git add -A
+git commit -m "$message"
+git push
