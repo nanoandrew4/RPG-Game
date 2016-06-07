@@ -45,69 +45,59 @@ public class OverworldController extends Thread{
 
             KeyCode keyCode = event.getCode();
             // position on tiles needs work
+
             if(keyCode == KeyCode.A){
+                view.speedX.set(view.speedXVal);
+                view.speedY.set(view.speedYVal);
                 if(model.currPos[0] > 0){
                     System.out.println(view.xOffset);
                     if(model.mapTileSize <= Math.abs(view.xOffset)) {
                         System.out.println("Next tile");
                         model.currPos[0]--;
-                        model.currPos[1]++;
+                        //model.currPos[1]++;
                         view.xOffset -= model.mapTileSize;
-                        //getScene();
+                        view.addColumn(model.tiles, main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize, false);
                     }
-                    else
-                    if(event.isShiftDown())
-                        view.speedX.set(view.speedXVal * 2);
-                    else
-                        view.speedX.set(view.speedXVal);
                 }
             }
             else if(keyCode == KeyCode.S){
+                view.speedX.set(view.speedXVal);
+                view.speedY.set(-view.speedYVal);
                 if(model.currPos[1] < model.mapSize){
                     if(model.mapTileSize <= Math.abs(view.yOffset)) {
                         System.out.println("Next tile");
                         model.currPos[1]++;
-                        model.currPos[0]++;
+                        //model.currPos[0]++;
                         view.yOffset -= model.mapTileSize;
-                        //getScene();
+                        view.addRow(model.tiles, main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize, false);
                     }
-                    else
-                        if(event.isShiftDown())
-                            view.speedY.set(-view.speedYVal * 2);
-                        else
-                            view.speedY.set(-view.speedYVal);
                 }
             }
             else if(keyCode == KeyCode.W){
+                view.speedX.set(-view.speedXVal);
+                view.speedY.set(view.speedYVal);
                 if(model.currPos[1] > 0){
                     if(model.mapTileSize <= Math.abs(view.yOffset)) {
                         System.out.println("Next tile");
                         model.currPos[1]--;
-                        model.currPos[0]--;
+                        //model.currPos[0]--;
                         view.yOffset -= model.mapTileSize;
-                        //getScene();
+                        view.addRow(model.tiles, main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize, true);
+
                     }
-                    else
-                        if(event.isShiftDown())
-                            view.speedY.set(view.speedYVal * 2);
-                        else
-                            view.speedY.set(view.speedYVal);
                 }
             }
             else if(keyCode == KeyCode.D){
+                view.speedX.set(-view.speedXVal);
+                view.speedY.set(-view.speedYVal);
                 if(model.currPos[0] < model.mapSize){
                     if(model.mapTileSize <= Math.abs(view.xOffset)) {
                         System.out.println("Next tile");
                         model.currPos[0]++;
-                        model.currPos[1]--;
+                        //model.currPos[1]--;
                         view.xOffset -= model.mapTileSize;
-                        //getScene();
+                        view.addColumn(model.tiles, main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize, true);
                     }
-                    else
-                        if(event.isShiftDown())
-                            view.speedX.set(-view.speedXVal * 2);
-                        else
-                            view.speedX.set(-view.speedXVal);
                 }
             }
 
@@ -115,10 +105,8 @@ public class OverworldController extends Thread{
         });
 
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
-            if (event.getCode() == KeyCode.D || event.getCode() == KeyCode.A) {
+            if (event.getCode() == KeyCode.D || event.getCode() == KeyCode.A || event.getCode() == KeyCode.W || event.getCode() == KeyCode.S) {
                 view.speedX.set(0);
-            }
-            if (event.getCode() == KeyCode.W || event.getCode() == KeyCode.S) {
                 view.speedY.set(0);
             }
             if(event.getCode() == KeyCode.A){
