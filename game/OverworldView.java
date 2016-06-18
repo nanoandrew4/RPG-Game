@@ -95,7 +95,7 @@ public class OverworldView{
                     setMoveAnim(xPos, yPos);
                 }
             }
-            removeRow(!top, currPos, zoom, mapSize);
+            //removeRow(!top, currPos, zoom, mapSize);
         }
     }
 
@@ -114,8 +114,8 @@ public class OverworldView{
                     setMoveAnim(xPos, yPos);
                 }
             }
+            //removeColumn(!right, currPos, zoom, mapSize);
         }
-        removeColumn(!right, currPos, zoom, mapSize);
     }
 
     private void removeRow(boolean top, int[] currPos, int zoom, int mapSize){

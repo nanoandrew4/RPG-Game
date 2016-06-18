@@ -22,6 +22,8 @@ public class Main extends Application {
 
     Stage stage;
 
+    int mapSize;
+
     public double screenWidth, screenHeight;
 
     public static void main(String[] args){
@@ -35,20 +37,64 @@ public class Main extends Application {
         getScreenSize();
 
         Pane layout = new Pane();
-        Button playButton = new Button("Play");
+        Button newGame = new Button("New Game");
+        Button loadGame = new Button("Load Game");
 
-        playButton.relocate(screenWidth / 2, screenHeight / 2);
-        layout.getChildren().add(playButton);
-        playButton.setOnAction(event -> {
-            System.out.println("Initializing UI");
-            startOverworldController();
+        newGame.relocate(screenWidth / 2 - 25, screenHeight / 2 - 25);
+        loadGame.relocate(screenWidth / 2 - 25, screenHeight / 2 + 25);
+        layout.getChildren().add(newGame);
+        layout.getChildren().add(loadGame);
+        newGame.setOnAction(event -> {
+
+            layout.getChildren().remove(newGame);
+            layout.getChildren().remove(loadGame);
+
+            Button verySmall = new Button("Very Small");
+            Button small = new Button("Small");
+            Button medium = new Button("Medium");
+            Button large = new Button("Large");
+            Button veryLarge = new Button("Very Large");
+
+            verySmall.relocate(screenWidth / 2 - 25, screenHeight / 2 - 70);
+            small.relocate(screenWidth / 2 - 25, screenHeight / 2 - 35);
+            medium.relocate(screenWidth / 2 - 25, screenHeight / 2);
+            large.relocate(screenWidth / 2 - 25, screenHeight / 2 + 35);
+            veryLarge.relocate(screenWidth / 2 - 25, screenHeight / 2 + 70);
+
+            layout.getChildren().add(verySmall);
+            layout.getChildren().add(small);
+            layout.getChildren().add(medium);
+            layout.getChildren().add(large);
+            layout.getChildren().add(veryLarge);
+
+            verySmall.setOnAction(event1 -> {
+                startOverworldController(150);
+            });
+            small.setOnAction(event1 -> {
+                startOverworldController(300);
+            });
+            medium.setOnAction(event1 -> {
+                startOverworldController(500);
+            });
+            large.setOnAction(event1 -> {
+                startOverworldController(750);
+            });
+            veryLarge.setOnAction(event1 -> {
+                startOverworldController(1000);
+            });
+
+            System.out.println("New game being created...");
+        });
+        loadGame.setOnAction(event -> {
+            System.out.println("Loading game...");
         });
 
         stage.setScene(new Scene(layout, screenWidth, screenHeight));
         stage.show();
     }
 
-    private void startOverworldController(){
+    private void startOverworldController(int mapSize){
+        this.mapSize = mapSize;
         // if controllers need to talk, initialize objects and run instead of instance of new class
         overworldController = new OverworldController(this);
         overworldController.setDaemon(true);
