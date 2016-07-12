@@ -18,13 +18,13 @@ public class OverworldView{
     public final DoubleProperty speedY = new SimpleDoubleProperty();
     private final LongProperty lastUpdateTime = new SimpleLongProperty();
 
-    private ImageView[][] imageViews;
+    public ImageView[][] imageViews; // private
     private Pane overworldLayout;
 
     private int areaMultiplier = 2;
 
-    public double xOffset = 0;
-    public double yOffset = 0;
+    public double xOffset = 0; // total offset from initial tile
+    public double yOffset = 0; // total offset from initial tile
 
     private Image forestTile;
     private Image villageTile;
@@ -39,14 +39,14 @@ public class OverworldView{
 
         long start = System.currentTimeMillis();
 
-        speedXVal = mapTileSize / 16;
-        speedYVal = mapTileSize / 32;
+        speedXVal = mapTileSize / 32;
+        speedYVal = mapTileSize / 64;
 
         overworldLayout = new Pane();
 
         loadGraphics(mapTileSize, mapTileSize);
 
-        for (int y = -zoom * areaMultiplier * 2; y < zoom * areaMultiplier * 2; y++) {
+        for (int y = -zoom * areaMultiplier; y < zoom * areaMultiplier; y++) {
             for (int x = -zoom * areaMultiplier; x < zoom * areaMultiplier; x++) {
 
                 if(!(currPos[0] + x < 0 || currPos[1] + y < 0 || currPos[0] + x > mapSize || currPos[1] + y > mapSize)) {
@@ -56,13 +56,17 @@ public class OverworldView{
 
                     genTile(xPos, yPos, tiles);
 
-                    imageViews[xPos][yPos].relocate(0.5 * mapTileSize * (x - y) + (screenWidth) - (mapTileSize / 2), 0.25 * mapTileSize * (x + y)/* - (screenHeight / 2)*/ - (mapTileSize / 2));
+                    imageViews[xPos][yPos].relocate(0.5 * mapTileSize * (x - y) + (screenWidth / 2), 0.25 * mapTileSize * (x + y) + (screenHeight / 2));
                     overworldLayout.getChildren().add(imageViews[xPos][yPos]);
 
                     setMoveAnim(xPos, yPos);
                 }
             }
         }
+
+        //ImageView redDot = new ImageView(new Image("/media/graphics/redDot.png"));
+        //redDot.relocate((screenWidth / 2) - 25, (screenHeight / 2) - 25);
+        //overworldLayout.getChildren().add(redDot);
 
         System.out.println("Init load took " + (System.currentTimeMillis() - start) + "ms");
 
@@ -72,7 +76,7 @@ public class OverworldView{
     private void genTile(int xPos, int yPos, Tile[][] tiles){
         if (tiles[xPos][yPos].type.equalsIgnoreCase("Village"))
             imageViews[xPos][yPos] = new ImageView(villageTile);
-        if (tiles[xPos][yPos].type.equalsIgnoreCase("ForestTest"))
+        if (tiles[xPos][yPos].type.equalsIgnoreCase("ForestLight"))
             imageViews[xPos][yPos] = new ImageView(forestTile);
         if (tiles[xPos][yPos].type.equalsIgnoreCase("Grass"))
             imageViews[xPos][yPos] = new ImageView(grassTile);
@@ -147,10 +151,10 @@ public class OverworldView{
     }
 
     private void loadGraphics(double width, double height){
-        forestTile = new Image("/media/graphics/ForestTest.png", width, height, true, false);
-        villageTile = new Image("/media/graphics/Village.png", width, height, true, false);
-        mountainTile = new Image("/media/graphics/Mountain.png", width, height, true, false);
-        grassTile = new Image("/media/graphics/Grass.png", width, height, true, false);
+        forestTile = new Image("/media/graphics/overworld/ForestLight.png", width, height, true, false);
+        villageTile = new Image("/media/graphics/overworld/Village.png", width, height, true, false);
+        mountainTile = new Image("/media/graphics/overworld/Mountain.png", width, height, true, false);
+        grassTile = new Image("/media/graphics/overworld/Grass.png", width, height, true, false);
     }
 
     private void setMoveAnim(int xPos, int yPos) {

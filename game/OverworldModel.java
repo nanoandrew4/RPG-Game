@@ -110,7 +110,7 @@ public class OverworldModel {
 
         x = endPos;
         startPos = y; endPos = rand.nextInt(waterLineMax) + 2;
-        for(y = startPos; y > endPos; y--){ // second iteration of coastline defining
+        for(y = startPos; y > endPos; y--){ // fourth iteration of coastline defining
             int dir = rand.nextInt(100);
             String name;
             if(dir < 25 && y < waterLineMax) {
@@ -138,7 +138,7 @@ public class OverworldModel {
             for (int x = 0; x < mapSize; x++){
                 int randNum = rand.nextInt(100);
                 if(randNum < 30)
-                    tiles[x][y] = new Tile("ForestTest", true, false);
+                    tiles[x][y] = new Tile("ForestLight", true, false);
                 if(randNum >= 30 && randNum < 31)
                     tiles[x][y] = new settlementTile("Village", 'c', 50);
                 if(randNum >= 31 && randNum < 90)
