@@ -18,11 +18,9 @@ public class OverworldView{
     public final DoubleProperty speedY = new SimpleDoubleProperty();
     private final LongProperty lastUpdateTime = new SimpleLongProperty();
 
-    public ImageView[][] imageViews; // private
+    public ImageView[][] imageViews; // for controller to access and add click events
     private Pane overworldLayout;
-
-    private int areaMultiplier = 2;
-
+    
     public double xOffset = 0; // total offset from initial tile
     public double yOffset = 0; // total offset from initial tile
 
@@ -35,7 +33,7 @@ public class OverworldView{
 
     public Scene initDisplay(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize){
 
-        System.out.println("Reloading image array");
+        System.out.println("Loading images");
 
         long start = System.currentTimeMillis();
 
@@ -46,8 +44,8 @@ public class OverworldView{
 
         loadGraphics(mapTileSize, mapTileSize);
 
-        for (int y = -zoom * areaMultiplier; y < zoom * areaMultiplier; y++) {
-            for (int x = -zoom * areaMultiplier; x < zoom * areaMultiplier; x++) {
+        for (int y = -zoom; y < zoom; y++) {
+            for (int x = -zoom; x < zoom; x++) {
 
                 if(!(currPos[0] + x < 0 || currPos[1] + y < 0 || currPos[0] + x > mapSize || currPos[1] + y > mapSize)) {
 
@@ -56,7 +54,7 @@ public class OverworldView{
 
                     genTile(xPos, yPos, tiles);
 
-                    imageViews[xPos][yPos].relocate(0.5 * mapTileSize * (x - y) + (screenWidth / 2), 0.25 * mapTileSize * (x + y) + (screenHeight / 2));
+                    imageViews[xPos][yPos].relocate(0.5 * mapTileSize * (x - y) + (screenWidth / 2) - (mapTileSize / 2), 0.25 * mapTileSize * (x + y) + (screenHeight / 2) - (mapTileSize * 3 / 4));
                     overworldLayout.getChildren().add(imageViews[xPos][yPos]);
 
                     setMoveAnim(xPos, yPos);
@@ -64,8 +62,8 @@ public class OverworldView{
             }
         }
 
-        //ImageView redDot = new ImageView(new Image("/media/graphics/redDot.png"));
-        //redDot.relocate((screenWidth / 2) - 25, (screenHeight / 2) - 25);
+        //ImageView redDot = new ImageView(new Image("/media/graphics/redDot.png", 12, 12, false, false));
+        //redDot.relocate((screenWidth / 2) - 6, (screenHeight / 2) - 6);
         //overworldLayout.getChildren().add(redDot);
 
         System.out.println("Init load took " + (System.currentTimeMillis() - start) + "ms");
@@ -86,10 +84,10 @@ public class OverworldView{
 
     public void addRow(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize, boolean top){
         System.out.println("Adding row");
-        if((top && currPos[1] + (zoom * areaMultiplier * 2) + 1 < mapSize) || (!top && currPos[1] + (zoom * areaMultiplier * 2) - 1 > 0)) {
-            int y = top ? -zoom * areaMultiplier : zoom * areaMultiplier;
+        if((top && currPos[1] + (zoom) + 1 < mapSize) || (!top && currPos[1] + (zoom) - 1 > 0)) {
+            int y = top ? -zoom: zoom;
             int yPos = currPos[1] + y;
-            for (int x = -zoom * areaMultiplier; x < zoom * areaMultiplier; x++) {
+            for (int x = -zoom; x < zoom; x++) {
                 if (!(currPos[0] + x < 0 || currPos[0] + x > mapSize)) {
                     int xPos = currPos[0] + x;
                     genTile(xPos, yPos, tiles);
@@ -99,16 +97,16 @@ public class OverworldView{
                     setMoveAnim(xPos, yPos);
                 }
             }
-            //removeRow(!top, currPos, zoom, mapSize);
+            removeRow(!top, currPos, zoom, mapSize);
         }
     }
 
     public void addColumn(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize, boolean right){
         System.out.println("Adding column");
-        if((right && currPos[0] + (zoom * areaMultiplier) + 1 < mapSize) || (!right && currPos[0] + (zoom * areaMultiplier) - 1 > 0)) {
-            int x = right ? zoom * areaMultiplier / 2 : -zoom * areaMultiplier / 2;
+        if((right && currPos[0] + (zoom) + 1 < mapSize) || (!right && currPos[0] + (zoom) - 1 > 0)) {
+            int x = right ? zoom/ 2 : -zoom/ 2;
             int xPos = currPos[0] + x;
-            for (int y = -zoom * areaMultiplier * 2; y < zoom * areaMultiplier * 2; y++) {
+            for (int y = -zoom; y < zoom; y++) {
                 if (!(currPos[1] + y < 0 || currPos[1] + y > mapSize)) {
                     int yPos = currPos[1] + y;
                     genTile(xPos, yPos, tiles);
@@ -118,15 +116,15 @@ public class OverworldView{
                     setMoveAnim(xPos, yPos);
                 }
             }
-            //removeColumn(!right, currPos, zoom, mapSize);
+            removeColumn(!right, currPos, zoom, mapSize);
         }
     }
 
     private void removeRow(boolean top, int[] currPos, int zoom, int mapSize){
-        if((top && currPos[1] + (zoom * areaMultiplier) + 1 < mapSize) || (!top && currPos[1] + (zoom * areaMultiplier) - 1 > 0)) {
-            int y = top ? -zoom * areaMultiplier : zoom * areaMultiplier;
+        if((top && currPos[1] + (zoom) + 1 < mapSize) || (!top && currPos[1] + (zoom) - 1 > 0)) {
+            int y = top ? -zoom: zoom;
             int yPos = currPos[1] + y;
-            for (int x = -zoom * areaMultiplier; x < zoom * areaMultiplier; x++) {
+            for (int x = -zoom; x < zoom; x++) {
                 if (!(currPos[0] + x < 0 || currPos[0] + x > mapSize)) {
                     int xPos = currPos[0] + x;
                     overworldLayout.getChildren().remove(imageViews[xPos][yPos]);
@@ -137,10 +135,10 @@ public class OverworldView{
     }
 
     private void removeColumn(boolean right, int[] currPos, int zoom, int mapSize){
-        if((right && currPos[0] + (zoom * areaMultiplier) + 1 < mapSize) || (!right && currPos[0] + (zoom * areaMultiplier) - 1 > 0)) {
-            int x = right ? zoom * areaMultiplier / 2 : -zoom * areaMultiplier / 2;
+        if((right && currPos[0] + (zoom) + 1 < mapSize) || (!right && currPos[0] + (zoom) - 1 > 0)) {
+            int x = right ? zoom/ 2 : -zoom/ 2;
             int xPos = currPos[0] + x;
-            for (int y = -zoom * areaMultiplier * 2; y < zoom * areaMultiplier * 2; y++) {
+            for (int y = -zoom; y < zoom; y++) {
                 if (!(currPos[1] + y < 0 || currPos[1] + y > mapSize)) {
                     int yPos = currPos[1] + y;
                     overworldLayout.getChildren().remove(imageViews[xPos][yPos]);
@@ -164,7 +162,7 @@ public class OverworldView{
             @Override
             public void handle(long timestamp) {
                 if (lastUpdateTime.get() > 0) {
-                    if(imageViews[fx][fy] == null) {
+                    if(imageViews[fx][fy] == null) { // if redundant delete if statement
                         stop();
                         return;
                     }

@@ -4,15 +4,19 @@
 
 package game;
 
+import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 
-public class OverworldController extends Thread{
+public class OverworldController implements Runnable{
 
     private Main main;
     private Scene scene;
     private boolean newTile;
+    private float zoomMultiplier = 2.5f;
     
     private OverworldView view;
     private OverworldModel model;
@@ -21,7 +25,11 @@ public class OverworldController extends Thread{
         this.main = main;
         model = new OverworldModel(main.mapSize);
         view = new OverworldView(model.mapSize);
+    }
 
+    @Override
+    public void run(){
+        System.out.println("Overworld thread started");
         setTileSize(); // which runs get scene
     }
 
@@ -35,9 +43,10 @@ public class OverworldController extends Thread{
     }
 
     private void getScene(){
-        scene = view.initDisplay(model.tiles,main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize);
+        scene = view.initDisplay(model.tiles,main.screenWidth, main.screenHeight, (int)(model.zoom * zoomMultiplier), model.mapTileSize, model.currPos, model.mapSize);
+        setClickEvents();
         setInput(scene);
-        main.setStage(scene);
+        Platform.runLater(() -> main.setStage(scene)); // to update UI from non-javafx thread
     }
 
     private double[] calcAngles(double yOffset, double xOffset){
@@ -102,22 +111,23 @@ public class OverworldController extends Thread{
             System.out.println("Moved tile");
             if (rightAngle >= 22.5) {
                 model.currPos[1]++;
-                //view.addRow(model.tiles, main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize, false);
+                //view.addRow(model.tiles, main.screenWidth, main.screenHeight, (int)(model.zoom * zoomMultiplier), model.mapTileSize, model.currPos, model.mapSize, false);
             }
             else if (rightAngle <= -22.5) {
                 model.currPos[0]++;
-                //view.addColumn(model.tiles, main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize, false);
+                //view.addColumn(model.tiles, main.screenWidth, main.screenHeight, (int)(model.zoom * zoomMultiplier), model.mapTileSize, model.currPos, model.mapSize, false);
             }
             else if (leftAngle >= 22.5) {
                 model.currPos[0]--;
-                //view.addColumn(model.tiles, main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize, false);
+                //view.addColumn(model.tiles, main.screenWidth, main.screenHeight, (int)(model.zoom * zoomMultiplier), model.mapTileSize, model.currPos, model.mapSize, false);
             }
             else if (leftAngle <= -22.5) {
                 model.currPos[1]--;
-                //view.addRow(model.tiles, main.screenWidth, main.screenHeight, model.zoom, model.mapTileSize, model.currPos, model.mapSize, false);
+                //view.addRow(model.tiles, main.screenWidth, main.screenHeight, (int)(model.zoom * zoomMultiplier), model.mapTileSize, model.currPos, model.mapSize, false);
             }
             if (!(xOffset < -model.mapTileSize / 2 || yOffset < -model.mapTileSize / 4 || xOffset > model.mapTileSize / 2 || yOffset > model.mapTileSize / 4))
                 newTile = true; // means moved tile so that even tho the offsets are < mapTileSize / 2 it will start calculating from the next tile
+            setClickEvents();
         }
         System.out.println();
     }
@@ -164,10 +174,28 @@ public class OverworldController extends Thread{
             if(event.getCode() == KeyCode.A || event.getCode() == KeyCode.D || event.getCode() == KeyCode.W || event.getCode() == KeyCode.S){
                 if(model.currPos[0] <= 0 || model.currPos[0] >= model.mapSize || model.currPos[1] <= 0 || model.currPos[1] >= model.mapSize)
                     return;
+
                 detectTileChange();
             }
-
             event.consume();
         });
+    }
+
+    private void setClickEvents(){
+        System.out.println("Setting click events");
+        for(int y = model.currPos[1] - (int)(model.zoom * zoomMultiplier); y < model.currPos[1] + (int)(model.zoom * zoomMultiplier); y++){
+            for(int x = model.currPos[0] - (int)(model.zoom * zoomMultiplier); x < model.currPos[0] + (int)(model.zoom * zoomMultiplier); x++){
+                final int finalX = x;
+                final int finalY = y;
+                view.imageViews[x][y].addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+                    int x = finalX;
+                    int y = finalY;
+                    @Override
+                    public void handle(MouseEvent event) {
+                        System.out.println("Tile @ pos " + x + ", " + y);
+                    }
+                });
+            }
+        }
     }
 }

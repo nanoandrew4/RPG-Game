@@ -5,6 +5,7 @@
 package game;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
@@ -16,7 +17,7 @@ import java.util.concurrent.Executors;
 
 public class Main extends Application {
 
-    ExecutorService threadPool = Executors.newFixedThreadPool(1); // change later, only need 1 for overworld now
+    //ExecutorService threadPool = Executors.newFixedThreadPool(1); // change later, only need 1 for overworld now
 
     OverworldController overworldController;
 
@@ -96,11 +97,13 @@ public class Main extends Application {
     private void startOverworldController(int mapSize){
         this.mapSize = mapSize;
         // if controllers need to talk, initialize objects and run instead of instance of new class
-        overworldController = new OverworldController(this);
-        overworldController.setDaemon(true);
-        threadPool.execute(overworldController);
+        Thread overworldThread = new Thread(new OverworldController(this));
+        overworldThread.setDaemon(true);
+        overworldThread.run();
 
-        threadPool.shutdown();
+        System.out.println("All threads started");
+
+        //threadPool.shutdown();
     }
 
     public void setStage(Scene scene){
