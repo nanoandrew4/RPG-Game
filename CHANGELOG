@@ -1,0 +1,29 @@
+------------------------28/09/2016------------------------
+
++ World gen added, coastline def still WIP, have some bugs to iron out, but all crashes fixed
+
++ Added function to view entire map, tiles almost too small to see as well and long wait time, but WIP
+
++ Added info menu to tiles
+
++ Skeleton code for Database management (for future saved data)
+
++ Implemented Mouse Events and added skeleton code for mouse events to be implemented
+
+- Eliminated use of a threadpool, might only be temporary
+
+------------------------03/09/2016------------------------
+
++ Skeleton code in model added
+
++ Banners for villages added, skeleton code for menus added
+
+----------------------PRE 01/09/2016----------------------
+
++ Started constructing the Overworld view and model, implemented basic view without loading
+
++ Console version of the InMap version started, although progess lost with the death of Chen's computer
+
++ Added graphics
+
++ Added WASD input

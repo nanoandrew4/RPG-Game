@@ -110,11 +110,6 @@ public class Main extends Application {
         stage.setScene(scene);
     }
 
-    public void sleep(long time){
-        long startTime = System.currentTimeMillis();
-        while(System.currentTimeMillis() - startTime < time);
-    }
-
     private void getScreenSize() {
         screenWidth = Screen.getPrimary().getVisualBounds().getWidth();
         screenHeight = Screen.getPrimary().getVisualBounds().getHeight();

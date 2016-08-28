@@ -1,19 +1,116 @@
 package game;
 
+import javafx.scene.layout.Pane;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class Tile {
     boolean tresspassable;
-    boolean accesible; // for entering cities
+    boolean accessible; // for entering cities
     String type;
+    SettlementTile settlementTile;
+    Pane banner;
 
     Tile(){
         tresspassable = false;
-        accesible = false;
+        accessible = false;
         type = "";
     }
 
+    // for static tiles
     Tile(String tileType, boolean tresspassable, boolean accesible){
         this.tresspassable = tresspassable;
         this.type = tileType;
-        this.accesible = accesible;
+        this.accessible = accesible;
+    }
+
+    // for settlements
+    Tile(String tileType, boolean tresspassable, boolean accessible, String name, String subType, char branch, int relationship){
+        this.tresspassable = tresspassable;
+        this.type = tileType;
+        this.accessible = accessible;
+        settlementTile = new SettlementTile(name, subType, branch, relationship);
     }
 }
+
+class SettlementTile extends Tile {
+
+    public String subType; // village, city...
+    public char branch; // m for military or c for commercial
+    public int relationship;
+    public String faction;
+    public boolean capitalSettlement;
+    public String settlementName;
+    public CityPolitics cityPolitics = new CityPolitics(); // read from SQL database
+
+    SettlementTile(){
+        accessible = true;
+        tresspassable = false;
+        settlementName = "";
+        capitalSettlement = false;
+    }
+
+    SettlementTile(String name, String subType, char branch, int relationship){
+        accessible = true;
+        tresspassable = false;
+        this.settlementName = name;
+        this.subType = subType;
+        this.branch = branch;
+        this.relationship = relationship;
+        this.capitalSettlement = false;
+    }
+
+    public void setCapitalSettlement(){
+        capitalSettlement = true;
+    }
+}
+
+class CityPolitics {
+    float avgHappiness = 0;
+    int maxNobles; // max amount of nobles that can be on the council at once
+    double growth; // rate of growth of a city
+    double capital;
+    int population;
+    int[] resources; // for the 5? types of resources
+
+    List<String> nobles = new ArrayList<>();
+
+    // TODO: list of nobles
+    // TODO: COURT SYSTEM (so much work...) use SQLite for saving finds by kingdom, city, and name for fast lookup
+    // TODO: Implement random and non-random events (scandals(levels?), assassination)
+
+    CityPolitics(){
+        avgHappiness = 0;
+        maxNobles = 0;
+        growth = 0d;
+        capital = 0d;
+        population = 0;
+        resources = new int[5];
+    }
+
+    CityPolitics(double avgHappiness, int maxNobles, double growth, double capital, int population, int[] resources){
+
+    }
+
+    public void buyLot(){
+
+    }
+
+    public void buildOnLot(){
+
+    }
+
+    public void demolishOnLot(){
+
+    }
+
+    public void sellLot(){
+
+    }
+
+    public void assasination(/* Target char, Assassin char */){
+
+    }
+}
+
