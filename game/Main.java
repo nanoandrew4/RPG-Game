@@ -69,35 +69,36 @@ public class Main extends Application {
             layout.getChildren().add(veryLarge);
 
             verySmall.setOnAction(event1 -> {
-                startOverworldController(150);
+                startOverworldController(150, true);
             });
             small.setOnAction(event1 -> {
-                startOverworldController(300);
+                startOverworldController(300, true);
             });
             medium.setOnAction(event1 -> {
-                startOverworldController(500);
+                startOverworldController(500, true);
             });
             large.setOnAction(event1 -> {
-                startOverworldController(750);
+                startOverworldController(750, true);
             });
             veryLarge.setOnAction(event1 -> {
-                startOverworldController(1000);
+                startOverworldController(1000, true);
             });
 
             System.out.println("New game being created...");
         });
         loadGame.setOnAction(event -> {
             System.out.println("Loading game...");
+            startOverworldController(0, false); // mapSize has to be set to 1 for load to work
         });
 
         stage.setScene(new Scene(layout, screenWidth, screenHeight));
         stage.show();
     }
 
-    private void startOverworldController(int mapSize){
+    private void startOverworldController(int mapSize, boolean newGame){
         this.mapSize = mapSize;
         // if controllers need to talk, initialize objects and run instead of instance of new class
-        Thread overworldThread = new Thread(new OverworldController(this));
+        Thread overworldThread = new Thread(new OverworldController(this, newGame));
         overworldThread.setDaemon(true);
         overworldThread.run();
 

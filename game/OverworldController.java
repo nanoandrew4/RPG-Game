@@ -29,11 +29,11 @@ public class OverworldController implements Runnable {
     private OverworldView view;
     private OverworldModel model;
 
-    OverworldController(Main main) {
+    OverworldController(Main main, boolean newGame) {
         start = System.currentTimeMillis();
 
         this.main = main;
-        model = new OverworldModel(main.mapSize);
+        model = new OverworldModel(main.mapSize, newGame);
 
         System.out.println("Model init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
 
@@ -195,6 +195,10 @@ public class OverworldController implements Runnable {
                         view.imageViews[xPos][yPos][1].setVisible(true);
                     }
                 }
+            }
+
+            if(event.getCode() == KeyCode.ESCAPE){ // for now save when hit escape
+                model.saveGame();
             }
 
             if (event.getCode() == KeyCode.M) {

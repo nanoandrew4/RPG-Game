@@ -1,5 +1,7 @@
 package game;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -9,6 +11,7 @@ public class OverworldModel {
     /*
         Data holder and handler for all non-graphical code
         Also handles any interaction with model related classes (such as Map) to retrieve data
+        TODO: FIX OUTOFBOUNDS THAT HAPPENS AT FORCE REDIRECT
     */
 
     private double mapTileSize;
@@ -18,9 +21,13 @@ public class OverworldModel {
     private Map map;
     private FileAccess fileAccess = new FileAccess();
 
-    OverworldModel(int mapSize) {
+    OverworldModel(int mapSize, boolean newGame) {
 
-        map = new Map(mapSize);
+        try {
+            map = new Map(mapSize, newGame);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
         fileAccess.loadFile("src/data/player");
         currPos[0] = (int) fileAccess.getFromFile("locationX", "int");
@@ -59,6 +66,13 @@ public class OverworldModel {
     public void setMapTileSize(double mapTileSize) { // sets map tile size to be used by view
         this.mapTileSize = mapTileSize;
     }
+    public void saveGame(){ // saves game
+        try {
+            map.save();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
 
 class Map {
@@ -67,10 +81,11 @@ class Map {
         Map class holds all information related to the overworld map, such as the world gen algorithm and 2D array of type Tile
      */
 
-    Random rand; // random value seeded with current time to use in world gen
+    private Random rand; // random value seeded with current time to use in world gen
+    private DBManager dbManager;
 
     private Tile[][] tiles; // array containing all the information for each tile in the game
-    private int mapSize;
+    private int mapSize = 0;
 
     /*
         Minimum and maximum tiles to be used in world gen by tile type
@@ -83,9 +98,25 @@ class Map {
     private final int MIN_SETTLEMENT;
     private final int MAX_SETTLEMENT;
 
-    Map(int mapSize) {
+    Map(int mapSize, boolean newGame) throws SQLException {
+        dbManager = new DBManager("test");
         rand = new Random(System.currentTimeMillis());
-        this.mapSize = mapSize;
+
+        if(!newGame){
+            ResultSet rs = dbManager.selectFromDatabase("WORLD_DATA");
+
+            while (rs.next()){
+                this.mapSize = rs.getRow();
+            }
+
+            this.mapSize = (int)Math.sqrt(this.mapSize) + 1;
+
+            System.out.println(this.mapSize);
+        }
+        else
+            this.mapSize = mapSize;
+
+        dbManager.setMapSize(this.mapSize);
 
         MIN_MOUNTAIN = (int)(2.5 * mapSize);
         MAX_MOUNTAIN = (int)(3.5 * mapSize);
@@ -94,7 +125,17 @@ class Map {
         MIN_SETTLEMENT = 1 * mapSize;
         MAX_SETTLEMENT = 2 * mapSize;
 
-        tiles = genMap(mapSize);
+        if(newGame){
+            tiles = genMap(mapSize);
+            try {
+                dbManager.createTables();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        else{
+            load();
+        }
     }
 
     public int getMapSize(){ // returns map size
@@ -105,9 +146,67 @@ class Map {
         return tiles;
     }
 
-    public Tile[][] loadMap() { // loads world from database file
-        // use global tiles array
-        return null;
+    public void load() throws SQLException {
+
+        System.out.println("Starting world load");
+
+        long start = System.currentTimeMillis();
+
+        ResultSet rs = dbManager.selectFromDatabase("WORLD_DATA");
+        int x = 0, y = 0;
+
+        tiles = new Tile[mapSize][mapSize];
+
+        while (rs.next()){
+
+            if(x >= mapSize - 1) {
+                x = 0;
+                y++;
+            }
+
+            String type = rs.getString("TYPE");
+            String subType = rs.getString("SUBTYPE");
+            String branch = rs.getString("BRANCH");
+            String name = rs.getString("NAME");
+            int relationship = rs.getInt("RELATIONSHIP");
+
+            if(type.equalsIgnoreCase("Settlement")) // add other dynamic tiles in the future
+                tiles[x][y] = new Tile(type, subType, branch, name, relationship);
+
+            else
+                tiles[x][y] = new Tile(type);
+
+            x++;
+        }
+
+        System.out.println("Load took: " + ((double)(System.currentTimeMillis() - start) / 1000) + "s");
+    }
+
+    public void save() throws SQLException {
+
+        System.out.println("Starting game save");
+        long start = System.currentTimeMillis();
+
+        dbManager.deleteTable("WORLD_DATA");
+        dbManager.createTables();
+
+        dbManager.setAutoCommit(false);
+
+        for (int y = 0; y < mapSize; y++){
+            for(int x = 0; x < mapSize; x++) {
+                if(tiles[x][y].settlementTile != null) {
+                    dbManager.insertIntoTable_WORLD_DATA(tiles[x][y].type, tiles[x][y].settlementTile.subType, tiles[x][y].settlementTile.branch,
+                            tiles[x][y].settlementTile.settlementName, tiles[x][y].settlementTile.relationship);
+                }
+                else
+                    dbManager.insertIntoTable_WORLD_DATA(tiles[x][y].type, null, null, null, 0);
+            }
+        }
+
+        dbManager.commit();
+        dbManager.setAutoCommit(true);
+
+        System.out.println("Game save took: " + ((float)(System.currentTimeMillis() - start) / 1000) + "s");
     }
 
     private String nextWaterTile(String prev, String dir, int x, int y, int mapSize) {
@@ -376,43 +475,43 @@ class Map {
          */
 
         if (dir.equals("north")) {
-            tiles[x][y] = new Tile("WaterE", false, false);
-            tiles[x][y - 1] = new Tile("WaterS", false, false);
+            tiles[x][y] = new Tile("WaterE");
+            tiles[x][y - 1] = new Tile("WaterS");
             if (rand.nextBoolean()) {
-                tiles[x + 1][y - 1] = new Tile("WaterSWSE", false, false);
+                tiles[x + 1][y - 1] = new Tile("WaterSWSE");
                 return "WaterSWSE";
             } else {
-                tiles[x + 1][y - 1] = new Tile("WaterSW", false, false);
+                tiles[x + 1][y - 1] = new Tile("WaterSW");
                 return "WaterSW";
             }
         } else if (dir.equals("east")) {
-            tiles[x][y] = new Tile("WaterS", false, false);
-            tiles[x + 1][y] = new Tile("WaterW", false, false);
+            tiles[x][y] = new Tile("WaterS");
+            tiles[x + 1][y] = new Tile("WaterW");
             if (rand.nextBoolean()) {
-                tiles[x + 1][y + 1] = new Tile("WaterNWSW", false, false);
+                tiles[x + 1][y + 1] = new Tile("WaterNWSW");
                 return "WaterNWSW";
             } else {
-                tiles[x + 1][y + 1] = new Tile("WaterNW", false, false);
+                tiles[x + 1][y + 1] = new Tile("WaterNW");
                 return "WaterNW";
             }
         } else if (dir.equals("south")) {
-            tiles[x][y] = new Tile("WaterW", false, false);
-            tiles[x][y + 1] = new Tile("WaterN", false, false);
+            tiles[x][y] = new Tile("WaterW");
+            tiles[x][y + 1] = new Tile("WaterN");
             if (rand.nextBoolean()) {
-                tiles[x - 1][y + 1] = new Tile("WaterNWNE", false, false);
+                tiles[x - 1][y + 1] = new Tile("WaterNWNE");
                 return "WaterNWNE";
             } else {
-                tiles[x - 1][y + 1] = new Tile("WaterNE", false, false);
+                tiles[x - 1][y + 1] = new Tile("WaterNE");
                 return "WaterNE";
             }
         } else if (dir.equals("west")) {
-            tiles[x][y] = new Tile("WaterN", false, false);
-            tiles[x - 1][y] = new Tile("WaterE", false, false);
+            tiles[x][y] = new Tile("WaterN");
+            tiles[x - 1][y] = new Tile("WaterE");
             if (rand.nextBoolean()) {
-                tiles[x - 1][y - 1] = new Tile("WaterNESE", false, false);
+                tiles[x - 1][y - 1] = new Tile("WaterNESE");
                 return "WaterNESE";
             } else {
-                tiles[x - 1][y - 1] = new Tile("WaterSE", false, false);
+                tiles[x - 1][y - 1] = new Tile("WaterSE");
                 return "WaterSE";
             }
         }
@@ -425,7 +524,8 @@ class Map {
             Core of the world gen algorithm
             Generates coastline in 4 steps, one for each cardinal direction
             Then generates static tiles (lakes, mountains, forests)
-            Lastly generates settlements
+            Generates settlements
+            Fills in null tiles with grass type tiles
          */
 
         Tile[][] tiles = new Tile[mapSize][mapSize];
@@ -452,7 +552,8 @@ class Map {
                 }
                 // change x and y coords to new position
             } else {
-                tiles[x][y] = new Tile(tile, false, false);
+                if(tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                    tiles[x][y] = new Tile(tile);
             }
             y += changeOnAxis(tile, false);
         }
@@ -469,7 +570,8 @@ class Map {
                 x--;
                 y++;
             } else {
-                tiles[x][y] = new Tile(tile, false, false);
+                if(tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                    tiles[x][y] = new Tile(tile);
             }
             x += changeOnAxis(tile, true);
         }
@@ -486,7 +588,8 @@ class Map {
                 x--;
                 y--;
             } else {
-                tiles[x][y] = new Tile(tile, false, false);
+                if(tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                    tiles[x][y] = new Tile(tile);
             }
             y -= changeOnAxis(tile, false);
         }
@@ -503,7 +606,8 @@ class Map {
                 x++;
                 y--;
             } else {
-                tiles[x][y] = new Tile(tile, false, false);
+                if(tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                    tiles[x][y] = new Tile(tile);
             }
             x -= changeOnAxis(tile, true);
         }
@@ -576,7 +680,7 @@ class Map {
                 int randX = rand.nextInt(mapSize) + 2;
                 int randY = rand.nextInt(mapSize) + 2;
                 if (isAreaEmpty(tiles, randX, randY, 1, mapSize)) {
-                    tiles[randX][randY] = new Tile("Settlement", false, true, "Name", "Village", 'c', 50);
+                    tiles[randX][randY] = new Tile("Settlement", "Village", "c", "Name,", 50);
                     break;
                 }
             }
@@ -587,7 +691,7 @@ class Map {
         for (int a = 0; a < mapSize; a++) {
             for (int b = 0; b < mapSize; b++) {
                 if (tiles[b][a] == null)
-                    tiles[b][a] = new Tile("Grass", true, false);
+                    tiles[b][a] = new Tile("Grass");
             }
         }
 
@@ -625,7 +729,7 @@ class Map {
         for (int a = y - radius; a < y + radius; a++)
             for (int b = x - radius; b < x + radius; b++)
                 if (tiles[a][b] == null && rand.nextInt(10) < 7) // 70 percent chance of spawning tile
-                    tiles[a][b] = new Tile(type, false, false);
+                    tiles[a][b] = new Tile(type);
     }
 }
 

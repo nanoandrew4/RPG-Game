@@ -1,4 +1,10 @@
-------------------------28/09/2016------------------------
+------------------------05/09/2016------------------------
+
+++ Save games and loading saves implemented
+
++ Added comments to Controller, View and Model (overworld)
+
+------------------------28/08/2016------------------------
 
 + World gen added, coastline def still WIP, have some bugs to iron out, but all crashes fixed
 
@@ -12,13 +18,13 @@
 
 - Eliminated use of a threadpool, might only be temporary
 
-------------------------03/09/2016------------------------
+------------------------03/08/2016------------------------
 
 + Skeleton code in model added
 
 + Banners for villages added, skeleton code for menus added
 
-----------------------PRE 01/09/2016----------------------
+----------------------PRE 01/08/2016----------------------
 
 + Started constructing the Overworld view and model, implemented basic view without loading
 

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Tile {
+
     boolean tresspassable;
     boolean accessible; // for entering cities
     String type;
@@ -19,25 +20,24 @@ public class Tile {
     }
 
     // for static tiles
-    Tile(String tileType, boolean tresspassable, boolean accesible){
-        this.tresspassable = tresspassable;
+    Tile(String tileType){
         this.type = tileType;
-        this.accessible = accesible;
     }
 
     // for settlements
-    Tile(String tileType, boolean tresspassable, boolean accessible, String name, String subType, char branch, int relationship){
-        this.tresspassable = tresspassable;
-        this.type = tileType;
-        this.accessible = accessible;
-        settlementTile = new SettlementTile(name, subType, branch, relationship);
+    Tile(String type, String subType, String branch, String name, int relationship){
+        this.type = type;
+        settlementTile = new SettlementTile(subType, branch, name, relationship);
     }
+
+    // set tresspasaibility and accessibility based on tile type
+
 }
 
 class SettlementTile extends Tile {
 
     public String subType; // village, city...
-    public char branch; // m for military or c for commercial
+    public String branch; // m for military or c for commercial
     public int relationship;
     public String faction;
     public boolean capitalSettlement;
@@ -51,7 +51,7 @@ class SettlementTile extends Tile {
         capitalSettlement = false;
     }
 
-    SettlementTile(String name, String subType, char branch, int relationship){
+    SettlementTile(String subType, String branch, String name, int relationship){
         accessible = true;
         tresspassable = false;
         this.settlementName = name;

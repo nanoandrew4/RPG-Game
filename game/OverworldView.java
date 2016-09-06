@@ -204,7 +204,7 @@ public class OverworldView {
         ImageView diplomacy = new ImageView(images.diplomacy);
         Text name = new Text(tile.settlementTile.settlementName);
         name.setFont(new Font(10));
-        Text relationship = new Text((tile.settlementTile.relationship >= 0 ? "+" : "-") + tile.settlementTile.relationship);
+        Text relationship = new Text((tile.settlementTile.relationship >= 0 ? "" : "-") + tile.settlementTile.relationship);
         relationship.setFont(new Font(10));
 
         bannerL.relocate(0, boxHeight / 3);
@@ -469,7 +469,7 @@ public class OverworldView {
                 //createButton(trade, screenWidth / 2 + boxWidth / 2 - padding - calcStringWidth("Trade"), screenHeight / 2 + boxHeight / 2 - 50, "Trade"),
                 createText(screenWidth / 2 - calcStringWidth(tile.settlementName) / 2, screenHeight / 2 - (boxHeight / 2) + 20, tile.settlementName, 24),
                 createText(screenWidth / 2 - calcStringWidth(tile.subType) / 2, screenHeight / 2 - (boxHeight / 2) + 40, tile.subType, 16),
-                createText(screenWidth / 2 - boxWidth / 2 + padding, screenHeight / 2 - (boxHeight / 2) + 55, "Type: " + (tile.branch == 'm' ? "Military" : "Commercial"), 12),
+                createText(screenWidth / 2 - boxWidth / 2 + padding, screenHeight / 2 - (boxHeight / 2) + 55, "Type: " + (tile.branch.equals("m") ? "Military" : "Commercial"), 12),
                 createText(screenWidth / 2 - boxWidth / 2 + padding, screenHeight / 2 - (boxHeight / 2) + 70, "Relationship: " + tile.relationship, 12)
         );
         overworldLayout.getChildren().add(infoBox);
