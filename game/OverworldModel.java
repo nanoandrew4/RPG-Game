@@ -1,7 +1,3 @@
-/*
-    Data holder and handler for all non-graphical code
-*/
-
 package game;
 
 import java.util.ArrayList;
@@ -9,125 +5,122 @@ import java.util.List;
 import java.util.Random;
 
 public class OverworldModel {
+
+    /*
+        Data holder and handler for all non-graphical code
+        Also handles any interaction with model related classes (such as Map) to retrieve data
+    */
+
     private double mapTileSize;
-    private int mapSize, zoom = 6;
+    private int zoom = 6;
     private int[] currPos = new int[2];
 
-    private Tile[][] tiles;
-
-    private Map map = new Map();
+    private Map map;
     private FileAccess fileAccess = new FileAccess();
 
     OverworldModel(int mapSize) {
 
-        this.mapSize = mapSize;
-
-        tiles = new Tile[mapSize][mapSize];
+        map = new Map(mapSize);
 
         fileAccess.loadFile("src/data/player");
         currPos[0] = (int) fileAccess.getFromFile("locationX", "int");
         currPos[1] = (int) fileAccess.getFromFile("locationY", "int");
 
-        tiles = map.genMap(mapSize);
     }
 
-    public Tile[][] getTiles() {
-        return tiles;
+    public Tile[][] getTiles() { // returns 2D array of type Tile
+        return map.getTiles();
     }
 
-    public int getMapSize() {
-        return mapSize;
+    public int getMapSize() { // returns map size
+        return map.getMapSize();
     }
 
-    public int getZoom() {
+    public int getZoom() { // returns zoom
         return zoom;
     }
 
-    public double getMapTileSize() {
+    public double getMapTileSize() { // returns the tile size to be used
         return mapTileSize;
     }
 
-    public int[] getCurrPos() {
+    public int[] getCurrPos() { // returns current position on overworld, x -> 0 and y -> 1
         return currPos;
     }
 
-    public int getCurrPos(int index) {
+    public int getCurrPos(int index) { // returns position specified by index, x -> 0 and y -> 1
         return currPos[index];
     }
 
-    public void setCurrPos(int index, int sum) {
+    public void setCurrPos(int index, int sum) { // sets current pos at index to current value plus sum
         currPos[index] += sum;
     }
 
-    public void setMapTileSize(double mapTileSize) {
+    public void setMapTileSize(double mapTileSize) { // sets map tile size to be used by view
         this.mapTileSize = mapTileSize;
-    }
-
-    public void gameInit() {
-
-        while (true) {
-
-        }
-        // notify controller?
-    }
-
-    private void sleep(long time) {
-        long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < time) ;
     }
 }
 
 class Map {
 
-    Random rand;
+    /*
+        Map class holds all information related to the overworld map, such as the world gen algorithm and 2D array of type Tile
+     */
 
-    private final int MIN_MOUNTAIN = 2500;
-    private final int MAX_MOUNTAIN = 3500;
-    private final int MIN_FOREST = 15000;
-    private final int MAX_FOREST = 20000;
-    private final int MIN_SETTLEMENT = 2000;
-    private final int MAX_SETTLEMENT = 1000;
+    Random rand; // random value seeded with current time to use in world gen
 
-    Map() {
+    private Tile[][] tiles; // array containing all the information for each tile in the game
+    private int mapSize;
+
+    /*
+        Minimum and maximum tiles to be used in world gen by tile type
+     */
+
+    private final int MIN_MOUNTAIN;
+    private final int MAX_MOUNTAIN;
+    private final int MIN_FOREST;
+    private final int MAX_FOREST;
+    private final int MIN_SETTLEMENT;
+    private final int MAX_SETTLEMENT;
+
+    Map(int mapSize) {
         rand = new Random(System.currentTimeMillis());
+        this.mapSize = mapSize;
+
+        MIN_MOUNTAIN = (int)(2.5 * mapSize);
+        MAX_MOUNTAIN = (int)(3.5 * mapSize);
+        MIN_FOREST = 15 * mapSize;
+        MAX_FOREST = 20 * mapSize;
+        MIN_SETTLEMENT = 1 * mapSize;
+        MAX_SETTLEMENT = 2 * mapSize;
+
+        tiles = genMap(mapSize);
     }
 
-    public Tile[][] loadMap() { // maybe just void
+    public int getMapSize(){ // returns map size
+        return mapSize;
+    }
+
+    public Tile[][] getTiles(){
+        return tiles;
+    }
+
+    public Tile[][] loadMap() { // loads world from database file
         // use global tiles array
         return null;
     }
 
-    public Tile[][] tmpgenMap(int mapSize) {
-        Tile[][] tiles = new Tile[mapSize][mapSize];
-        long start = System.currentTimeMillis();
-
-        for (int y = 0; y < mapSize; y++) {
-            for (int x = 0; x < mapSize; x++) {
-                int randNum = rand.nextInt(100);
-                if (randNum < 30)
-                    tiles[x][y] = new Tile("ForestLight", true, false);
-                if (randNum >= 30 && randNum < 31)
-                    tiles[x][y] = new Tile("Settlement", true, true, "Name", "Village", 'c', 50);
-                if (randNum >= 31 && randNum < 95)
-                    tiles[x][y] = new Tile("Grass", true, false);
-                if (randNum >= 95 && randNum < 100)
-                    tiles[x][y] = new Tile("Mountain", true, false);
-            }
-        }
-
-        System.out.println("Loading world arr took " + (double) (System.currentTimeMillis() - start) / 1000);
-
-        return tiles;
-    }
-
     private String nextWaterTile(String prev, String dir, int x, int y, int mapSize) {
-        // if returns null, force redirect of direction must happen to prevent outOfBoundsException
+
+        /*
+            Determines which water tile can come after the current one, and assigns scores to each possibility
+            Straight lines get better scores because they shorten the runtime of the algorithm
+            If the function return null, it calls the force redirect function to prevent going beyond the limits of the array
+            Code is purposefully redundant to improve performance (inside the if statements)
+         */
+
         String[] possibleDirections = getPossibleDirections(prev);
         int[] priority = new int[possibleDirections.length];
-
-        // IMPORTANT: CODE IS REDUNDANT FOR SPEED, TO MINIMIZE OPERATIONS SINCE WORLD GEN WILL BE TAKING TONS OF CALCULATION
-        // MIGHT REDUCE REDUNDANCY IN THE FUTURE
-        // Depending on direction, eliminate some options since they only work one way
 
         // TODO: REVERSE COORD DIRECTION OF BONUSES FOR TILES AND FOR LIMITING (IF AND LOOP)
         // TODO: FORMULA FOR PREFERENCE OF 5,7,9 LETTER WATER TILES BASED ON PROXIMITY TO EDGE OF MAP
@@ -140,12 +133,12 @@ class Map {
 
         if (dir.equalsIgnoreCase("north")) {
             for (int strings = 0; strings < possibleDirections.length - 1; strings++) {
-                if (possibleDirections[strings].length() == 7) // NW NE SW SE, preferable
+                if (possibleDirections[strings].length() == 7)
                     priority[strings] += 5;
                 else if (possibleDirections[strings].length() == 9)
                     priority[strings] += 3;
                 else
-                    priority[strings]++; // N W S E least preferable since they make the algorithm run longer with abrupt changes in direction
+                    priority[strings]++;
                 if (possibleDirections[strings].contains("SE"))
                     priority[strings] += (1 / 8) * Math.pow(x - ((2 + (mapSize / 50)) / 2), 2);
                 else
@@ -158,7 +151,7 @@ class Map {
                 else if (possibleDirections[strings].length() == 9)
                     priority[strings] += 3;
                 else
-                    priority[strings]++; // N W S E least preferable since they make the algorithm run longer with abrupt changes in direction
+                    priority[strings]++;
                 if (possibleDirections[strings].contains("SW"))
                     priority[strings] += (1 / 8) * Math.pow(y - ((2 + (mapSize / 50)) / 2), 2);
                 else
@@ -166,12 +159,12 @@ class Map {
             }
         } else if (dir.equalsIgnoreCase("south")) {
             for (int strings = 0; strings < possibleDirections.length - 1; strings++) {
-                if (possibleDirections[strings].length() == 7) // NW NE SW SE, preferable
+                if (possibleDirections[strings].length() == 7)
                     priority[strings] += 5;
                 else if (possibleDirections[strings].length() == 9)
                     priority[strings] += 3;
                 else
-                    priority[strings]++; // N W S E least preferable since they make the algorithm run longer with abrupt changes in direction
+                    priority[strings]++;
                 if (possibleDirections[strings].contains("SE"))
                     priority[strings] += (1 / 8) * Math.pow(x - ((2 + (mapSize / 50)) / 2), 2);
                 else
@@ -179,12 +172,12 @@ class Map {
             }
         } else if (dir.equalsIgnoreCase("east")) {
             for (int strings = 0; strings < possibleDirections.length - 1; strings++) {
-                if (possibleDirections[strings].length() == 7) // NW NE SW SE, preferable
+                if (possibleDirections[strings].length() == 7)
                     priority[strings] += 5;
                 else if (possibleDirections[strings].length() == 9)
                     priority[strings] += 3;
                 else
-                    priority[strings]++; // N W S E least preferable since they make the algorithm run longer with abrupt changes in direction
+                    priority[strings]++;
                 if (possibleDirections[strings].contains("NE"))
                     priority[strings] += (1 / 8) * Math.pow(y - ((2 + (mapSize / 50)) / 2), 2);
                 else
@@ -192,7 +185,7 @@ class Map {
             }
         }
 
-        for (int a = 0; a < possibleDirections.length; a++) // may be redundant
+        for (int a = 0; a < possibleDirections.length; a++) // checks that no negative values will be passed
             if (priority[a] < 0)
                 priority[a] = 0;
 
@@ -200,6 +193,11 @@ class Map {
     }
 
     private int chooseString(int[] priority) {
+
+        /*
+            Chooses a random direction to go in, but statistically the better choices have higher chances of being picked
+         */
+
         int num = rand.nextInt(priority[0] + priority[1] + priority[2] + priority[3] + priority[4]);
         if (num < priority[0])
             return 0;
@@ -215,7 +213,9 @@ class Map {
 
     private String[] getPossibleDirections(String prev) {
 
-        // returns possible next tiles using the previous one
+        /*
+            Returns the tiles that match up with the previous one (on all sides)
+         */
 
         String[] dirs = new String[5];
 
@@ -296,73 +296,85 @@ class Map {
         return dirs;
     }
 
-    private int changeOnAxis(String tile, boolean x) { // if to continue, wait on currPos or go backwards
-        // if change on x is wanted, true, else, false
-        if (tile.equals("WaterSW")) {
-            if (x)
-                return 1;
-            else
+    private int changeOnAxis(String tile, boolean x) {
+
+        /*
+            Returns change in position the algorithm should make to continue generating the coastline
+         */
+
+        switch (tile) {
+            case "WaterSW":
+                if (x)
+                    return 1;
+                else
+                    return 0;
+            case "WaterW":
+                if (x)
+                    return 0;
+                else
+                    return 1;
+            case "WaterSWSE":
+                if (x)
+                    return 0;
+                else
+                    return -1;
+            case "WaterNW":
+                if (x)
+                    return 0;
+                else
+                    return 1;
+            case "WaterNWSW":
+                if (x)
+                    return 1;
+                else
+                    return 0;
+            case "WaterN":
+                if (x)
+                    return -1;
+                else
+                    return 0;
+            case "WaterNE":
+                if (x)
+                    return -1;
+                else
+                    return 0;
+            case "WaterE":
+                if (x)
+                    return 0;
+                else
+                    return -1;
+            case "WaterNESE":
+                if (x)
+                    return -1;
+                else
+                    return 0;
+            case "WaterSE":
+                if (x)
+                    return 0;
+                else
+                    return -1;
+            case "WaterS":
+                if (x)
+                    return 1;
+                else
+                    return 0;
+            case "WaterNWNE":
+                if (x)
+                    return 0;
+                else
+                    return 1;
+            default:
                 return 0;
-        } else if (tile.equals("WaterW")) {
-            if (x)
-                return 0;
-            else
-                return 1;
-        } else if (tile.equals("WaterSWSE")) {
-            if (x)
-                return 0;
-            else
-                return -1;
-        } else if (tile.equals("WaterNW")) {
-            if (x)
-                return 0;
-            else
-                return 1;
-        } else if (tile.equals("WaterNWSW")) {
-            if (x)
-                return 1;
-            else
-                return 0;
-        } else if (tile.equals("WaterN")) {
-            if (x)
-                return -1;
-            else
-                return 0;
-        } else if (tile.equals("WaterNE")) {
-            if (x)
-                return -1;
-            else
-                return 0;
-        } else if (tile.equals("WaterE")) {
-            if (x)
-                return 0;
-            else
-                return -1;
-        } else if (tile.equals("WaterNESE")) {
-            if (x)
-                return -1;
-            else
-                return 0;
-        } else if (tile.equals("WaterSE")) {
-            if (x)
-                return 0;
-            else
-                return -1;
-        } else if (tile.equals("WaterS")) {
-            if (x)
-                return 1;
-            else
-                return 0;
-        } else if (tile.equals("WaterNWNE")) {
-            if (x)
-                return 0;
-            else
-                return 1;
-        } else // maybe input manually for special scenarios...?
-            return 0;
+        }
     }
 
     private String forceRedirect(Tile[][] tiles, int x, int y, String dir) {
+
+        /*
+            Called when algorithm gets too close to the limits of the array
+            Turns the direction around by force placing tiles
+         */
+
         if (dir.equals("north")) {
             tiles[x][y] = new Tile("WaterE", false, false);
             tiles[x][y - 1] = new Tile("WaterS", false, false);
@@ -407,7 +419,15 @@ class Map {
         return null; // should not
     }
 
-    public Tile[][] genMap(int mapSize) {
+    private Tile[][] genMap(int mapSize) {
+
+        /*
+            Core of the world gen algorithm
+            Generates coastline in 4 steps, one for each cardinal direction
+            Then generates static tiles (lakes, mountains, forests)
+            Lastly generates settlements
+         */
+
         Tile[][] tiles = new Tile[mapSize][mapSize];
 
         System.out.println("Starting water tiles gen");
@@ -505,6 +525,7 @@ class Map {
             }
         }
 */
+        // END WATER TILES GEN
         //////////////////////////////////////////////////////////
 
         System.out.println("Finished water tiles gen");
@@ -581,6 +602,12 @@ class Map {
     }
 
     private boolean isAreaEmpty(Tile[][] tiles, int x, int y, int radius, int mapSize) {
+
+        /*
+            Returns true if the area has not been yet initialized or is not out of bounds
+            Returns false if any part of the area has been initialized or is out of bounds
+         */
+
         for (int a = y - radius; a < y + radius; a++)
             for (int b = x - radius; b < x + radius; b++)
                 if (a < 0 || b < 0 || a >= mapSize || b >= mapSize || tiles[a][b] != null)
@@ -590,6 +617,11 @@ class Map {
     }
 
     private void populateArea(Tile[][] tiles, int x, int y, int radius, String type) {
+
+        /*
+            Populates area of radius radius in a square with a center at x, y with tiles of type type
+         */
+
         for (int a = y - radius; a < y + radius; a++)
             for (int b = x - radius; b < x + radius; b++)
                 if (tiles[a][b] == null && rand.nextInt(10) < 7) // 70 percent chance of spawning tile
@@ -598,6 +630,10 @@ class Map {
 }
 
 class Faction {
+
+    /*
+        Class contains all data related to factions
+     */
 
     String kingdomName;
     String capitalSettlement;

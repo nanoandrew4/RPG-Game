@@ -24,7 +24,7 @@ public class OverworldController implements Runnable {
     private float zoomMultiplier = 2.5f;
     private boolean controlsLocked = false;
 
-    long start;
+    long start; // for timing the creation of the Model and View
 
     private OverworldView view;
     private OverworldModel model;
@@ -59,6 +59,11 @@ public class OverworldController implements Runnable {
     }
 
     private void getScene() {
+
+        /*
+            Gets scene from the View and passes it to main to be displayed
+         */
+
         scene = view.initDisplay(model.getTiles(), main.screenWidth, main.screenHeight, (int) (model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getMapSize());
         setMouseEvents();
         setInput(scene);
@@ -67,6 +72,11 @@ public class OverworldController implements Runnable {
     }
 
     private double[] calcAngles(double yOffset, double xOffset) {
+
+        /*
+            Calculates and returns angles from current position on tile to leftmost and rightmost point
+         */
+
         double[] tmpArr = new double[2]; // stores langle, rangle
         while (xOffset > model.getMapTileSize() / 2)
             xOffset -= model.getMapTileSize();
@@ -87,7 +97,13 @@ public class OverworldController implements Runnable {
         return tmpArr;
     }
 
-    private void detectTileChange() { //
+    private void detectTileChange() {
+
+        /*
+            Algorithm to detect whether there has been a change in tile (user moved off tile on to adjacent one)
+            TODO: WIP
+         */
+
         // getMapTileSize() / 2 is the max the actual offset from the centre of any tile, horizontally (vertically divide by 4)
         double xOffset = -view.xOffset; // offset from centre of nearest tile, negative to make right positive
         double yOffset = view.yOffset; // offset from centre of nearest tile
@@ -144,6 +160,10 @@ public class OverworldController implements Runnable {
     }
 
     private void setInput(Scene scene) {
+
+        /*
+            Maps keyboard inputs to various functions, such as movement of screen
+         */
 
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
 
@@ -233,6 +253,11 @@ public class OverworldController implements Runnable {
     }
 
     private void setMouseEvents() {
+
+        /*
+            Maps click events to functions
+         */
+
         System.out.println("Setting click events");
         for (int y = model.getCurrPos(1) - (int) (model.getZoom() * zoomMultiplier); y < model.getCurrPos(1) + (int) (model.getZoom() * zoomMultiplier); y++) {
             for (int x = model.getCurrPos(0) - (int) (model.getZoom() * zoomMultiplier); x < model.getCurrPos(0) + (int) (model.getZoom() * zoomMultiplier); x++) {
@@ -262,24 +287,28 @@ public class OverworldController implements Runnable {
                     view.imageViews[x][y][0].addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
                         @Override
                         public void handle(MouseEvent event) {
+                            // if mouse is on a settlement tile, show banner for settlement
                             model.getTiles()[finalX][finalY].banner.setVisible(true);
                         }
                     });
                     view.imageViews[x][y][0].addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
                         @Override
                         public void handle(MouseEvent event) {
+                            // if mouse leaves settlement tile, hide banner
                             model.getTiles()[finalX][finalY].banner.setVisible(false);
                         }
                     });
                     model.getTiles()[finalX][finalY].banner.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
                         @Override
                         public void handle(MouseEvent event) {
+                            // if mouse is on banner, show banner
                             model.getTiles()[finalX][finalY].banner.setVisible(true);
                         }
                     });
                     model.getTiles()[finalX][finalY].banner.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
                         @Override
                         public void handle(MouseEvent event) {
+                            // if mouse leaves banner, hide banner
                             model.getTiles()[finalX][finalY].banner.setVisible(false);
                         }
                     });
@@ -290,6 +319,8 @@ public class OverworldController implements Runnable {
 
                     @Override
                     public void handle(MouseEvent event) {
+
+                        // shows tile information when tile is clicked and handles all buttons in windows opened
 
                         if (controlsLocked)
                             return;

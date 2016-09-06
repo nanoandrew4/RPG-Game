@@ -50,12 +50,12 @@ public class FileAccess{
         return o; // return the string if none applicable
     }
 
-    public void loadDatabase(String url) {
+    public void loadDatabase(String name) {
 
-        String user = "user";
-        String pass = "pass";
+        String URL = "jdbc:sqlite:data/" + name + ".db";
+
         try {
-            c = DriverManager.getConnection(url, user, pass);
+            c = DriverManager.getConnection(name);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -67,8 +67,7 @@ public class FileAccess{
             ResultSet rs = s.executeQuery(query);
 
             while (rs.next()){
-                // run stuff
-                // rs.getInt();
+
             }
 
             rs.close();

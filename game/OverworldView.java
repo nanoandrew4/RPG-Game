@@ -1,11 +1,5 @@
 package game;
 
-/*
-    Displays all graphical elements of the overworld with data from the model provided by the controller
-
-    TODO: CHANGE ALL STATIC ARBITRARY VALUES IN LOWER CLASSES TO WORK ON ALL DISPLAYS EQUALLY
- */
-
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.LongProperty;
@@ -26,6 +20,10 @@ import java.awt.image.BufferedImage;
 import java.util.Stack;
 
 class Images {
+
+    /*
+        Class contains and loads all images to be used by view in individual imageviews
+     */
 
     Image tileBorder;
 
@@ -84,7 +82,17 @@ class Images {
 
 public class OverworldView {
 
+    /*
+        Displays all graphical elements of the overworld with data from the model provided by the controller
+
+        TODO: CHANGE ALL STATIC ARBITRARY VALUES IN LOWER CLASSES TO WORK ON ALL DISPLAYS EQUALLY
+     */
+
     Images images;
+
+    /*
+        Vars to be used for moving animation
+     */
 
     public double speedXVal;
     public double speedYVal;
@@ -112,6 +120,10 @@ public class OverworldView {
     }
 
     public Scene initDisplay(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize) {
+
+        /*
+            Loads the initial set of tiles for display based on current position
+         */
 
         System.out.println("Loading images");
 
@@ -173,6 +185,11 @@ public class OverworldView {
     }
 
     private void genBanner(double width, double height, Tile tile) {
+
+        /*
+            Generates the banner graphical element to overlay over each settlement
+         */
+
         tile.banner = new Pane();
 
         double boxWidth = width;
@@ -203,6 +220,10 @@ public class OverworldView {
     }
 
     private ImageView genTile(int xPos, int yPos, Tile[][] tiles) {
+
+        /*
+            Generates the imageview with the image from Image class based on the data from the model
+         */
 
         ImageView img = new ImageView();
         String type = tiles[xPos][yPos].type;
@@ -249,6 +270,12 @@ public class OverworldView {
     }
 
     public void addRow(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize, boolean top) {
+
+        /*
+            Adds a row when a tile change on the y axis is detected
+            TODO: WIP
+         */
+
         System.out.println("Adding row");
         if ((top && currPos[1] + (zoom) + 1 < mapSize) || (!top && currPos[1] + (zoom) - 1 > 0)) {
             int y = top ? -zoom : zoom;
@@ -269,6 +296,12 @@ public class OverworldView {
     }
 
     public void addColumn(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize, boolean right) {
+
+        /*
+            Adds a column when a tile change on the x axis is detected
+            TODO: WIP
+         */
+
         System.out.println("Adding column");
         if ((right && currPos[0] + (zoom) + 1 < mapSize) || (!right && currPos[0] + (zoom) - 1 > 0)) {
             int x = right ? zoom / 2 : -zoom / 2;
@@ -289,6 +322,11 @@ public class OverworldView {
     }
 
     private void removeRow(boolean top, int[] currPos, int zoom, int mapSize) {
+
+        /*
+            Removes a row opposite the new row created (this method is only called by newRow)
+         */
+
         if ((top && currPos[1] + (zoom) + 1 < mapSize) || (!top && currPos[1] + (zoom) - 1 > 0)) {
             int y = top ? -zoom : zoom;
             int yPos = currPos[1] + y;
@@ -303,6 +341,11 @@ public class OverworldView {
     }
 
     private void removeColumn(boolean right, int[] currPos, int zoom, int mapSize) {
+
+        /*
+            Removes column opposite the new column created (this method is only called by newColumn)
+         */
+
         if ((right && currPos[0] + (zoom) + 1 < mapSize) || (!right && currPos[0] + (zoom) - 1 > 0)) {
             int x = right ? zoom / 2 : -zoom / 2;
             int xPos = currPos[0] + x;
@@ -317,6 +360,11 @@ public class OverworldView {
     }
 
     private void setMoveAnim(ImageView imageView) {
+
+        /*
+            Sets the movement animation of a tile (imageview)
+         */
+
         new AnimationTimer() {
             @Override
             public void handle(long timestamp) {
@@ -340,6 +388,11 @@ public class OverworldView {
     }
 
     private void setMoveAnim(Pane pane) {
+
+        /*
+            Sets the movement animation for a Pane object
+         */
+
         new AnimationTimer() {
             @Override
             public void handle(long timestamp) {
@@ -363,6 +416,10 @@ public class OverworldView {
     }
 
     public void showTileInfo(Tile tile) {
+
+        /*
+            Shows the information of the clicked tile. Click event handled by controller
+         */
 
         // TODO: BUTTON RELOCATING NEEDS IMPROVING
 
@@ -389,6 +446,11 @@ public class OverworldView {
     }
 
     public void showSettlementInfo(SettlementTile tile) {
+
+        /*
+            Shows the information of a settlement tile. Click event handled by controller
+         */
+
         infoBox = new Pane();
 
         paneStack.push(infoBox);
@@ -414,6 +476,11 @@ public class OverworldView {
     }
 
     private Text createText(double x, double y, String string, int font) { // font size
+
+        /*
+            Creates and returns a text object at coords x, y with text string and font font
+         */
+
         Text text = new Text(x, y, string);
         text.setFont(new Font(font));
 
@@ -421,22 +488,41 @@ public class OverworldView {
     }
 
     private Button createButton(Button button, double x, double y, String string) {
+
+        /*
+            Creates and returns a button object at coords x, y and with text string
+         */
+
         button.setPadding(Insets.EMPTY);
         button.relocate(x, y);
         return button;
     }
 
     private double calcStringWidth(String string) {
+
+        /*
+            Calculates and returns the width of string (graphical element)
+         */
+
         BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         java.awt.FontMetrics fm = img.getGraphics().getFontMetrics();
         return fm.stringWidth(string); // for variable font size
     }
 
     public void removePane(Pane pane) {
+
+        /*
+            Removes a pane (window) from the GUI
+         */
+
         overworldLayout.getChildren().remove(pane);
     }
 
     public void showCityManagement(SettlementTile tile) {
+
+        /*
+            Creates and displays the city management window
+         */
 
         managmentBox = new Pane();
 
@@ -472,6 +558,10 @@ public class OverworldView {
     }
 
     public Scene displayMap(Tile[][] tiles, int mapSize, double screenWidth, double screenHeight) {
+
+        /*
+            Displays the whole world array, for dev purposes only
+         */
 
         // TODO: FIT BETTER IN SCREEN AND LOAD DURING GAME LOAD SO SCENE IS READY FOR DISPLAY
 
