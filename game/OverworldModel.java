@@ -12,6 +12,7 @@ public class OverworldModel {
         Data holder and handler for all non-graphical code
         Also handles any interaction with model related classes (such as Map) to retrieve data
         TODO: FIX OUTOFBOUNDS THAT HAPPENS AT FORCE REDIRECT
+        TODO: FIX COASTLINE GEN
     */
 
     private double mapTileSize;
@@ -66,7 +67,8 @@ public class OverworldModel {
     public void setMapTileSize(double mapTileSize) { // sets map tile size to be used by view
         this.mapTileSize = mapTileSize;
     }
-    public void saveGame(){ // saves game
+
+    public void saveGame() { // saves game
         try {
             map.save();
         } catch (SQLException e) {
@@ -102,47 +104,45 @@ class Map {
         dbManager = new DBManager("test");
         rand = new Random(System.currentTimeMillis());
 
-        if(!newGame){
+        if (!newGame) {
             ResultSet rs = dbManager.selectFromDatabase("WORLD_DATA");
 
-            while (rs.next()){
+            while (rs.next()) {
                 this.mapSize = rs.getRow();
             }
 
-            this.mapSize = (int)Math.sqrt(this.mapSize) + 1;
+            this.mapSize = (int) Math.sqrt(this.mapSize) + 1;
 
             System.out.println(this.mapSize);
-        }
-        else
+        } else
             this.mapSize = mapSize;
 
         dbManager.setMapSize(this.mapSize);
 
-        MIN_MOUNTAIN = (int)(2.5 * mapSize);
-        MAX_MOUNTAIN = (int)(3.5 * mapSize);
+        MIN_MOUNTAIN = (int) (2.5 * mapSize);
+        MAX_MOUNTAIN = (int) (3.5 * mapSize);
         MIN_FOREST = 15 * mapSize;
         MAX_FOREST = 20 * mapSize;
         MIN_SETTLEMENT = 1 * mapSize;
         MAX_SETTLEMENT = 2 * mapSize;
 
-        if(newGame){
+        if (newGame) {
             tiles = genMap(mapSize);
             try {
                 dbManager.createTables();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        }
-        else{
+        } else {
             load();
         }
     }
 
-    public int getMapSize(){ // returns map size
+    public int getMapSize() { // returns map size
         return mapSize;
     }
 
-    public Tile[][] getTiles(){
+    public Tile[][] getTiles() {
         return tiles;
     }
 
@@ -157,9 +157,9 @@ class Map {
 
         tiles = new Tile[mapSize][mapSize];
 
-        while (rs.next()){
+        while (rs.next()) {
 
-            if(x >= mapSize - 1) {
+            if (x >= mapSize - 1) {
                 x = 0;
                 y++;
             }
@@ -170,7 +170,7 @@ class Map {
             String name = rs.getString("NAME");
             int relationship = rs.getInt("RELATIONSHIP");
 
-            if(type.equalsIgnoreCase("Settlement")) // add other dynamic tiles in the future
+            if (type.equalsIgnoreCase("Settlement")) // add other dynamic tiles in the future
                 tiles[x][y] = new Tile(type, subType, branch, name, relationship);
 
             else
@@ -179,7 +179,7 @@ class Map {
             x++;
         }
 
-        System.out.println("Load took: " + ((double)(System.currentTimeMillis() - start) / 1000) + "s");
+        System.out.println("Load took: " + ((double) (System.currentTimeMillis() - start) / 1000) + "s");
     }
 
     public void save() throws SQLException {
@@ -192,13 +192,12 @@ class Map {
 
         dbManager.setAutoCommit(false);
 
-        for (int y = 0; y < mapSize; y++){
-            for(int x = 0; x < mapSize; x++) {
-                if(tiles[x][y].settlementTile != null) {
+        for (int y = 0; y < mapSize; y++) {
+            for (int x = 0; x < mapSize; x++) {
+                if (tiles[x][y].settlementTile != null) {
                     dbManager.insertIntoTable_WORLD_DATA(tiles[x][y].type, tiles[x][y].settlementTile.subType, tiles[x][y].settlementTile.branch,
                             tiles[x][y].settlementTile.settlementName, tiles[x][y].settlementTile.relationship);
-                }
-                else
+                } else
                     dbManager.insertIntoTable_WORLD_DATA(tiles[x][y].type, null, null, null, 0);
             }
         }
@@ -206,7 +205,7 @@ class Map {
         dbManager.commit();
         dbManager.setAutoCommit(true);
 
-        System.out.println("Game save took: " + ((float)(System.currentTimeMillis() - start) / 1000) + "s");
+        System.out.println("Game save took: " + ((float) (System.currentTimeMillis() - start) / 1000) + "s");
     }
 
     private String nextWaterTile(String prev, String dir, int x, int y, int mapSize) {
@@ -218,7 +217,7 @@ class Map {
             Code is purposefully redundant to improve performance (inside the if statements)
          */
 
-        String[] possibleDirections = getPossibleDirections(prev);
+        String[] possibleDirections = getPossibleDirections(prev, dir);
         int[] priority = new int[possibleDirections.length];
 
         // TODO: REVERSE COORD DIRECTION OF BONUSES FOR TILES AND FOR LIMITING (IF AND LOOP)
@@ -310,7 +309,7 @@ class Map {
             return 4;
     }
 
-    private String[] getPossibleDirections(String prev) {
+    private String[] getPossibleDirections(String prev, String currDir) {
 
         /*
             Returns the tiles that match up with the previous one (on all sides)
@@ -318,6 +317,11 @@ class Map {
 
         String[] dirs = new String[5];
 
+        if (currDir.equalsIgnoreCase("north")) {
+
+        }
+
+        /*
         if (prev.contains("NWSW")) {
             dirs[0] = "WaterSWSE";
             dirs[1] = "WaterNWNE";
@@ -342,7 +346,9 @@ class Map {
             dirs[2] = "WaterNE";
             dirs[3] = "WaterSE";
             dirs[4] = "WaterE";
-        } else if (prev.contains("NW")) {
+        }
+            */
+        if (prev.contains("NW")) {
             dirs[0] = "WaterNWSW";
             dirs[1] = "WaterNWNE";
             dirs[2] = "WaterN";
@@ -552,7 +558,7 @@ class Map {
                 }
                 // change x and y coords to new position
             } else {
-                if(tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
                     tiles[x][y] = new Tile(tile);
             }
             y += changeOnAxis(tile, false);
@@ -570,7 +576,7 @@ class Map {
                 x--;
                 y++;
             } else {
-                if(tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
                     tiles[x][y] = new Tile(tile);
             }
             x += changeOnAxis(tile, true);
@@ -588,7 +594,7 @@ class Map {
                 x--;
                 y--;
             } else {
-                if(tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
                     tiles[x][y] = new Tile(tile);
             }
             y -= changeOnAxis(tile, false);
@@ -606,7 +612,7 @@ class Map {
                 x++;
                 y--;
             } else {
-                if(tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
                     tiles[x][y] = new Tile(tile);
             }
             x -= changeOnAxis(tile, true);

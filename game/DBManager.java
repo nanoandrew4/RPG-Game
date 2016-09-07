@@ -20,7 +20,7 @@ public class DBManager {
     private int batchNum = 0, mapSize;
     private PreparedStatement ps;
 
-    DBManager(String name){
+    DBManager(String name) {
 
         String URL = "jdbc:sqlite:src/data/" + name + ".db";
 
@@ -54,17 +54,16 @@ public class DBManager {
     public void insertIntoTable_WORLD_DATA(String type, String subType, String branch, String name, int relationship) throws SQLException {
 
         /*
-            Makes batches of 1000 queries to process at once (speeds up save time A LOT)
+            Makes batches of mapSize queries to process at once (speeds up save time A LOT)
          */
 
-        if(batchNum == 0)
+        if (batchNum == 0)
             ps = c.prepareStatement("INSERT INTO WORLD_DATA VALUES(?, ?, ?, ?, ?)");
 
-        if(batchNum >= mapSize) {
+        if (batchNum >= mapSize) {
             ps.executeBatch();
             batchNum = 0;
-        }
-        else{
+        } else {
             ps.setString(1, type);
             ps.setString(2, subType);
             ps.setString(3, branch);
@@ -88,7 +87,7 @@ public class DBManager {
         c.commit();
     }
 
-    public void closeDatabase(){
+    public void closeDatabase() {
         try {
             c.close();
             statement.close();
@@ -97,7 +96,7 @@ public class DBManager {
         }
     }
 
-    public void setMapSize(int mapSize){
+    public void setMapSize(int mapSize) {
         this.mapSize = mapSize;
     }
 }
