@@ -8,7 +8,7 @@ package inmap;
 public class Location {
     int baseFloor, currentFloor, difficulty, size;
     String name, type;
-    Floor[] floors;
+    private Floor[] floors;
     
     //random constructor
     Location() {
@@ -16,7 +16,7 @@ public class Location {
         size = (int)(Math.random() * 5 + 1); 
         floors = new Floor[size];
         for(int i = 0; i < size; i++) {
-            floors[i] = new Floor(difficulty, 10, 10);
+            floors[i] = new Floor(difficulty, 20, 12);
         }
     }
     
