@@ -1,18 +1,18 @@
 /*
-    Controller for InMap.
+    Console controller for InMap.
  */
 
 package inmap;
 
 import java.util.*;
 
-public class InMapController {
+public class InMapCController {
     InMapModel map;
-    InMapView view;
+    InMapCView view;
     
     void run() {
         map = new InMapModel();
-        view = new InMapView();
+        view = new InMapCView();
         view.display(map.getCurrentLocation().getCurrentFloor());
         
         Scanner in = new Scanner(System.in);
