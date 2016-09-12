@@ -6,7 +6,7 @@
 package inmap;
 
 public class Floor {
-    int sizeX, sizeY, difficulty;
+    int sizeX, sizeY, difficulty, number;
     Tile[][] tiles;
     Character[][] chars;
     Character[] party; //[0] is the hero
@@ -17,6 +17,7 @@ public class Floor {
     Floor(int diff, int sX, int sY) {
         //init
         difficulty = diff;
+        number = 1;
         sizeX = sX;
         sizeY = sY;
         tiles = new Tile[sizeX][sizeY];
@@ -91,6 +92,7 @@ public class Floor {
         }
         else if(tiles[ex][ey].floorMovement != 0 && chars[sx][sy].name.equals("Hero")) {
             generate(sizeX, sizeY);
+            number++;
         }
         else if(!tiles[ex][ey].isWall) {
             swap(sx, sy, ex, ey);
@@ -165,7 +167,7 @@ public class Floor {
         vWall2 = (vWall2 == hDoor ? vWall2+1: vWall2);
         for(int i = hWall; i >= 0; i--)
             tiles[vWall2][i] = new Tile("wall");
-        tiles[vWall2][(int)(Math.random() * (hWall) + 1)] = new Tile("door");
+        tiles[vWall2][(int)(Math.random() * (hWall-1) + 1)] = new Tile("door");
         //generate stairs
         while(true) {
             int x = (int)(Math.random() * sX);
@@ -187,7 +189,7 @@ public class Floor {
             }
         }
         //generate enemies
-        int nEnemies = (int)(Math.random() * (sX * sY / 20) + 1);
+        int nEnemies = (int)(Math.random() * (Math.sqrt((double)sX * sY) / 1.5) + 1);
         enemies = new Character[nEnemies];
         for(int i = 0; i < nEnemies; i++) {
             while(true) {
