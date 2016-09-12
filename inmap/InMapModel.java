@@ -1,5 +1,6 @@
 /*
     InMap Model.
+    Contains important character data.
  */
 
 package inmap;
@@ -18,6 +19,11 @@ public class InMapModel {
     //process input
     void process(Direction direction) {
         maps[currentMap].process(direction);
+    }
+    
+    //reset location
+    void reset() {
+        maps[0] = new Location();
     }
     
     //return current map
