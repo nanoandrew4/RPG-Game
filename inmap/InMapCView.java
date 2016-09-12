@@ -1,10 +1,10 @@
 /*
-    View for InMap.
+    Console view for InMap.
  */
 
 package inmap;
 
-public class InMapView {
+public class InMapCView {
     void display(Floor floor) {
         //top row
         System.out.print("+");
