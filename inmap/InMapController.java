@@ -8,15 +8,17 @@ import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 
+import main.Main;
+
 public class InMapController implements Runnable {
     
-    private final Main main;
+    final Main main;
     private Scene scene;
     private final InMapModel model;
     private final InMapView view;
     
     //constructor
-    InMapController(Main main) {
+    public InMapController(Main main) {
         this.main = main;
         model = new InMapModel();
         view = new InMapView(main.screenWidth, main.screenHeight);
