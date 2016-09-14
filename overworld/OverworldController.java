@@ -5,7 +5,7 @@
     TODO: CLEAN UP AND ORGANIZE CODE NEATLY
  */
 
-package overworld;
+package game;
 
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -16,11 +16,9 @@ import javafx.scene.input.MouseEvent;
 
 import java.util.Scanner;
 
-import main.Main;
-
 public class OverworldController implements Runnable {
 
-    private main.Main main;
+    private Main main;
     private Scene scene;
     private boolean newTile;
     private float zoomMultiplier = 2.5f;
@@ -31,7 +29,7 @@ public class OverworldController implements Runnable {
     private OverworldView view;
     private OverworldModel model;
 
-    public OverworldController(Main main, boolean newGame) {
+    OverworldController(Main main, boolean newGame) {
         start = System.currentTimeMillis();
 
         this.main = main;

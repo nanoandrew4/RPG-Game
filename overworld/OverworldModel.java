@@ -1,4 +1,4 @@
-package overworld;
+package game;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -226,7 +226,7 @@ class Map {
         if (prev.equalsIgnoreCase(""))
             return "WaterSW";
 
-        if (y <= 2 || x <= 2 || y >= mapSize - 3 || x >= mapSize - 3) // equal signs necessary to avoid rare crash
+        if (y <= 3 || x <= 3 || y >= mapSize - 4 || x >= mapSize - 4) // equal signs necessary to avoid rare crash
             return null; // activates force redirect
 
         if (dir.equalsIgnoreCase("north")) {
@@ -296,116 +296,182 @@ class Map {
             Chooses a random direction to go in, but statistically the better choices have higher chances of being picked
          */
 
-        int num = rand.nextInt(priority[0] + priority[1] + priority[2] + priority[3] + priority[4]);
-        if (num < priority[0])
-            return 0;
-        else if (num < priority[0] + priority[1])
-            return 1;
-        else if (num < priority[0] + priority[1] + priority[2])
-            return 2;
-        else if (num < priority[0] + priority[1] + priority[2] + priority[3])
-            return 3;
+        if(priority.length == 3) {
+            int num = rand.nextInt(priority[0] + priority[1] + priority[2]);
+            if (num < priority[0])
+                return 0;
+            else if (num < priority[0] + priority[1])
+                return 1;
+            else
+                return 2;
+        }
+        else if(priority.length == 2){
+            int num = rand.nextInt(priority[0] + priority[1]);
+            if (num < priority[0])
+                return 0;
+            else
+                return 1;
+        }
         else
-            return 4;
+            return -1;
     }
 
-    private String[] getPossibleDirections(String prev, String currDir) {
+    private String[] getPossibleDirections(String prev, String genDir) {
 
         /*
             Returns the tiles that match up with the previous one (on all sides)
          */
 
-        String[] dirs = new String[5];
+        String[] dirs = new String[3];
 
-        if (currDir.equalsIgnoreCase("north")) {
-
+        if(genDir.equalsIgnoreCase("north")){
+            if(prev.contains("NESE")){
+                dirs[0] = "WaterE";
+                dirs[1] = "WaterNE";
+            }
+            else if(prev.contains("SWSE")){
+                dirs[0] = "WaterSE";
+                dirs[1] = "WaterNESE";
+                dirs[2] = "WaterS";
+            }
+            else if(prev.contains("SE")){
+                dirs[0] = "WaterNESE";
+                dirs[1] = "WaterS";
+                dirs[2] = "WaterSE";
+            }
+            else if(prev.contains("NE")){
+                dirs[0] = "WaterE";
+                dirs[1] = "WaterNE";
+            }
+            else if(prev.contains("SW")){
+                dirs[0] = "WaterSWSE";
+                dirs[1] = "WaterSW";
+            }
+            else if(prev.contains("E")){
+                dirs[0] = "WaterSE";
+                dirs[1] = "WaterNESE";
+                dirs[2] = "WaterS";
+            }
+            else if(prev.contains("S")){
+                dirs[0] = "WaterSW";
+                dirs[1] = "WaterSWSE";
+            }
+        }
+        else if(genDir.equalsIgnoreCase("east")){
+            if(prev.contains("SWSE")){
+                dirs[0] = "WaterSE";
+                dirs[1] = "WaterS";
+            }
+            else if(prev.contains("NWSW")){
+                dirs[0] = "WaterSW";
+                dirs[1] = "WaterW";
+                dirs[2] = "WaterSWSE";
+            }
+            else if(prev.contains("NW")){
+                dirs[0] = "WaterNWSW";
+                dirs[1] = "WaterNW";
+            }
+            else if(prev.contains("SE")){
+                dirs[0] = "WaterS";
+                dirs[1] = "WaterSE";
+            }
+            else if(prev.contains("SW")){
+                dirs[0] = "WaterSW";
+                dirs[1] = "WaterW";
+                dirs[2] = "WaterSWSE";
+            }
+            else if(prev.contains("S")){
+                dirs[0] = "WaterW";
+                dirs[1] = "WaterSW";
+                dirs[2] = "WaterSWSE";
+            }
+            else if(prev.contains("W")){
+                dirs[0] = "WaterNW";
+                dirs[1] = "WaterNWSW";
+            }
+        }
+        else if(genDir.equalsIgnoreCase("south")){
+            if(prev.contains("NWSW")){
+                dirs[0] = "WaterSW";
+                dirs[1] = "WaterW";
+            }
+            else if(prev.contains("NWNE")){
+                dirs[0] = "WaterNW";
+                dirs[1] = "WaterN";
+            }
+            else if(prev.contains("NW")){
+                dirs[0] = "WaterNWSW";
+                dirs[1] = "WaterNW";
+                dirs[2] = "WaterN";
+            }
+            else if(prev.contains("NE")){
+                dirs[0] = "WaterNWNE";
+                dirs[1] = "WaterNE";
+            }
+            else if(prev.contains("SW")){
+                dirs[0] = "WaterSW";
+                dirs[1] = "WaterW";
+            }
+            else if(prev.contains("N")){
+                dirs[0] = "WaterNE";
+                dirs[1] = "WaterNWNE";
+            }
+            else if(prev.contains("W")){
+                dirs[0] = "WaterNW";
+                dirs[1] = "WaterNWSW";
+                dirs[2] = "WaterN";
+            }
+        }
+        else if(genDir.equalsIgnoreCase("west")){
+            if(prev.contains("NESE")){
+                dirs[0] = "WaterNE";
+                dirs[1] = "WaterE";
+            }
+            else if(prev.contains("NWNE")){
+                dirs[0] = "WaterNW";
+                dirs[1] = "WaterN";
+            }
+            else if(prev.contains("NE")){
+                dirs[0] = "WaterNE";
+                dirs[1] = "WaterE";
+                dirs[2] = "WaterNWNE";
+            }
+            else if(prev.contains("NW")){
+                dirs[0] = "WaterNW";
+                dirs[1] = "WaterN";
+            }
+            else if(prev.contains("SE")){
+                dirs[0] = "WaterSE";
+                dirs[1] = "WaterNESE";
+            }
+            else if(prev.contains("E")){
+                dirs[0] = "WaterSE";
+                dirs[1] = "WaterNESE";
+            }
+            else if(prev.contains("N")){
+                dirs[0] = "WaterNE";
+                dirs[1] = "WaterNWNE";
+                dirs[2] = "WaterE";
+            }
         }
 
-        /*
-        if (prev.contains("NWSW")) {
-            dirs[0] = "WaterSWSE";
-            dirs[1] = "WaterNWNE";
-            dirs[2] = "WaterNW";
-            dirs[3] = "WaterSW";
-            dirs[4] = "WaterW";
-        } else if (prev.contains("NWNE")) {
-            dirs[0] = "WaterNWSW";
-            dirs[1] = "WaterNESE";
-            dirs[2] = "WaterNW";
-            dirs[3] = "WaterNE";
-            dirs[4] = "WaterN";
-        } else if (prev.contains("SWSE")) {
-            dirs[0] = "WaterNWSW";
-            dirs[1] = "WaterNESE";
-            dirs[2] = "WaterSW";
-            dirs[3] = "WaterSE";
-            dirs[4] = "WaterS";
-        } else if (prev.contains("NESE")) {
-            dirs[0] = "WaterNWNE";
-            dirs[1] = "WaterSWSE";
-            dirs[2] = "WaterNE";
-            dirs[3] = "WaterSE";
-            dirs[4] = "WaterE";
-        }
-            */
-        if (prev.contains("NW")) {
-            dirs[0] = "WaterNWSW";
-            dirs[1] = "WaterNWNE";
-            dirs[2] = "WaterN";
-            dirs[3] = "WaterW";
-            dirs[4] = "WaterNW";
-        } else if (prev.contains("NE")) {
-            dirs[0] = "WaterNWNE";
-            dirs[1] = "WaterNESE";
-            dirs[2] = "WaterN";
-            dirs[3] = "WaterE";
-            dirs[4] = "WaterNE";
-        } else if (prev.contains("SE")) {
-            dirs[0] = "WaterSWSE";
-            dirs[1] = "WaterNESE";
-            dirs[2] = "WaterS";
-            dirs[3] = "WaterE";
-            dirs[4] = "WaterSE";
-        } else if (prev.contains("SW")) {
-            dirs[0] = "WaterNWSW";
-            dirs[1] = "WaterSWSE";
-            dirs[2] = "WaterS";
-            dirs[3] = "WaterW";
-            dirs[4] = "WWaterSW";
-        } else if (prev.contains("W")) {
-            dirs[0] = "WaterNW";
-            dirs[1] = "WaterSW";
-            dirs[2] = "WaterNWSW";
-            dirs[3] = "WaterN";
-            dirs[4] = "WaterS";
-        } else if (prev.contains("S")) {
-            dirs[0] = "WaterSE";
-            dirs[1] = "WaterSE";
-            dirs[2] = "WaterSWSE";
-            dirs[3] = "WaterW";
-            dirs[4] = "WaterE";
-        } else if (prev.contains("E")) {
-            dirs[0] = "WaterSE";
-            dirs[1] = "WaterNE";
-            dirs[2] = "WaterNESE";
-            dirs[3] = "WaterN";
-            dirs[4] = "WaterS";
-        } else if (prev.contains("N")) {
-            dirs[0] = "WaterNE";
-            dirs[1] = "WaterNW";
-            dirs[2] = "WaterNWNE";
-            dirs[3] = "WaterW";
-            dirs[4] = "WaterE";
+        if(dirs[2] == null){
+            String[] tmp = new String[2];
+            tmp[0] = dirs[0];
+            tmp[1] = dirs[1];
+            return tmp;
         }
 
         return dirs;
     }
 
-    private int changeOnAxis(String tile, boolean x) {
+    private int changeOnAxis(String tile, boolean x, String genDir) {
 
         /*
             Returns change in position the algorithm should make to continue generating the coastline
          */
+
+        //String dir = returnDir(genDir, tile);
 
         switch (tile) {
             case "WaterSW":
@@ -427,7 +493,7 @@ class Map {
                 if (x)
                     return 0;
                 else
-                    return 1;
+                    return -1;
             case "WaterNWSW":
                 if (x)
                     return 1;
@@ -524,6 +590,50 @@ class Map {
         return null; // should not
     }
 
+    /*private String returnDir(String genDir, String tile){
+        if(genDir.equals("east")){
+            if(tile.equals("WaterSWSE"))
+                return "north";
+            else if(tile.equals("WaterNWSW"))
+                return "east";
+            else if(tile.equals("WaterW"))
+                return "south";
+            else if(tile.equals("WaterS"))
+                return "east";
+        }
+        else if(genDir.equals("south")){
+            if(tile.equals("WaterNWSW"))
+                return "east";
+            else if(tile.equals("WaterNWNE"))
+                return "south";
+            else if(tile.equals("WaterN"))
+                return "west";
+            else if(tile.equals("WaterW"))
+                return "south";
+        }
+        else if(genDir.equals("west")){
+            if(tile.equals("WaterNESE"))
+                return "west";
+            else if(tile.equals("WaterNWNE"))
+                return "south";
+            else if(tile.equals("WaterN"))
+                return "west";
+            else if(tile.equals("WaterE"))
+                return "north";
+        }
+        else if(genDir.equals("north")){
+            if(tile.equals("WaterNESE"))
+                return "west";
+            else if(tile.equals("WaterSWSE"))
+                return "north";
+            else if(tile.equals("WaterE"))
+                return "north";
+            else if(tile.equals("WaterS"))
+                return "east";
+        }
+        return null;
+    }*/
+
     private Tile[][] genMap(int mapSize) {
 
         /*
@@ -541,84 +651,104 @@ class Map {
         //////////////////////////////////////////////////////////
         // WATER TILES GEN
 
-//        int waterLineMax = mapSize / 20;
-//        System.out.println("MaxWaterline: " + waterLineMax);
-//        String currDir = "east";
-//
-//        int endPos = rand.nextInt(waterLineMax) + 2;
-//        int y = rand.nextInt(waterLineMax) + 2;
-//        String tile = "";
-//        for (int x = rand.nextInt(waterLineMax) + 2; x < mapSize - endPos; x += changeOnAxis(tile, true)) { // first iteration of coastline defining
-//            tile = nextWaterTile(tile, currDir, x, y, mapSize);
-//            if (tile == null) {
-//                tile = forceRedirect(tiles, x, y, currDir);
-//                if (tile.equals("WaterNWSW")) {
-//                    x++;
-//                    y++;
-//                }
-//                // change x and y coords to new position
-//            } else {
-//                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
-//                    tiles[x][y] = new Tile(tile);
-//            }
-//            y += changeOnAxis(tile, false);
-//        }
-//
-//        System.out.println("Eastward generation finished");
-//
-//        int x = endPos;
-//        currDir = "south";
-//        endPos = mapSize - (rand.nextInt(waterLineMax) + 2);
-//        for (; y < mapSize - endPos; y += changeOnAxis(tile, false)) { // second iteration of coastline defining
-//            tile = nextWaterTile(tile, currDir, x, y, mapSize);
-//            if (tile == null) {
-//                tile = forceRedirect(tiles, x, y, currDir);
-//                x--;
-//                y++;
-//            } else {
-//                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
-//                    tiles[x][y] = new Tile(tile);
-//            }
-//            x += changeOnAxis(tile, true);
-//        }
-//
-//        System.out.println("Southward generation finished");
-//
-//        y = endPos;
-//        currDir = "west";
-//        endPos = mapSize - (rand.nextInt(waterLineMax) + 2);
-//        for (; x > endPos; x -= changeOnAxis(tile, true)) { // third iteration of coastline defining
-//            tile = nextWaterTile(tile, currDir, x, y, mapSize);
-//            if (tile == null) {
-//                tile = forceRedirect(tiles, x, y, currDir);
-//                x--;
-//                y--;
-//            } else {
-//                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
-//                    tiles[x][y] = new Tile(tile);
-//            }
-//            y -= changeOnAxis(tile, false);
-//        }
-//
-//        System.out.println("Westward generation finished");
-//
-//        x = endPos;
-//        currDir = "north";
-//        endPos = rand.nextInt(waterLineMax) + 2;
-//        for (; y > endPos; y -= changeOnAxis(tile, false)) { // fourth iteration of coastline defining
-//            tile = nextWaterTile(tile, currDir, x, y, mapSize);
-//            if (tile == null) {
-//                tile = forceRedirect(tiles, x, y, currDir);
-//                x++;
-//                y--;
-//            } else {
-//                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
-//                    tiles[x][y] = new Tile(tile);
-//            }
-//            x -= changeOnAxis(tile, true);
-//        }
-//
-//        System.out.println("Northward generation finished");
+        int waterLineMax = mapSize / 20;
+        System.out.println("MaxWaterline: " + waterLineMax);
+        String genDir = "east";
+        String currDir = "east";
+
+        int endPos = mapSize - (rand.nextInt(waterLineMax) + 3);
+        int y = rand.nextInt(waterLineMax) + 3;
+        String tile = "";
+        for (int x = rand.nextInt(waterLineMax) + 3; x < mapSize - endPos; x += changeOnAxis(tile, true, currDir)) { // first iteration of coastline defining
+            tile = nextWaterTile(tile, genDir, x, y, mapSize);
+            if (tile == null) {
+                tile = forceRedirect(tiles, x, y, genDir);
+                if (tile.equals("WaterNWSW")) {
+                    x++;
+                    y++;
+                }
+                // change x and y coords to new position
+            } else {
+                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                    tiles[x][y] = new Tile(tile);
+            }
+            y += changeOnAxis(tile, false, currDir);
+        }
+
+        tile = "WaterW";
+        tiles[endPos++][y] = new Tile(tile);
+        y++;
+
+        System.out.println("Eastward generation finished");
+
+        int x = endPos;
+        genDir = "south";
+        endPos = mapSize - (rand.nextInt(waterLineMax) + 3);
+        for (; y < mapSize - endPos; y += changeOnAxis(tile, false, currDir)) { // second iteration of coastline defining
+            tile = nextWaterTile(tile, genDir, x, y, mapSize);
+            if (tile == null) {
+                tile = forceRedirect(tiles, x, y, genDir);
+                x--;
+                y++;
+            } else {
+                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                    tiles[x][y] = new Tile(tile);
+            }
+            x += changeOnAxis(tile, true, currDir);
+        }
+
+        tile = "WaterN";
+        tiles[x][endPos++] = new Tile(tile);
+        x--;
+
+        System.out.println("Southward generation finished");
+
+        y = endPos;
+        genDir = "west";
+        endPos = (rand.nextInt(waterLineMax) + 3);
+        for (; x > endPos; x += changeOnAxis(tile, true, currDir)) { // third iteration of coastline defining
+            System.out.println(x);
+            System.out.println(y);
+            System.out.println(tile);
+            System.out.println();
+            tile = nextWaterTile(tile, genDir, x, y, mapSize);
+            if (tile == null) {
+                tile = forceRedirect(tiles, x, y, genDir);
+                x--;
+                y--;
+            } else {
+                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                    tiles[x][y] = new Tile(tile);
+            }
+            y += changeOnAxis(tile, false, currDir);
+        }
+
+        tile = "WaterE";
+        tiles[endPos--][y] = new Tile(tile);
+        y--;
+
+        System.out.println("Westward generation finished");
+
+        x = endPos;
+        genDir = "north";
+        endPos = (rand.nextInt(waterLineMax) + 3);
+        for (; y > endPos; y += changeOnAxis(tile, false, currDir)) { // fourth iteration of coastline defining
+//            System.out.println(x);
+//            System.out.println(y);
+//            System.out.println();
+            tile = nextWaterTile(tile, genDir, x, y, mapSize);
+            if (tile == null) {
+                tile = forceRedirect(tiles, x, y, genDir);
+                x++;
+                y--;
+            } else {
+                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                    tiles[x][y] = new Tile(tile);
+            }
+            x += changeOnAxis(tile, true, currDir);
+        }
+
+        System.out.println("Northward generation finished");
 
 /*
         for (y = 0; y < mapSize; y++){

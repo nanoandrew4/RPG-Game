@@ -1,4 +1,4 @@
-package overworld;
+package game;
 
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.DoubleProperty;
@@ -132,7 +132,7 @@ public class OverworldView {
         long start = System.currentTimeMillis();
 
         speedXVal = mapTileSize / 32;
-        speedYVal = mapTileSize / 64;
+        speedYVal = mapTileSize / 32;
 
         overworldLayout = new Pane();
 

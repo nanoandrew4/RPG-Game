@@ -1,3 +1,11 @@
+------------------------14/09/2016------------------------
+
++++ Merged overworld and inmap, created isolated main class
+
+++ InMap functional, though graphics are temporary
+
+- Coastline gen still WIP, model crashes if code for water gen is not commented
+
 ------------------------05/09/2016------------------------
 
 ++ Save games and loading saves implemented
