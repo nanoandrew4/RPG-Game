@@ -19,8 +19,7 @@ public class InMapController implements Runnable {
     InMapController(Main main) {
         this.main = main;
         model = new InMapModel();
-        view = new InMapView(model.getCurrentLocation().getCurrentFloor().sizeX, 
-                model.getCurrentLocation().getCurrentFloor().sizeY, main.screenWidth, main.screenHeight);
+        view = new InMapView(main.screenWidth, main.screenHeight);
     }
     
     @Override

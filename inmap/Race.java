@@ -8,6 +8,10 @@ public class Race {
     String name;
     
     Race() {
-        name = "something.";
+        name = "None";
+    }
+    
+    Race(String name) {
+        this.name = name;
     }
 }

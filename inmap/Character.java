@@ -7,11 +7,11 @@ package inmap;
 public class Character {
     //vars
     boolean exists;
-    int AIMode, x, y;
+    int x, y;
     int LVL, EXP, VIT, ACC, INT, STR, DEX, WIS, LUK; //base stats
-    int maxHP, currentHP, maxMP, currentMP;
+    int maxHP, currentHP, maxMP, currentMP; //calculated stats
     double CRT, HIT, EVA, DMG, DEF, RES, PRC; //combat stats
-    String name;
+    String name, AIMode;
     Race race;
     Item weapon;
     Item headArmor, torsoArmor, legArmor, footArmor;
@@ -22,16 +22,11 @@ public class Character {
         exists = false;
     }
     
-    //duplicate a character
-    Character(Character clone) {
-        exists = clone.exists;
-    }
-    
     //generate character given parameters
-    Character(int LVL, int EXP, int VIT, int INT, int ACC, int STR, int DEX, int WIS, int LUK, String name) {
+    Character(int LVL, int VIT, int INT, int ACC, int STR, int DEX, int WIS, int LUK, String name, String race, String AIMode) {
         exists = true;
         this.LVL = LVL;
-        this.EXP = EXP;
+        EXP = 0;
         this.VIT = VIT;
         this.INT = INT;
         this.ACC = ACC;
@@ -40,6 +35,7 @@ public class Character {
         this.WIS = WIS;
         this.LUK = LUK;
         this.name = name;
+        this.AIMode = AIMode;
         
         weapon = new Item();
         headArmor = new Item();
@@ -49,7 +45,7 @@ public class Character {
         accessory2 = new Item();
         accessory3 = new Item();
         
-        race = new Race();
+        this.race = new Race(race);
         
         calculateStats();
         
@@ -57,21 +53,40 @@ public class Character {
         currentMP = maxMP;
     }
     
-    //randomized character given approximate level
-    Character(int level) {
-        exists = true;
-        this.LVL = Math.max(1, level + (int)(Math.random() * 6 - 3));
-    }
-    
+    //random enemy generation
     Character generateEnemy() {
         switch((int)(Math.random() * 4)) {
-            //case: return new Character(lvl, exp, vit, int, acc, str, dex, wis, luk, name);
-            case 0: return new Character(  2,   0,   3,   1,  80,   2,   4,   1,   0, "Spider");
-            case 1: return new Character(  1,   0,   5,   1,  90,   1,   1,   1,   0, "Slug");
-            case 2: return new Character(  5,   0,   8,   3,  75,   6,   3,   2,   3, "Goblin");
-            case 3: return new Character(  3,   0,   6,   3,  85,   3,   3,   1,   2, "Bat");
+            //case: return new Character(lvl, vit, int, acc, str, dex, wis, luk, name);
+            case 0: return new Character(  2,   3,   1,  80,   2,   4,   1,   0, "Spider", "Monster", "hostile");
+            case 1: return new Character(  1,   5,   1,  90,   1,   1,   1,   0, "Slug", "Monster", "hostile");
+            case 2: return new Character(  5,   8,   3,  75,   6,   3,   2,   3, "Goblin", "Monster", "hostile");
+            case 3: return new Character(  3,   6,   3,  85,   3,   3,   1,   2, "Bat", "Monster", "hostile");
             default: return new Character();
         }
+    }
+    
+    //gain exp, calculate level
+    void gainEXP(int exp) {
+        EXP += exp;
+        
+        //level up
+        if(EXP >= 150 * Math.sqrt(LVL + 10) - 430) {
+            LVL++;
+            EXP = 0;
+            
+            //stat increases
+            VIT += 1;
+            STR += 1;
+            DEX += 1;
+            WIS += 1;
+            calculateStats();
+            currentHP = maxHP;
+        }
+    }
+    
+    //gain exp based on defeated enemy
+    void gainEXP(Character defeatedEnemy) {
+        gainEXP((int)(Math.pow(defeatedEnemy.LVL, 2) / 2 + 10));
     }
     
     //use base stats to calculate combat stats
@@ -93,5 +108,10 @@ public class Character {
         PRC = 100;
         EVA = 0;
         HIT = ACC;
+    }
+    
+    //kill
+    final void kill() {
+        exists = false;
     }
 }

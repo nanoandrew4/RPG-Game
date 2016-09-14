@@ -6,35 +6,43 @@
 package inmap;
 
 public class Floor {
-    int sizeX, sizeY, difficulty, number;
+    Location location;
+    int size, sizeX, sizeY; //size is arbitrary, affects sizeX/Y
+    int difficulty; //difficulty affects spawn rate, avg level
+    int enterX, enterY, endX, endY; //stair locations
+    int floorNum; //floor number of a given location
     Tile[][] tiles;
     Character[][] chars;
-    Character[] party; //[0] is the hero
-    Character[] enemies;
+    Character[] party; //[0] is the player
+    Character[] npcs;
     Item[][] items;
     
     //constructor
-    Floor(int diff, int sX, int sY) {
+    Floor(Location location, int floorNum, String type, int diff, int size, Character[] party) {
         //init
+        this.location = location;
+        this.floorNum = floorNum;
         difficulty = diff;
-        number = 1;
-        sizeX = sX;
-        sizeY = sY;
-        tiles = new Tile[sizeX][sizeY];
-        chars = new Character[sizeX][sizeY];
-        items = new Item[sizeX][sizeY];
-        party = new Character[1];
+        this.size = size;
+        this.party = party;
         
-        //empty everything
-        for(int x = 0; x < sizeX; x++) {
-            for(int y = 0; y < sizeY; y++) {
-                tiles[x][y] = new Tile();
-                chars[x][y] = new Character();
-                items[x][y] = new Item();
-            }
+        generate(type, size);
+    }
+    
+    //ready for input processing
+    void passControl(Direction direction) {
+        switch(direction) {
+            case Up:
+                party[0].x = enterX;
+                party[0].y = enterY;
+                chars[enterX][enterY] = party[0];
+                break;
+            case Down:
+                party[0].x = endX;
+                party[0].y = endY;
+                chars[endX][endY] = party[0];
+                break;
         }
-        
-        generate(sizeX, sizeY);
     }
     
     //process player input
@@ -53,30 +61,35 @@ public class Floor {
         process(sx, sy, ex, ey);
     }
     
-    //process enemy movement
+    //process all npc movement: currently just follow player
     void processAI() {
-        for(Character e : enemies) {
-            int dx, dy;
-            if(e.exists) {
-                //x movement
-                if(party[0].x < e.x)
-                    dx = -1;
-                else if(party[0].x > e.x)
-                    dx = 1;
-                else dx = 0;
-                //y movement
-                if(party[0].y < e.y)
-                    dy = -1;
-                else if(party[0].y > e.y)
-                    dy = 1;
-                else dy = 0;
-                //randomly move either vertically or horizontally
-                if(Math.random() * 100 < 50)
-                    dx = (dy == 0 ? dx : 0);
-                else 
-                    dy = (dx == 0 ? dy : 0);
+        for(Character n : npcs) {
+            if(n.exists) {
+                int dx, dy;
+                switch(n.AIMode) {
+                    case "NA": break;
+                    case "hostile":
+                        //x movement
+                        if(party[0].x < n.x)
+                            dx = -1;
+                        else if(party[0].x > n.x)
+                            dx = 1;
+                        else dx = 0;
+                        //y movement
+                        if(party[0].y < n.y)
+                            dy = -1;
+                        else if(party[0].y > n.y)
+                            dy = 1;
+                        else dy = 0;
+                        //randomly move either vertically or horizontally
+                        if(Math.random() * 100 < 50)
+                            dx = (dy == 0 ? dx : 0);
+                        else 
+                            dy = (dx == 0 ? dy : 0);
 
-                process(e.x, e.y, e.x+dx, e.y+dy);
+                        process(n.x, n.y, n.x+dx, n.y+dy);
+                    default: break;
+                }
             }
         }
     }
@@ -85,14 +98,18 @@ public class Floor {
     private void process(int sx, int sy, int ex, int ey) {
         ///TODO: item processing
         if(chars[ex][ey].exists) {
-             ///TODO: check for allies
-             attack(chars[sx][sy], chars[ex][ey]);
-             if(chars[ex][ey].currentHP <= 0)
-                 chars[ex][ey] = new Character();
+            if(!chars[sx][sy].race.name.equals(chars[ex][ey].race.name) || chars[ex][ey].AIMode.equals("hostile")) {
+                attack(chars[sx][sy], chars[ex][ey]);
+                if(chars[ex][ey].currentHP <= 0) {
+                    chars[sx][sy].gainEXP(chars[ex][ey]);
+                    chars[ex][ey].kill();
+                }
+            }
+            
         }
         else if(tiles[ex][ey].floorMovement != 0 && chars[sx][sy].name.equals("Hero")) {
-            generate(sizeX, sizeY);
-            number++;
+            location.changeFloor(tiles[ex][ey].floorMovement);
+            chars[sx][sy] = new Character();
         }
         else if(!tiles[ex][ey].isWall) {
             swap(sx, sy, ex, ey);
@@ -140,69 +157,193 @@ public class Floor {
     }
     
     //generate a floor with 4 rooms and 3 doors
-    private void generate(int sX, int sY) {
-        //basic init
-        for(int x = 0; x < sX; x++) {
-            for(int y = 0; y < sY; y++) {
-                if(x == 0 || x == sX-1 || y == 0 || y == sY-1)
-                    tiles[x][y] = new Tile("wall");
-                else tiles[x][y] = new Tile();
-                chars[x][y] = new Character();
-            }
-        }
-        //generate wall somewhere
-        int hWall = (int)(Math.random() * (sY-4)) + 2;
-        for(int i = 0; i < sX; i++)
-            tiles[i][hWall] = new Tile("wall");
-        int hDoor = (int)(Math.random() * (sX-2) + 1);
-        tiles[hDoor][hWall] = new Tile("door");
-        //vertical wall somewhere
-        int vWall1 = (int)(Math.random() * (sX-4)) + 2;
-        vWall1 = (vWall1 == hDoor ? vWall1+1: vWall1);
-        for(int i = hWall; i < sY; i++)
-            tiles[vWall1][i] = new Tile("wall");
-        tiles[vWall1][(int)(Math.random() * (sY - 2 - hWall) + hWall + 1)] = new Tile("door");
-        //other vertical wall
-        int vWall2 = (int)(Math.random() * (sX-4)) + 2;
-        vWall2 = (vWall2 == hDoor ? vWall2+1: vWall2);
-        for(int i = hWall; i >= 0; i--)
-            tiles[vWall2][i] = new Tile("wall");
-        tiles[vWall2][(int)(Math.random() * (hWall-1) + 1)] = new Tile("door");
-        //generate stairs
-        while(true) {
-            int x = (int)(Math.random() * sX);
-            int y = (int)(Math.random() * sY);
-            if(!tiles[x][y].isWall) {
-                tiles[x][y] = new Tile("stairsUp");
-                break;
-            }
-        }
-        //generate hero if first generation
-        party[0] = new Character(1, 0, 10, 10, 90, 10, 10, 10, 10, "Hero");
-        while(true) {
-            int x = (int)(Math.random() * sX);
-            int y = (int)(Math.random() * sY);
-            if(!tiles[x][y].isWall && !chars[x][y].exists && tiles[x][y].floorMovement == 0) {
-                party[0].x = x; party[0].y = y;
-                chars[x][y] = party[0];
-                break;
-            }
-        }
-        //generate enemies
-        int nEnemies = (int)(Math.random() * (Math.sqrt((double)sX * sY) / 1.5) + 1);
-        enemies = new Character[nEnemies];
-        for(int i = 0; i < nEnemies; i++) {
-            while(true) {
-                int x = (int)(Math.random() * sX);
-                int y = (int)(Math.random() * sY);
-                if(!tiles[x][y].isWall && !chars[x][y].exists) {
-                    enemies[i] = new Character().generateEnemy();
-                    enemies[i].x = x;
-                    enemies[i].y = y;
-                    chars[x][y] = enemies[i];
-                    break;
+    private void generate(String type, int size) {
+        
+        switch(type) {
+            
+            case "dungeon":
+                
+                //choose size, initialize arrays
+                switch(size) {
+                    case 1: sizeX = 10; sizeY = 6; break;
+                    case 2: sizeX = 20; sizeY = 12; break;
+                    case 3: sizeX = 30; sizeY = 18; break;
+                    case 4: sizeX = 40; sizeY = 24; break;
                 }
-            }
+                tiles = new Tile[sizeX][sizeY];
+                chars = new Character[sizeX][sizeY];
+                items = new Item[sizeX][sizeY];
+                for(int x = 0; x < sizeX; x++) {
+                    for(int y = 0; y < sizeY; y++) {
+                        if(x == 0 || x == sizeX-1 || y == 0 || y == sizeY-1)
+                            tiles[x][y] = new Tile("wall");
+                        else tiles[x][y] = new Tile();
+                        chars[x][y] = new Character();
+                    }
+                }
+                
+                //generate wall somewhere
+                int hWall = (int)(Math.random() * (sizeY-4)) + 2;
+                for(int i = 0; i < sizeX; i++)
+                    tiles[i][hWall] = new Tile("wall");
+                int hDoor = (int)(Math.random() * (sizeX-2) + 1);
+                tiles[hDoor][hWall] = new Tile("door");
+                
+                //vertical wall somewhere
+                int vWall1 = (int)(Math.random() * (sizeX-4)) + 2;
+                vWall1 = (vWall1 == hDoor ? vWall1+1: vWall1);
+                for(int i = hWall; i < sizeY; i++)
+                    tiles[vWall1][i] = new Tile("wall");
+                tiles[vWall1][(int)(Math.random() * (sizeY - 2 - hWall) + hWall + 1)] = new Tile("door");
+                
+                //other vertical wall
+                int vWall2 = (int)(Math.random() * (sizeX-4)) + 2;
+                vWall2 = (vWall2 == hDoor ? vWall2+1: vWall2);
+                for(int i = hWall; i >= 0; i--)
+                    tiles[vWall2][i] = new Tile("wall");
+                tiles[vWall2][(int)(Math.random() * (hWall-1) + 1)] = new Tile("door");
+                
+                //generate stairsup if not at top
+                if(floorNum != location.numFloors - 1) {
+                    while(true) {
+                        int x = (int)(Math.random() * sizeX);
+                        int y = (int)(Math.random() * sizeY);
+                        if(!tiles[x][y].isWall) {
+                            tiles[x][y] = new Tile("stairsUp");
+                            endX = x;
+                            endY = y;
+                            break;
+                        }
+                    }
+                }
+                
+                //generate stairsdown
+                while(true) {
+                    int x = (int)(Math.random() * sizeX);
+                    int y = (int)(Math.random() * sizeY);
+                    if(!tiles[x][y].isWall && tiles[x][y].floorMovement == 0) {
+                        tiles[x][y] = new Tile("stairsDown");
+                        enterX = x;
+                        enterY = y;
+                        break;
+                    }
+                }
+                
+                //generate enemies
+                int nEnemies = (int)(Math.random() * (Math.sqrt((double)sizeX * sizeY) / 1.5) + 1);
+                npcs = new Character[nEnemies];
+                for(int i = 0; i < nEnemies; i++) {
+                    while(true) {
+                        int x = (int)(Math.random() * sizeX);
+                        int y = (int)(Math.random() * sizeY);
+                        if(!tiles[x][y].isWall && !chars[x][y].exists) {
+                            npcs[i] = new Character().generateEnemy();
+                            npcs[i].x = x;
+                            npcs[i].y = y;
+                            chars[x][y] = npcs[i];
+                            break;
+                        }
+                    }
+                }
+                break;
+                
+            case "tower":
+                
+                //choose size
+                switch(size) {
+                    case 1: sizeX = 9; sizeY = 9; break;
+                    case 2: sizeX = 17; sizeY = 17; break;
+                    case 3: sizeX = 27; sizeY = 27; break;
+                    case 4: sizeX = 39; sizeY = 39; break;
+                }
+                tiles = new Tile[sizeX][sizeY];
+                chars = new Character[sizeX][sizeY];
+                items = new Item[sizeX][sizeY];
+                for(int x = 0; x < sizeX; x++) {
+                    for(int y = 0; y < sizeY; y++) {
+                        tiles[x][y] = new Tile("wall");
+                        chars[x][y] = new Character();
+                    }
+                }
+                
+                //create rectangles and empty
+                for(int x = sizeX / 2 - size, y = 1; x > 0 && y < sizeY / 2; x -= 1, y+= 1) {
+                    for(int x2 = x; x2 < sizeX - x; x2++) {
+                        for(int y2 = y; y2 < sizeY - y; y2++) {
+                            tiles[x2][y2] = new Tile();
+                        }
+                    }
+                }
+                
+                //generate stairsup if not at top
+                if(floorNum != location.numFloors - 1) {
+                    while(true) {
+                        int x = (int)(Math.random() * sizeX);
+                        int y = (int)(Math.random() * sizeY);
+                        if(!tiles[x][y].isWall) {
+                            tiles[x][y] = new Tile("stairsUp");
+                            endX = x;
+                            endY = y;
+                            break;
+                        }
+                    }
+                }
+                
+                //generate stairsdown
+                while(true) {
+                    int x = (int)(Math.random() * sizeX);
+                    int y = (int)(Math.random() * sizeY);
+                    if(!tiles[x][y].isWall && tiles[x][y].floorMovement == 0) {
+                        tiles[x][y] = new Tile("stairsDown");
+                        enterX = x;
+                        enterY = y;
+                        break;
+                    }
+                }
+                
+                //generate enemies
+                nEnemies = (int)(Math.random() * (Math.sqrt((double)sizeX * sizeY) / 1000.5) + 1);
+                npcs = new Character[nEnemies];
+                for(int i = 0; i < nEnemies; i++) {
+                    while(true) {
+                        int x = (int)(Math.random() * sizeX);
+                        int y = (int)(Math.random() * sizeY);
+                        if(!tiles[x][y].isWall && !chars[x][y].exists) {
+                            npcs[i] = new Character().generateEnemy();
+                            npcs[i].x = x;
+                            npcs[i].y = y;
+                            chars[x][y] = npcs[i];
+                            break;
+                        }
+                    }
+                }
+                
+                break;
+                
+            case "cave":
+                
+                //choose size
+                switch(size) {
+                    case 1: sizeX = 30; sizeY = 15; break;
+                    case 2: sizeX = 40; sizeY = 20; break;
+                    case 3: sizeX = 50; sizeY = 25; break;
+                    case 4: sizeX = 60; sizeY = 30; break;
+                }
+                tiles = new Tile[sizeX][sizeY];
+                chars = new Character[sizeX][sizeY];
+                items = new Item[sizeX][sizeY];
+                for(int x = 0; x < sizeX; x++) {
+                    for(int y = 0; y < sizeY; y++) {
+                        if(x == 0 || x == sizeX-1 || y == 0 || y == sizeY-1)
+                            tiles[x][y] = new Tile("wall");
+                        else tiles[x][y] = new Tile();
+                        chars[x][y] = new Character();
+                    }
+                }
+                
+                //generate walls
+                
+                break;
         }
     }
 }

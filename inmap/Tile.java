@@ -17,8 +17,8 @@ public class Tile {
         
         switch(entity) {
             case "wall": isWall = true; name = "Wall"; break;
-            case "stairsUp": floorMovement = 1; name = "Stairs"; break;
-            case "stairsDown": floorMovement = -1; name = "Stairs"; break;
+            case "stairsUp": floorMovement = 1; name = "StairsUp"; break;
+            case "stairsDown": floorMovement = -1; name = "StairsDown"; break;
             case "door": openable = true; isWall = true; name = "Door"; break;
             default: break;
         }

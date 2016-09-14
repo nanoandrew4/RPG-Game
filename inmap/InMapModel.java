@@ -8,12 +8,16 @@ package inmap;
 public class InMapModel {
     private final Location[] maps;
     private int currentMap;
+    private Character[] party;
     
     //default constructor
     InMapModel() {
-        maps = new Location[1];
+        party = new Character[1];
+        party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, "Hero", "Human", "NA");
         currentMap = 0;
-        maps[0] = new Location();
+        maps = new Location[1];
+        maps[0] = new Location("dungeon", 2, party);
+        maps[currentMap].getCurrentFloor().passControl(Direction.Up);
     }
     
     //process input
@@ -23,7 +27,10 @@ public class InMapModel {
     
     //reset location
     void reset() {
-        maps[0] = new Location();
+        party[0].currentHP = party[0].maxHP;
+        party[0].exists = true;
+        maps[currentMap] = new Location("dungeon", 2, party);
+        maps[currentMap].getCurrentFloor().passControl(Direction.Up);
     }
     
     //return current map

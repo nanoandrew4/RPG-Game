@@ -6,18 +6,26 @@
 package inmap;
 
 public class Location {
-    int baseFloor, currentFloor, difficulty, size;
+    int currentFloor, difficulty, numFloors;
     String name, type;
     private Floor[] floors;
     
     //random constructor
-    Location() {
+    Location(String type, int size, Character[] party) {
         difficulty = (int)(Math.random() * 5 + 1);
-        size = (int)(Math.random() * 5 + 1); 
-        floors = new Floor[size];
-        for(int i = 0; i < size; i++) {
-            floors[i] = new Floor(difficulty, 20, 12);
+        currentFloor = 0;
+        numFloors = (int)(Math.random() * 20 + 5); 
+        floors = new Floor[numFloors];
+        for(int i = 0; i < numFloors; i++) {
+            floors[i] = new Floor(this, i, type, difficulty, size, party);
         }
+    }
+    
+    //changing floors
+    void changeFloor(int floorMovement) {
+        currentFloor += floorMovement;
+        if(currentFloor >= numFloors) currentFloor = numFloors - 1;
+        floors[currentFloor].passControl(floorMovement > 0 ? Direction.Up : Direction.Down);
     }
     
     //process input
