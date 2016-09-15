@@ -73,8 +73,8 @@ public class InMapView {
     public double speedXVal;
     public double speedYVal;
     private final LongProperty lastUpdateTime = new SimpleLongProperty();
-    double width = 64, height = 96;
-    int zoom = 10;
+    double width, height;
+    final double zoom;
     
     //constructor
     InMapView(double screenWidth, double screenHeight) {
@@ -86,21 +86,24 @@ public class InMapView {
         //5: fog
         //setTileSize();
         imageViews = new ImageView[22][14][6];
-        images = new Images(width, height); // width = 64 & height = 96
-        inmapLayout = new Pane();
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
+        zoom = 12;
+        setTileSize();
+        images = new Images(width, height);
+        inmapLayout = new Pane();
         speedXVal = 64;
         speedYVal = 64;
     }
 
+    //set tile size
     private void setTileSize() {
         if (screenWidth > screenHeight) {
             width = (screenHeight / zoom);
             height = (screenHeight / zoom) * 1.5;
         } else {
             width = (screenWidth / zoom);
-            height = (screenWidth / zoom)  *1.5;
+            height = (screenWidth / zoom) * 1.5;
         }
     }
     
@@ -252,54 +255,6 @@ public class InMapView {
             else return null;
         }
         else return null;
-    }
-    
-    //imageview animation
-    private void setMoveAnim(ImageView imageView) {
-        new AnimationTimer() {
-            @Override
-            public void handle(long timestamp) {
-                if (lastUpdateTime.get() > 0) {
-                    if (imageView == null) { // if redundant delete if statement
-                        stop();
-                        return;
-                    }
-                    final double oldX = imageView.getTranslateX();
-                    final double newX = oldX + speedX.get();
-                    final double oldY = imageView.getTranslateY();
-                    final double newY = oldY + speedY.get();
-                    imageView.setTranslateX(newX);
-                    imageView.setTranslateY(newY);
-//                    xOffset = imageView.getTranslateX();
-//                    yOffset = imageView.getTranslateY();
-                }
-                lastUpdateTime.set(timestamp);
-            }
-        }.start();
-    }
-    
-    //pane animation
-    private void setMoveAnim(Pane pane) {
-        new AnimationTimer() {
-            @Override
-            public void handle(long timestamp) {
-                if (lastUpdateTime.get() > 0) {
-                    if (pane == null) { // if redundant delete if statement
-                        stop();
-                        return;
-                    }
-                    final double oldX = pane.getTranslateX();
-                    final double newX = oldX + speedX.get();
-                    final double oldY = pane.getTranslateY();
-                    final double newY = oldY + speedY.get();
-                    pane.setTranslateX(newX);
-                    pane.setTranslateY(newY);
-                    pane.getTranslateX();
-                    pane.getTranslateY();
-                }
-                lastUpdateTime.set(timestamp);
-            }
-        }.start();
     }
 }
 
