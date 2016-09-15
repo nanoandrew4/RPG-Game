@@ -267,13 +267,25 @@ public class Floor {
                 }
                 
                 //create rectangles and empty
-                for(int x = sizeX / 2 - size, y = 1; x > 0 && y < sizeY / 2; x -= 1, y+= 1) {
+                for(int x = sizeX / 2 - size, y = 1; x > 0 && y < sizeY / 2; 
+                        x -= (x > size + 1 ? (x - size) / 2 : 1), y += (y > size + 1 ? y - size : 1)) {
                     for(int x2 = x; x2 < sizeX - x; x2++) {
                         for(int y2 = y; y2 < sizeY - y; y2++) {
                             tiles[x2][y2] = new Tile();
                         }
                     }
                 }
+                
+                //create walls and doors
+                for(int x = 1; x < sizeX; x++)
+                    tiles[x][sizeY/2] = new Tile("wall");
+                for(int y = 1; y < sizeY; y++)
+                    tiles[sizeX/2][y] = new Tile("wall");
+                int rand = (int)(Math.random()*4);
+                if(rand != 0) tiles[(int)(Math.random()*(sizeX/2-1)+1)][sizeY/2] = new Tile("door");
+                if(rand != 1) tiles[(int)(Math.random()*(sizeX/2-2)+sizeX/2+1)][sizeY/2] = new Tile("door");
+                if(rand != 2) tiles[sizeX/2][(int)(Math.random()*(sizeY/2-1)+1)] = new Tile("door");
+                if(rand != 3) tiles[sizeX/2][(int)(Math.random()*(sizeY/2-2)+sizeY/2+1)] = new Tile("door");
                 
                 //generate stairsup if not at top
                 if(floorNum != location.numFloors - 1) {
@@ -302,7 +314,7 @@ public class Floor {
                 }
                 
                 //generate enemies
-                nEnemies = (int)(Math.random() * (Math.sqrt((double)sizeX * sizeY) / 1000.5) + 1);
+                nEnemies = (int)(Math.random() * (Math.sqrt((double)sizeX * sizeY) / 1.5) + 1);
                 npcs = new Character[nEnemies];
                 for(int i = 0; i < nEnemies; i++) {
                     while(true) {
