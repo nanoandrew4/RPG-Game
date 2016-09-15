@@ -1,4 +1,4 @@
-package game;
+package overworld;
 
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.DoubleProperty;

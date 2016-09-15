@@ -1,10 +1,11 @@
-package game;
+package overworld;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import main.*;
 
 public class OverworldModel {
 
@@ -22,10 +23,10 @@ public class OverworldModel {
     private Map map;
     private FileAccess fileAccess = new FileAccess();
 
-    OverworldModel(int mapSize, boolean newGame) {
+    OverworldModel(int mapSize, boolean newGame, DBManager dbManager) {
 
         try {
-            map = new Map(mapSize, newGame);
+            map = new Map(mapSize, newGame, dbManager);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -100,8 +101,8 @@ class Map {
     private final int MIN_SETTLEMENT;
     private final int MAX_SETTLEMENT;
 
-    Map(int mapSize, boolean newGame) throws SQLException {
-        dbManager = new DBManager("test");
+    Map(int mapSize, boolean newGame, DBManager dbManager) throws SQLException {
+        this.dbManager = dbManager;
         rand = new Random(System.currentTimeMillis());
 
         if (!newGame) {
@@ -208,7 +209,15 @@ class Map {
         System.out.println("Game save took: " + ((float) (System.currentTimeMillis() - start) / 1000) + "s");
     }
 
-    private String nextWaterTile(String prev, String dir, int x, int y, int mapSize) {
+    private int returnDiffTileBonus(int sameTileCount){
+        return (int) (5 * (Math.pow(2, -0.5 * sameTileCount)));
+    }
+
+    private int returnProximityBonus(int var, int mapSize){
+            return (int) ((1 / 8) * Math.pow(var - ((2 + (mapSize / 50)) / 2), 2));
+    }
+
+    private String nextWaterTile(String prev, String dir, int x, int y, int mapSize, int sameTileCount) {
 
         /*
             Determines which water tile can come after the current one, and assigns scores to each possibility
@@ -230,56 +239,40 @@ class Map {
             return null; // activates force redirect
 
         if (dir.equalsIgnoreCase("north")) {
-            for (int strings = 0; strings < possibleDirections.length - 1; strings++) {
+            for (int strings = 0; strings < possibleDirections.length; strings++) {
                 if (possibleDirections[strings].length() == 7)
                     priority[strings] += 5;
                 else if (possibleDirections[strings].length() == 9)
-                    priority[strings] += 3;
+                    priority[strings] += 4;
                 else
-                    priority[strings]++;
-                if (possibleDirections[strings].contains("SE"))
-                    priority[strings] += (1 / 8) * Math.pow(x - ((2 + (mapSize / 50)) / 2), 2);
-                else
-                    priority[strings] -= (1 / 8) * Math.pow(x - ((2 + (mapSize / 50)) / 2), 2);
+                    priority[strings] += 4;
             }
         } else if (dir.equalsIgnoreCase("west")) {
-            for (int strings = 0; strings < possibleDirections.length - 1; strings++) {
-                if (possibleDirections[strings].length() == 7) // NW NE SW SE, preferable
+            for (int strings = 0; strings < possibleDirections.length; strings++) {
+                if (possibleDirections[strings].length() == 7)
                     priority[strings] += 5;
                 else if (possibleDirections[strings].length() == 9)
-                    priority[strings] += 3;
+                    priority[strings] += 4;
                 else
-                    priority[strings]++;
-                if (possibleDirections[strings].contains("SW"))
-                    priority[strings] += (1 / 8) * Math.pow(y - ((2 + (mapSize / 50)) / 2), 2);
-                else
-                    priority[strings] -= (1 / 8) * Math.pow(y - ((2 + (mapSize / 50)) / 2), 2);
+                    priority[strings] += 4;
             }
         } else if (dir.equalsIgnoreCase("south")) {
-            for (int strings = 0; strings < possibleDirections.length - 1; strings++) {
+            for (int strings = 0; strings < possibleDirections.length; strings++) {
                 if (possibleDirections[strings].length() == 7)
                     priority[strings] += 5;
                 else if (possibleDirections[strings].length() == 9)
-                    priority[strings] += 3;
+                    priority[strings] += 4;
                 else
-                    priority[strings]++;
-                if (possibleDirections[strings].contains("SE"))
-                    priority[strings] += (1 / 8) * Math.pow(x - ((2 + (mapSize / 50)) / 2), 2);
-                else
-                    priority[strings] -= (1 / 8) * Math.pow(x - ((2 + (mapSize / 50)) / 2), 2);
+                    priority[strings] += 4;
             }
         } else if (dir.equalsIgnoreCase("east")) {
-            for (int strings = 0; strings < possibleDirections.length - 1; strings++) {
+            for (int strings = 0; strings < possibleDirections.length; strings++) {
                 if (possibleDirections[strings].length() == 7)
                     priority[strings] += 5;
                 else if (possibleDirections[strings].length() == 9)
-                    priority[strings] += 3;
+                    priority[strings] += 4;
                 else
-                    priority[strings]++;
-                if (possibleDirections[strings].contains("NE"))
-                    priority[strings] += (1 / 8) * Math.pow(y - ((2 + (mapSize / 50)) / 2), 2);
-                else
-                    priority[strings] -= (1 / 8) * Math.pow(y - ((2 + (mapSize / 50)) / 2), 2);
+                    priority[strings] += 4;
             }
         }
 
@@ -546,6 +539,8 @@ class Map {
             Turns the direction around by force placing tiles
          */
 
+        System.out.println("Force redirect activated");
+
         if (dir.equals("north")) {
             tiles[x][y] = new Tile("WaterE");
             tiles[x][y - 1] = new Tile("WaterS");
@@ -659,8 +654,15 @@ class Map {
         int endPos = mapSize - (rand.nextInt(waterLineMax) + 3);
         int y = rand.nextInt(waterLineMax) + 3;
         String tile = "";
+        String prevTile = "";
+        int sameTileCount = 0;
         for (int x = rand.nextInt(waterLineMax) + 3; x < mapSize - endPos; x += changeOnAxis(tile, true, currDir)) { // first iteration of coastline defining
-            tile = nextWaterTile(tile, genDir, x, y, mapSize);
+            prevTile = tile;
+            if(prevTile.equals(tile))
+                sameTileCount++;
+            else
+                sameTileCount = 0;
+            tile = nextWaterTile(tile, genDir, x, y, mapSize, sameTileCount);
             if (tile == null) {
                 tile = forceRedirect(tiles, x, y, genDir);
                 if (tile.equals("WaterNWSW")) {
@@ -685,7 +687,12 @@ class Map {
         genDir = "south";
         endPos = mapSize - (rand.nextInt(waterLineMax) + 3);
         for (; y < mapSize - endPos; y += changeOnAxis(tile, false, currDir)) { // second iteration of coastline defining
-            tile = nextWaterTile(tile, genDir, x, y, mapSize);
+            prevTile = tile;
+            if(prevTile.equals(tile))
+                sameTileCount++;
+            else
+                sameTileCount = 0;
+            tile = nextWaterTile(tile, genDir, x, y, mapSize, sameTileCount);
             if (tile == null) {
                 tile = forceRedirect(tiles, x, y, genDir);
                 x--;
@@ -707,11 +714,12 @@ class Map {
         genDir = "west";
         endPos = (rand.nextInt(waterLineMax) + 3);
         for (; x > endPos; x += changeOnAxis(tile, true, currDir)) { // third iteration of coastline defining
-            System.out.println(x);
-            System.out.println(y);
-            System.out.println(tile);
-            System.out.println();
-            tile = nextWaterTile(tile, genDir, x, y, mapSize);
+            prevTile = tile;
+            if(prevTile.equals(tile))
+                sameTileCount++;
+            else
+                sameTileCount = 0;
+            tile = nextWaterTile(tile, genDir, x, y, mapSize, sameTileCount);
             if (tile == null) {
                 tile = forceRedirect(tiles, x, y, genDir);
                 x--;
@@ -733,10 +741,12 @@ class Map {
         genDir = "north";
         endPos = (rand.nextInt(waterLineMax) + 3);
         for (; y > endPos; y += changeOnAxis(tile, false, currDir)) { // fourth iteration of coastline defining
-//            System.out.println(x);
-//            System.out.println(y);
-//            System.out.println();
-            tile = nextWaterTile(tile, genDir, x, y, mapSize);
+            prevTile = tile;
+            if(prevTile.equals(tile))
+                sameTileCount++;
+            else
+                sameTileCount = 0;
+            tile = nextWaterTile(tile, genDir, x, y, mapSize, sameTileCount);
             if (tile == null) {
                 tile = forceRedirect(tiles, x, y, genDir);
                 x++;
@@ -750,21 +760,22 @@ class Map {
 
         System.out.println("Northward generation finished");
 
-/*
-        for (y = 0; y < mapSize; y++){
+        /*for (y = 0; y < mapSize; y++){
             boolean genAllWater = true;
             for (x = 0; x < mapSize; x++){
                 if(tiles[x][y] == null && genAllWater)
-                    tiles[x][y] = new Tile("WaterAll", false, false);
+                    tiles[x][y] = new Tile("WaterAll");
                 else {
                     if (genAllWater)
                         genAllWater = false;
-                    else
+                    else if(tiles[x][y] == null){
                         genAllWater = true;
+                        tiles[x][y] = new Tile("WaterAll");
+                    }
                 }
             }
-        }
-*/
+        }*/
+
         // END WATER TILES GEN
         //////////////////////////////////////////////////////////
 

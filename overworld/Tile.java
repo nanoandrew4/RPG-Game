@@ -1,4 +1,4 @@
-package game;
+package overworld;
 
 import javafx.scene.layout.Pane;
 
@@ -22,11 +22,21 @@ public class Tile {
     // for static tiles
     Tile(String tileType){
         this.type = tileType;
+        if(tileType.contains("Water") || tileType.equals("Mountain")){
+            tresspassable = false;
+            accessible = false;
+        }
+        else{
+            tresspassable = true;
+            accessible = false;
+        }
     }
 
     // for settlements
     Tile(String type, String subType, String branch, String name, int relationship){
         this.type = type;
+        this.accessible = true;
+        this.tresspassable = false;
         settlementTile = new SettlementTile(subType, branch, name, relationship);
     }
 

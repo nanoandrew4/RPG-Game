@@ -73,6 +73,8 @@ public class InMapView {
     public double speedXVal;
     public double speedYVal;
     private final LongProperty lastUpdateTime = new SimpleLongProperty();
+    double width = 64, height = 96;
+    int zoom = 10;
     
     //constructor
     InMapView(double screenWidth, double screenHeight) {
@@ -82,13 +84,24 @@ public class InMapView {
         //3: health
         //4: overlay
         //5: fog
+        //setTileSize();
         imageViews = new ImageView[22][14][6];
-        images = new Images(64, 96);
+        images = new Images(width, height); // width = 64 & height = 96
         inmapLayout = new Pane();
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         speedXVal = 64;
         speedYVal = 64;
+    }
+
+    private void setTileSize() {
+        if (screenWidth > screenHeight) {
+            width = (screenHeight / zoom);
+            height = (screenHeight / zoom) * 1.5;
+        } else {
+            width = (screenWidth / zoom);
+            height = (screenWidth / zoom)  *1.5;
+        }
     }
     
     //initialize display

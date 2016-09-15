@@ -1,4 +1,4 @@
-package game;
+package overworld;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

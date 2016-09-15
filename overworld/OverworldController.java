@@ -5,7 +5,7 @@
     TODO: CLEAN UP AND ORGANIZE CODE NEATLY
  */
 
-package game;
+package overworld;
 
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -13,6 +13,7 @@ import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import main.Main;
 
 import java.util.Scanner;
 
@@ -29,11 +30,11 @@ public class OverworldController implements Runnable {
     private OverworldView view;
     private OverworldModel model;
 
-    OverworldController(Main main, boolean newGame) {
+    public OverworldController(Main main, boolean newGame) {
         start = System.currentTimeMillis();
 
         this.main = main;
-        model = new OverworldModel(main.mapSize, newGame);
+        model = new OverworldModel(main.mapSize, newGame, main.dbManager);
 
         System.out.println("Model init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
 

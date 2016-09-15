@@ -10,14 +10,15 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-
 import inmap.InMapController;
 import overworld.OverworldController;
+import java.sql.*;
 
 public class Main extends Application {
 
     OverworldController overworldController;
     InMapController IMController;
+    public DBManager dbManager;
 
     Stage stage;
 
@@ -47,9 +48,12 @@ public class Main extends Application {
         layout.getChildren().add(loadGame);
         layout.getChildren().add(inMap);
         newGame.setOnAction(event -> {
+
+            dbManager = new DBManager("test");
             
             layout.getChildren().remove(newGame);
             layout.getChildren().remove(loadGame);
+            layout.getChildren().remove(inMap);
 
             Button verySmall = new Button("Very Small");
             Button small = new Button("Small");
@@ -106,7 +110,8 @@ public class Main extends Application {
     private void startOverworldController(int mapSize, boolean newGame) {
         this.mapSize = mapSize;
         // if controllers need to talk, initialize objects and run instead of instance of new class
-        Thread overworldThread = new Thread(new OverworldController(this, newGame));
+        overworldController = new OverworldController(this, newGame);
+        Thread overworldThread = new Thread(overworldController);
         overworldThread.setDaemon(true);
         overworldThread.run();
 
@@ -115,7 +120,8 @@ public class Main extends Application {
     
     //start inmap controller
     private void startInMapController() {
-        Thread inmapThread = new Thread(new InMapController(this));
+        IMController = new InMapController(this);
+        Thread inmapThread = new Thread(IMController);
         inmapThread.setDaemon(true);
 
         inmapThread.run();
