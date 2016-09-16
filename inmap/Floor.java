@@ -268,7 +268,8 @@ public class Floor {
                 
                 //create rectangles and empty
                 for(int x = sizeX / 2 - size, y = 1; x > 0 && y < sizeY / 2; 
-                        x -= (x > size + 1 ? (x - size) / 2 : 1), y += (y > size + 1 ? y - size : 1)) {
+                        x -= (y < size + 1 ? size + 1 - y : 1), 
+                        y += (x < size + 1 ? size + 1 - x : 1)) {
                     for(int x2 = x; x2 < sizeX - x; x2++) {
                         for(int y2 = y; y2 < sizeY - y; y2++) {
                             tiles[x2][y2] = new Tile();

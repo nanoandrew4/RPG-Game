@@ -4,11 +4,6 @@
 
 package inmap;
 
-import javafx.animation.AnimationTimer;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.LongProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleLongProperty;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
@@ -68,11 +63,8 @@ public class InMapView {
     Text floorT, levelT, rip;
     public double screenWidth, screenHeight;
     private Pane inmapLayout;
-    public final DoubleProperty speedX = new SimpleDoubleProperty();
-    public final DoubleProperty speedY = new SimpleDoubleProperty();
     public double speedXVal;
     public double speedYVal;
-    private final LongProperty lastUpdateTime = new SimpleLongProperty();
     double width, height;
     final double zoom;
     
