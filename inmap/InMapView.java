@@ -13,6 +13,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.FontWeight;
+import javafx.scene.shape.Rectangle;
 
 class Images {
     //contains images
@@ -29,6 +30,7 @@ class Images {
     Image bat;
     Image slug;
     Image goblin;
+    Image boss;
     
     Image health;
     
@@ -49,6 +51,7 @@ class Images {
         bat = new Image("/media/graphics/inmap/batman.png", width, width, true, false);
         slug = new Image("/media/graphics/inmap/slug.png", width, width, true, false);
         goblin = new Image("/media/graphics/inmap/harambe.png", width, width, true, false);
+        boss = new Image("/media/graphics/inmap/clinton.jpg", width, width, true, false);
         
         health = new Image("/media/graphics/inmap/health.jpg", width, width/5, true, false);
         
@@ -60,9 +63,9 @@ public class InMapView {
     //vars
     Images images;
     ImageView[][][] imageViews;
-    Text floorT, levelT, rip;
+    Text floorT, rip;
     public double screenWidth, screenHeight;
-    private Pane inmapLayout;
+    private Pane inmapLayout, menuBox, UIBox;
     public double speedXVal;
     public double speedYVal;
     double width, height;
@@ -84,6 +87,8 @@ public class InMapView {
         setTileSize();
         images = new Images(width, height);
         inmapLayout = new Pane();
+        UIBox = new Pane();
+        menuBox = new Pane();
         speedXVal = 64;
         speedYVal = 64;
     }
@@ -143,12 +148,6 @@ public class InMapView {
         floorT.setFill(Paint.valueOf("WHITE"));
         inmapLayout.getChildren().add(floorT);
         
-        //level text
-        levelT = new Text(40, 60, ("Level " + floor.party[0].LVL));
-        levelT.setFont(Font.font(null, FontWeight.NORMAL, 24));
-        levelT.setFill(Paint.valueOf("WHITE"));
-        inmapLayout.getChildren().add(levelT);
-        
         rip = new Text(360, 340, ("  GAME OVER\nR TO RESTART"));
         rip.setFont(Font.font(null, FontWeight.BOLD, 80));
         rip.setFill(Paint.valueOf("WHITE"));
@@ -190,14 +189,57 @@ public class InMapView {
         //floor text
         floorT.setText("Floor " + floor.location.currentFloor);
         
-        //level text
-        levelT.setText("Level " + floor.party[0].LVL);
-        
         //rip
         if(!floor.party[0].exists)
             rip.setVisible(true);
         else
             rip.setVisible(false);
+    }
+    
+    //toggle menu
+    public void toggleMenu(String window, Floor floor) {
+        if(inmapLayout.getChildren().contains(menuBox)) {
+            inmapLayout.getChildren().remove(menuBox);
+        }
+        else {
+            inmapLayout.getChildren().add(getMenu(window, floor));
+        }
+    }
+    
+    //create menu
+    public Pane getMenu(String window, Floor floor) {
+        double boxWidth = screenWidth / 5 * 4;
+        double boxHeight = screenHeight / 3 * 2;
+
+        Rectangle box = new Rectangle(boxWidth, boxHeight, Paint.valueOf("WHITE"));
+        box.relocate((screenWidth / 2) - (boxWidth / 2), screenHeight / 2 - (boxHeight / 2));
+
+        //level text
+        Text levelT = new Text(screenWidth/3, screenHeight/3+screenHeight/5, ("Level " + floor.party[0].LVL));
+        levelT.setFont(Font.font(null, FontWeight.NORMAL, 24));
+        levelT.setFill(Paint.valueOf("BLACK"));
+        
+        menuBox.getChildren().addAll(box, levelT);
+        
+        return menuBox;
+    }
+    
+    //toggle UI
+    public void toggleUI() {
+        if(inmapLayout.getChildren().contains(UIBox)) {
+            inmapLayout.getChildren().remove(UIBox);
+        }
+        else {
+            double boxWidth = screenWidth / 5;
+            double boxHeight = screenHeight / 2;
+
+            Rectangle box = new Rectangle(boxWidth, boxHeight, Paint.valueOf("WHITE"));
+            box.relocate(screenWidth / 15, screenHeight / 10);
+
+            UIBox.getChildren().addAll(box);
+            
+            inmapLayout.getChildren().add(UIBox);
+        }
     }
     
     //choose image based on data
@@ -244,6 +286,8 @@ public class InMapView {
                 return images.bat;
             else if(type.equalsIgnoreCase("goblin"))
                 return images.goblin;
+            else if(type.equalsIgnoreCase("clinton"))
+                return images.boss;
             else return null;
         }
         else return null;

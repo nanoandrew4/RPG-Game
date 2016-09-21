@@ -14,7 +14,7 @@ public class Location {
     Location(String type, int size, Character[] party) {
         difficulty = (int)(Math.random() * 5 + 1);
         currentFloor = 0;
-        numFloors = (int)(Math.random() * 20 + 5); 
+        numFloors = (int)(Math.random() * 10 + 5); 
         floors = new Floor[numFloors];
         for(int i = 0; i < numFloors; i++) {
             floors[i] = new Floor(this, i, type, difficulty, size, party);

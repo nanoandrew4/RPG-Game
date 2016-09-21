@@ -65,6 +65,11 @@ public class Character {
         }
     }
     
+    //make boss: temporary
+    Character generateBoss() {
+        return new Character(8, 15, 5, 90, 12, 12, 12, 12, "Clinton", "Monster", "hostile");
+    }
+    
     //gain exp, calculate level
     void gainEXP(int exp) {
         EXP += exp;

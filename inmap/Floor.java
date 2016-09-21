@@ -88,6 +88,12 @@ public class Floor {
                             dy = (dx == 0 ? dy : 0);
 
                         process(n.x, n.y, n.x+dx, n.y+dy);
+                        break;
+                    case "wandering":
+                        
+                        break;
+                    case "stationary":
+                        break;
                     default: break;
                 }
             }
@@ -316,6 +322,7 @@ public class Floor {
                 
                 //generate enemies
                 nEnemies = (int)(Math.random() * (Math.sqrt((double)sizeX * sizeY) / 1.5) + 1);
+                if(floorNum == location.numFloors - 1) nEnemies++;
                 npcs = new Character[nEnemies];
                 for(int i = 0; i < nEnemies; i++) {
                     while(true) {
@@ -326,6 +333,20 @@ public class Floor {
                             npcs[i].x = x;
                             npcs[i].y = y;
                             chars[x][y] = npcs[i];
+                            break;
+                        }
+                    }
+                }
+                
+                if(floorNum == location.numFloors - 1) {
+                    while(true) {
+                        int x = (int)(Math.random() * sizeX);
+                        int y = (int)(Math.random() * sizeY);
+                        if(!tiles[x][y].isWall && !chars[x][y].exists) {
+                            npcs[nEnemies-1] = new Character().generateBoss();
+                            npcs[nEnemies-1].x = x;
+                            npcs[nEnemies-1].y = y;
+                            chars[x][y] = npcs[nEnemies-1];
                             break;
                         }
                     }
@@ -345,6 +366,8 @@ public class Floor {
                 tiles = new Tile[sizeX][sizeY];
                 chars = new Character[sizeX][sizeY];
                 items = new Item[sizeX][sizeY];
+                
+                //border
                 for(int x = 0; x < sizeX; x++) {
                     for(int y = 0; y < sizeY; y++) {
                         if(x == 0 || x == sizeX-1 || y == 0 || y == sizeY-1)
@@ -354,7 +377,73 @@ public class Floor {
                     }
                 }
                 
-                //generate walls
+                //generate upper wall
+                for(int x = 0, y = sizeY / 5 + 2; x < sizeX; x++) {
+                    y += (int)(Math.random() * 3) - 1;
+                    for(int i = (int)(Math.random() * 4 + 2); i > 0 && x < sizeX; i--, x++) {
+                        for(int y2 = y; y2 > 0; y2--) {
+                            tiles[x][y2] = new Tile("wall");
+                        }
+                    }
+                    x--;
+                }
+                
+                //generate lower wall
+                for(int x = 0, y = sizeY / 5 * 4 - 2; x < sizeX; x++) {
+                    y += (int)(Math.random() * 3) - 1;
+                    //don't close off
+                    if(tiles[x][y-2].isWall)
+                        y++;
+                    for(int i = (int)(Math.random() * 4 + 2); i > 0 && x < sizeX; i--, x++) {
+                        for(int y2 = y; y2 < sizeY; y2++) {
+                            tiles[x][y2] = new Tile("wall");
+                        }
+                    }
+                    x--;
+                }
+                
+                //generate stairsup if not at top
+                if(floorNum != location.numFloors - 1) {
+                    while(true) {
+                        int x = (int)(Math.random() * sizeX);
+                        int y = (int)(Math.random() * sizeY);
+                        if(!tiles[x][y].isWall) {
+                            tiles[x][y] = new Tile("stairsUp");
+                            endX = x;
+                            endY = y;
+                            break;
+                        }
+                    }
+                }
+                
+                //generate stairsdown
+                while(true) {
+                    int x = (int)(Math.random() * sizeX);
+                    int y = (int)(Math.random() * sizeY);
+                    if(!tiles[x][y].isWall && tiles[x][y].floorMovement == 0) {
+                        tiles[x][y] = new Tile("stairsDown");
+                        enterX = x;
+                        enterY = y;
+                        break;
+                    }
+                }
+                
+                //generate enemies
+                nEnemies = (int)(Math.random() * (Math.sqrt((double)sizeX * sizeY) / 1000.5) + 1);
+                npcs = new Character[nEnemies];
+                for(int i = 0; i < nEnemies; i++) {
+                    while(true) {
+                        int x = (int)(Math.random() * sizeX);
+                        int y = (int)(Math.random() * sizeY);
+                        if(!tiles[x][y].isWall && !chars[x][y].exists) {
+                            npcs[i] = new Character().generateEnemy();
+                            npcs[i].x = x;
+                            npcs[i].y = y;
+                            chars[x][y] = npcs[i];
+                            break;
+                        }
+                    }
+                }
                 
                 break;
         }

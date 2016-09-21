@@ -16,7 +16,7 @@ public class InMapModel {
         party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, "Hero", "Human", "NA");
         currentMap = 0;
         maps = new Location[1];
-        maps[0] = new Location("tower", 3, party);
+        maps[0] = new Location("cave", 2, party);
         maps[currentMap].getCurrentFloor().passControl(Direction.Up);
     }
     
@@ -29,7 +29,7 @@ public class InMapModel {
     void reset() {
         party[0].currentHP = party[0].maxHP;
         party[0].exists = true;
-        maps[currentMap] = new Location("tower", 4, party);
+        maps[currentMap] = new Location("tower", 2, party);
         maps[currentMap].getCurrentFloor().passControl(Direction.Up);
     }
     
