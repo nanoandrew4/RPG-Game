@@ -24,7 +24,12 @@ public class Character {
     
     //generate character given parameters
     Character(int LVL, int VIT, int INT, int ACC, int STR, int DEX, int WIS, int LUK, String name, String race, String AIMode) {
-        exists = true;
+        setStats(true, LVL, VIT, INT, ACC, STR, DEX, WIS, LUK, name, race, AIMode);
+    }
+    
+    //set stats
+    final void setStats(boolean exists, int LVL, int VIT, int INT, int ACC, int STR, int DEX, int WIS, int LUK, String name, String race, String AIMode) {
+        this.exists = exists;
         this.LVL = LVL;
         EXP = 0;
         this.VIT = VIT;
@@ -53,21 +58,25 @@ public class Character {
         currentMP = maxMP;
     }
     
+    //random NPC generation
+    void generateNPC() {
+        setStats(true, 1, 5, 1, 90, 1, 1, 1, 1, "NPC", "Human", "wandering");
+    }
+    
     //random enemy generation
-    Character generateEnemy() {
+    void generateEnemy() {
         switch((int)(Math.random() * 4)) {
-            //case: return new Character(lvl, vit, int, acc, str, dex, wis, luk, name);
-            case 0: return new Character(  2,   3,   1,  80,   2,   4,   1,   0, "Spider", "Monster", "hostile");
-            case 1: return new Character(  1,   5,   1,  90,   1,   1,   1,   0, "Slug", "Monster", "hostile");
-            case 2: return new Character(  5,   8,   3,  75,   6,   3,   2,   3, "Goblin", "Monster", "hostile");
-            case 3: return new Character(  3,   6,   3,  85,   3,   3,   1,   2, "Bat", "Monster", "hostile");
-            default: return new Character();
+            //case: setStats(true, lvl, vit, int, acc, str, dex, wis, luk, name,     race,      ai);
+            case 0: setStats(true,   2,   3,   1,  80,   2,   4,   1,   0, "Spider", "Monster", "hostile");
+            case 1: setStats(true,   1,   5,   1,  90,   1,   1,   1,   0, "Slug",   "Monster", "wandering");
+            case 2: setStats(true,   5,   8,   3,  75,   6,   3,   2,   3, "Goblin", "Monster", "hostile");
+            case 3: setStats(true,   3,   6,   3,  85,   3,   3,   1,   2, "Bat",    "Monster", "hostile");
         }
     }
     
     //make boss: temporary
-    Character generateBoss() {
-        return new Character(8, 15, 5, 90, 12, 12, 12, 12, "Clinton", "Monster", "hostile");
+    void generateBoss() {
+        setStats(true, 8, 15, 5, 90, 12, 12, 12, 12, "Clinton", "Monster", "hostile");
     }
     
     //gain exp, calculate level

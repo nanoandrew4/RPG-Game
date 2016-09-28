@@ -4,10 +4,6 @@
 
 package inmap;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javafx.concurrent.Task;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -63,13 +59,13 @@ public class InMapController implements Runnable {
                     case R: model.reset(); break;
                     //open menu
                     case C:
-                        view.toggleMenu("", model.getCurrentLocation().getCurrentFloor());
+                        view.toggleMenu("", model.getParty(), model.getInventory(), model.getGold());
                         control = "menu";
                         break;
                     //display UI
                     case TAB:
                         if(!UIVisible) {
-                            view.toggleUI();
+                            view.toggleUI(model.getCurrentLocation(), model.getParty(), model.getGold());
                             UIVisible = true;
                         }
                         break;
@@ -84,9 +80,15 @@ public class InMapController implements Runnable {
             //menu scrolling
             else if(control.equals("menu")) {
                 switch(event.getCode()) {
+                    
+                    case A: view.changeMenu(-1, model.getParty(), model.getInventory(), model.getGold()); break;
+                    case LEFT: view.changeMenu(-1, model.getParty(), model.getInventory(), model.getGold()); break;
+                    case D: view.changeMenu(1, model.getParty(), model.getInventory(), model.getGold()); break;
+                    case RIGHT: view.changeMenu(1, model.getParty(), model.getInventory(), model.getGold()); break;
+                    
                     //close menu
                     case C:
-                        view.toggleMenu("", model.getCurrentLocation().getCurrentFloor());
+                        view.toggleMenu("", model.getParty(), model.getInventory(), model.getGold());
                         control = "floor";
                         break;
                 }
@@ -98,22 +100,29 @@ public class InMapController implements Runnable {
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
             
             //stop moving
-            if(event.getCode() == KeyCode.W || event.getCode() == KeyCode.UP 
-                    || event.getCode() == KeyCode.A || event.getCode() == KeyCode.LEFT 
-                    || event.getCode() == KeyCode.S || event.getCode() == KeyCode.DOWN 
-                    || event.getCode() == KeyCode.D || event.getCode() == KeyCode.RIGHT)
-                moving = false;
+//            if(event.getCode() == KeyCode.W || event.getCode() == KeyCode.UP 
+//                    || event.getCode() == KeyCode.A || event.getCode() == KeyCode.LEFT 
+//                    || event.getCode() == KeyCode.S || event.getCode() == KeyCode.DOWN 
+//                    || event.getCode() == KeyCode.D || event.getCode() == KeyCode.RIGHT) {
+//                moving = false;
+//            }
             
-            switch(event.getCode()) {
-                //release UI
-                case TAB:
-                    view.toggleUI();
-                    UIVisible = false;
-                    break;
-                //release shift
-                case SHIFT:
-                    shiftHeld = false;
-                    break;
+            if(control.equals("floor"))
+            {
+                switch(event.getCode()) {
+                    //release UI
+                    case TAB:
+                        view.toggleUI(model.getCurrentLocation(), model.getParty(), model.getGold());
+                        UIVisible = false;
+                        break;
+                    //release shift
+                    case SHIFT:
+                        shiftHeld = false;
+                        break;
+                }
+            }
+            else if(control.equals("menu")) {
+                
             }
             
             event.consume();

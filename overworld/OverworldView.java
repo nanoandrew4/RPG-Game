@@ -162,6 +162,8 @@ public class OverworldView {
                 }
             }
         }
+        
+        
 
         for (int y = -zoom; y < zoom; y++) { // for the tile borders
             for (int x = -zoom; x < zoom; x++) {
@@ -284,7 +286,7 @@ public class OverworldView {
                 if (!(currPos[0] + x < 0 || currPos[0] + x > mapSize)) {
                     int xPos = currPos[0] + x;
                     genTile(xPos, yPos, tiles);
-                    //imageViews[xPos][yPos].relocate(top ? imageViews[xPos][yPos + 1].getTranslateX() + 100 : imageViews[xPos][yPos - 1].getTranslateX() - 100, top ? imageViews[xPos][yPos + 1].getTranslateY() + 50 : imageViews[xPos][yPos - 1].getTranslateY() - 50);
+//                    imageViews[xPos][yPos].relocate(top ? imageViews[xPos][yPos + 1].getTranslateX() + 100 : imageViews[xPos][yPos - 1].getTranslateX() - 100, top ? imageViews[xPos][yPos + 1].getTranslateY() + 50 : imageViews[xPos][yPos - 1].getTranslateY() - 50);
                     imageViews[xPos][yPos][0].relocate(0.5 * mapTileSize * (x - y) + (screenWidth) - (mapTileSize / 2), 0.25 * mapTileSize * (x + y)/* - (screenHeight / 2)*/ - (mapTileSize / 2));
                     overworldLayout.getChildren().add(imageViews[xPos][yPos][0]);
                     setMoveAnim(imageViews[xPos][yPos][0]);
