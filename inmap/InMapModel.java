@@ -5,6 +5,8 @@
 
 package inmap;
 
+import main.Control;
+
 public class InMapModel {
     private final Location[] maps;
     private int currentMap;
@@ -15,17 +17,17 @@ public class InMapModel {
     //default constructor
     InMapModel() {
         party = new Character[1];
-        party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, "Hero", "Human", "NA");
+        party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, "Hero", "Human", "NA", false);
         currentMap = 0;
         maps = new Location[1];
-        maps[0] = new Location("city", 2, party);
+        maps[0] = new Location(this, "city", 2, party);
 //        switch((int)(Math.random()*3)) {
 //            case 0: maps[0] = new Location("tower", (int)(Math.random()*3+1), party); break;
 //            case 1: maps[0] = new Location("dungeon", (int)(Math.random()*3+1), party); break;
 //            case 2: maps[0] = new Location("cave", (int)(Math.random()*3+1), party); break;
 //        }
         
-        maps[currentMap].getCurrentFloor().passControl(Direction.Up);
+        maps[currentMap].getCurrentFloor().passControl(Control.Up);
         inv = new Item[64];
         
         //testing
@@ -36,7 +38,7 @@ public class InMapModel {
     }
     
     //process input
-    void process(Direction direction) {
+    void process(Control direction) {
         maps[currentMap].process(direction);
     }
     
@@ -45,11 +47,11 @@ public class InMapModel {
         party[0].currentHP = party[0].maxHP;
         party[0].exists = true;
         switch((int)(Math.random()*3)) {
-            case 0: maps[0] = new Location("tower", (int)(Math.random()*3+1), party); break;
-            case 1: maps[0] = new Location("dungeon", (int)(Math.random()*3+1), party); break;
-            case 2: maps[0] = new Location("cave", (int)(Math.random()*3+1), party); break;
+            case 0: maps[0] = new Location(this, "tower", (int)(Math.random()*3+1), party); break;
+            case 1: maps[0] = new Location(this, "dungeon", (int)(Math.random()*3+1), party); break;
+            case 2: maps[0] = new Location(this, "cave", (int)(Math.random()*3+1), party); break;
         }
-        maps[currentMap].getCurrentFloor().passControl(Direction.Up);
+        maps[currentMap].getCurrentFloor().passControl(Control.Up);
     }
     
     //return current map

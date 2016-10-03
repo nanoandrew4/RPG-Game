@@ -9,6 +9,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 
 import main.Main;
+import main.Control;
 
 public class InMapController implements Runnable {
     
@@ -47,14 +48,14 @@ public class InMapController implements Runnable {
             if(control.equals("floor")) {
                 switch(event.getCode()) {
                     //directional movement
-                    case W: modelProcess(Direction.Up); moving = true; break;
-                    case UP: modelProcess(Direction.Up); moving = true; break;
-                    case A: modelProcess(Direction.Left); moving = true; break;
-                    case LEFT: modelProcess(Direction.Left); moving = true; break;
-                    case S: modelProcess(Direction.Down); moving = true; break;
-                    case DOWN: modelProcess(Direction.Down); moving = true; break;
-                    case D: modelProcess(Direction.Right); moving = true; break;
-                    case RIGHT: modelProcess(Direction.Right); moving = true; break;
+                    case W: modelProcess(Control.Up); moving = true; break;
+                    case UP: modelProcess(Control.Up); moving = true; break;
+                    case A: modelProcess(Control.Left); moving = true; break;
+                    case LEFT: modelProcess(Control.Left); moving = true; break;
+                    case S: modelProcess(Control.Down); moving = true; break;
+                    case DOWN: modelProcess(Control.Down); moving = true; break;
+                    case D: modelProcess(Control.Right); moving = true; break;
+                    case RIGHT: modelProcess(Control.Right); moving = true; break;
                     //reset location: debug purposes
                     case R: model.reset(); break;
                     //open menu
@@ -130,7 +131,7 @@ public class InMapController implements Runnable {
     }
     
     //directional movement processing
-    private void modelProcess(Direction direction) {
+    private void modelProcess(Control direction) {
         model.process(direction);
         model.getCurrentLocation().getCurrentFloor().processAI();
         

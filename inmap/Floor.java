@@ -5,7 +5,10 @@
 
 package inmap;
 
+import main.Control;
+
 public class Floor {
+    InMapModel model;
     Location location;
     int size, sizeX, sizeY; //size is arbitrary, affects sizeX/Y
     int difficulty; //difficulty affects spawn rate, avg level
@@ -18,9 +21,10 @@ public class Floor {
     Item[][] items;
     
     //constructor
-    Floor(Location location, int floorNum, String type, int diff, int size, Character[] party) {
+    Floor(InMapModel model, Location location, int floorNum, String type, int diff, int size, Character[] party) {
         //init
         this.location = location;
+        this.model = model;
         this.floorNum = floorNum;
         difficulty = diff;
         this.size = size;
@@ -30,7 +34,7 @@ public class Floor {
     }
     
     //ready for input processing
-    void passControl(Direction direction) {
+    void passControl(Control direction) {
         switch(direction) {
             case Up:
                 party[0].x = enterX;
@@ -46,7 +50,7 @@ public class Floor {
     }
     
     //process player input
-    void processPlayer(Direction direction) {
+    void processPlayer(Control direction) {
         int sx = party[0].x;
         int sy = party[0].y;
         int ex = party[0].x;
@@ -61,14 +65,13 @@ public class Floor {
         process(sx, sy, ex, ey);
     }
     
-    //process all npc movement: currently just follow player
+    //process all npc movement
     void processAI() {
         for(Character n : npcs) {
             if(n.exists) {
                 int dx, dy;
                 switch(n.AIMode) {
-                    case "NA": break;
-                    case "hostile":
+                    case "attacking":
                         //x movement
                         if(party[0].x < n.x)
                             dx = -1;
@@ -90,6 +93,7 @@ public class Floor {
                         process(n.x, n.y, n.x+dx, n.y+dy);
                         break;
                     case "wandering":
+                        //wander randomly
                         int i = (int)(Math.random() * 20);
                         if(i < 4) {
                             dx = 0;
@@ -103,8 +107,15 @@ public class Floor {
                             }
                             process(n.x, n.y, n.x+dx, n.y+dy);
                         }
+                        //start attacking if within range
+                        if(n.hostile && Math.sqrt(Math.pow((party[0].x-n.x),2)+
+                                Math.pow((party[0].y-n.y),2)) < 7) {
+                            n.AIMode = "attacking";
+                        }
                         break;
                     case "stationary":
+                        break;
+                    case "NA":
                         break;
                     default: break;
                 }
@@ -117,14 +128,18 @@ public class Floor {
         //interaction with npc
         if(chars[sx][sy].exists && chars[ex][ey].exists) {
             //attacking
-            if(!chars[sx][sy].race.name.equals(chars[ex][ey].race.name) || chars[ex][ey].AIMode.equals("hostile")) {
+            if(!chars[sx][sy].race.name.equals(chars[ex][ey].race.name) 
+                    || chars[ex][ey].AIMode.equals("attacking")) {
                 attack(chars[sx][sy], chars[ex][ey]);
                 if(chars[ex][ey].currentHP <= 0) {
                     chars[sx][sy].gainEXP(chars[ex][ey]);
                     chars[ex][ey].kill();
                 }
             }
-            //interacting
+            //talking with npcs
+            else if(chars[ex][ey].AIMode.equals("wandering")) {
+                
+            }
         }
         //moving floors
         else if(tiles[ex][ey].floorMovement != 0 && chars[sx][sy].name.equals("Hero")) {
@@ -226,7 +241,7 @@ public class Floor {
                 vWall1 = (vWall1 == hDoor ? vWall1+1: vWall1);
                 for(int i = hWall; i < sizeY; i++)
                     tiles[vWall1][i] = new Tile("wall");
-                tiles[vWall1][(int)(Math.random() * (sizeY - 2 - hWall) + hWall + 1)] = new Tile("door");
+                tiles[vWall1][(int)(Math.random() * (sizeY-2-hWall) +hWall+1)] = new Tile("door");
                 
                 //other vertical wall
                 int vWall2 = (int)(Math.random() * (sizeX-4)) + 2;
@@ -262,7 +277,7 @@ public class Floor {
                 }
                 
                 //generate enemies
-                nEnemies = (int)(Math.random() * (Math.sqrt((double)sizeX * sizeY) / 1.5) + 1);
+                nEnemies = (int)(Math.random() * (Math.sqrt((double)sizeX*sizeY)/1.5)+1);
                 npcs = new Character[nEnemies];
                 for(int i = 0; i < nEnemies; i++) {
                     while(true) {

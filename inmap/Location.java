@@ -5,13 +5,17 @@
 
 package inmap;
 
+import main.Control;
+
 public class Location {
+    InMapModel model;
     int currentFloor, difficulty, numFloors;
     String name, type;
     private Floor[] floors;
     
     //random constructor
-    Location(String type, int size, Character[] party) {
+    Location(InMapModel model, String type, int size, Character[] party) {
+        this.model = model;
         this.type = type;
         difficulty = (int)(Math.random() * 5 + 1);
         currentFloor = 0;
@@ -19,7 +23,7 @@ public class Location {
         floors = new Floor[numFloors];
         randName();
         for(int i = 0; i < numFloors; i++) {
-            floors[i] = new Floor(this, i, type, difficulty, size, party);
+            floors[i] = new Floor(model, this, i, type, difficulty, size, party);
         }
     }
     
@@ -43,11 +47,11 @@ public class Location {
     void changeFloor(int floorMovement) {
         currentFloor += floorMovement;
         if(currentFloor < 0) currentFloor = 0;
-        floors[currentFloor].passControl(floorMovement > 0 ? Direction.Up : Direction.Down);
+        floors[currentFloor].passControl(floorMovement > 0 ? Control.Up : Control.Down);
     }
     
     //process input
-    void process(Direction direction) {
+    void process(Control direction) {
         floors[currentFloor].processPlayer(direction);
     }
     

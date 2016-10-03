@@ -12,6 +12,7 @@ public class Character {
     int maxHP, currentHP, maxMP, currentMP; //calculated stats
     double CRT, HIT, EVA, DMG, DEF, RES, PRC; //combat stats
     String name, AIMode;
+    boolean hostile;
     Race race;
     Item weapon;
     Item headArmor, torsoArmor, legArmor, footArmor;
@@ -23,12 +24,12 @@ public class Character {
     }
     
     //generate character given parameters
-    Character(int LVL, int VIT, int INT, int ACC, int STR, int DEX, int WIS, int LUK, String name, String race, String AIMode) {
-        setStats(true, LVL, VIT, INT, ACC, STR, DEX, WIS, LUK, name, race, AIMode);
+    Character(int LVL, int VIT, int INT, int ACC, int STR, int DEX, int WIS, int LUK, String name, String race, String AIMode, boolean hostile) {
+        setStats(true, LVL, VIT, INT, ACC, STR, DEX, WIS, LUK, name, race, AIMode, hostile);
     }
     
     //set stats
-    final void setStats(boolean exists, int LVL, int VIT, int INT, int ACC, int STR, int DEX, int WIS, int LUK, String name, String race, String AIMode) {
+    final void setStats(boolean exists, int LVL, int VIT, int INT, int ACC, int STR, int DEX, int WIS, int LUK, String name, String race, String AIMode, boolean hostile) {
         this.exists = exists;
         this.LVL = LVL;
         EXP = 0;
@@ -41,6 +42,7 @@ public class Character {
         this.LUK = LUK;
         this.name = name;
         this.AIMode = AIMode;
+        this.hostile = hostile;
         
         weapon = new Item();
         headArmor = new Item();
@@ -60,23 +62,23 @@ public class Character {
     
     //random NPC generation
     void generateNPC() {
-        setStats(true, 1, 5, 1, 90, 1, 1, 1, 1, "NPC", "Human", "wandering");
+        setStats(true, 1, 5, 1, 90, 1, 1, 1, 1, "NPC", "Human", "wandering", false);
     }
     
     //random enemy generation
     void generateEnemy() {
         switch((int)(Math.random() * 4)) {
-            //case: setStats(true, lvl, vit, int, acc, str, dex, wis, luk, name,     race,      ai);
-            case 0: setStats(true,   2,   3,   1,  80,   2,   4,   1,   0, "Spider", "Monster", "hostile");
-            case 1: setStats(true,   1,   5,   1,  90,   1,   1,   1,   0, "Slug",   "Monster", "wandering");
-            case 2: setStats(true,   5,   8,   3,  75,   6,   3,   2,   3, "Goblin", "Monster", "hostile");
-            case 3: setStats(true,   3,   6,   3,  85,   3,   3,   1,   2, "Bat",    "Monster", "hostile");
+            //case: setStats(true, lvl, vit, int, acc, str, dex, wis, luk, name,     race,      ai,          hostile);
+            case 0: setStats(true,   2,   3,   1,  80,   2,   4,   1,   0, "Spider", "Monster", "wandering", true); break;
+            case 1: setStats(true,   1,   5,   1,  90,   1,   1,   1,   0, "Slug",   "Monster", "wandering", true); break;
+            case 2: setStats(true,   5,   8,   3,  75,   6,   3,   2,   3, "Goblin", "Monster", "wandering", true); break;
+            case 3: setStats(true,   3,   6,   3,  85,   3,   3,   1,   2, "Bat",    "Monster", "wandering", true); break;
         }
     }
     
     //make boss: temporary
     void generateBoss() {
-        setStats(true, 8, 15, 5, 90, 12, 12, 12, 12, "Clinton", "Monster", "hostile");
+        setStats(true, 8, 15, 5, 90, 12, 12, 12, 12, "Clinton", "Monster", "wandering", true);
     }
     
     //gain exp, calculate level
