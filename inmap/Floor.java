@@ -36,12 +36,12 @@ public class Floor {
     //ready for input processing
     void passControl(Control direction) {
         switch(direction) {
-            case Up:
+            case UP:
                 party[0].x = enterX;
                 party[0].y = enterY;
                 chars[enterX][enterY] = party[0];
                 break;
-            case Down:
+            case DOWN:
                 party[0].x = endX;
                 party[0].y = endY;
                 chars[endX][endY] = party[0];
@@ -56,10 +56,10 @@ public class Floor {
         int ex = party[0].x;
         int ey = party[0].y;
         switch(direction) {
-            case Up: ey = party[0].y - 1; break;
-            case Down: ey = party[0].y + 1; break;
-            case Left: ex = party[0].x - 1; break;
-            case Right: ex = party[0].x + 1; break;
+            case UP: ey = party[0].y - 1; break;
+            case DOWN: ey = party[0].y + 1; break;
+            case LEFT: ex = party[0].x - 1; break;
+            case RIGHT: ex = party[0].x + 1; break;
         }
         
         process(sx, sy, ex, ey);

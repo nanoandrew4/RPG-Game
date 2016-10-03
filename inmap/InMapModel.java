@@ -27,7 +27,7 @@ public class InMapModel {
 //            case 2: maps[0] = new Location("cave", (int)(Math.random()*3+1), party); break;
 //        }
         
-        maps[currentMap].getCurrentFloor().passControl(Control.Up);
+        maps[currentMap].getCurrentFloor().passControl(Control.UP);
         inv = new Item[64];
         
         //testing
@@ -51,7 +51,7 @@ public class InMapModel {
             case 1: maps[0] = new Location(this, "dungeon", (int)(Math.random()*3+1), party); break;
             case 2: maps[0] = new Location(this, "cave", (int)(Math.random()*3+1), party); break;
         }
-        maps[currentMap].getCurrentFloor().passControl(Control.Up);
+        maps[currentMap].getCurrentFloor().passControl(Control.UP);
     }
     
     //return current map

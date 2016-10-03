@@ -46,32 +46,28 @@ public class InMapController implements Runnable {
 
             //movement in floors
             if(control.equals("floor")) {
-                switch(event.getCode()) {
+                //get control values for keycodes
+                switch(main.getControl(event.getCode())) {
                     //directional movement
-                    case W: modelProcess(Control.Up); moving = true; break;
-                    case UP: modelProcess(Control.Up); moving = true; break;
-                    case A: modelProcess(Control.Left); moving = true; break;
-                    case LEFT: modelProcess(Control.Left); moving = true; break;
-                    case S: modelProcess(Control.Down); moving = true; break;
-                    case DOWN: modelProcess(Control.Down); moving = true; break;
-                    case D: modelProcess(Control.Right); moving = true; break;
-                    case RIGHT: modelProcess(Control.Right); moving = true; break;
-                    //reset location: debug purposes
-                    case R: model.reset(); break;
-                    //open menu
-                    case C:
+                    case UP: modelProcess(Control.UP); break;
+                    case LEFT: modelProcess(Control.LEFT); break;
+                    case DOWN: modelProcess(Control.DOWN); break;
+                    case RIGHT: modelProcess(Control.RIGHT); break;
+                    //open/close menu
+                    case MENU:
                         view.toggleMenu("", model.getParty(), model.getInventory(), model.getGold());
                         control = "menu";
                         break;
-                    //display UI
+                    //toggle UI
                     case TAB:
                         if(!UIVisible) {
                             view.toggleUI(model.getCurrentLocation(), model.getParty(), model.getGold());
                             UIVisible = true;
                         }
                         break;
-                    case SHIFT:
-                        shiftHeld = true;
+                    //debug reset
+                    case R:
+                        model.reset(); break;
                     default: break;
                 }
 
@@ -80,15 +76,13 @@ public class InMapController implements Runnable {
             
             //menu scrolling
             else if(control.equals("menu")) {
-                switch(event.getCode()) {
-                    
-                    case A: view.changeMenu(-1, model.getParty(), model.getInventory(), model.getGold()); break;
+                switch(main.getControl(event.getCode())) {
+                    //switching menus
                     case LEFT: view.changeMenu(-1, model.getParty(), model.getInventory(), model.getGold()); break;
-                    case D: view.changeMenu(1, model.getParty(), model.getInventory(), model.getGold()); break;
                     case RIGHT: view.changeMenu(1, model.getParty(), model.getInventory(), model.getGold()); break;
                     
                     //close menu
-                    case C:
+                    case MENU:
                         view.toggleMenu("", model.getParty(), model.getInventory(), model.getGold());
                         control = "floor";
                         break;
@@ -98,28 +92,18 @@ public class InMapController implements Runnable {
             event.consume();
         });
 
+        //key release events
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
-            
-            //stop moving
-//            if(event.getCode() == KeyCode.W || event.getCode() == KeyCode.UP 
-//                    || event.getCode() == KeyCode.A || event.getCode() == KeyCode.LEFT 
-//                    || event.getCode() == KeyCode.S || event.getCode() == KeyCode.DOWN 
-//                    || event.getCode() == KeyCode.D || event.getCode() == KeyCode.RIGHT) {
-//                moving = false;
-//            }
             
             if(control.equals("floor"))
             {
-                switch(event.getCode()) {
+                switch(main.getControl(event.getCode())) {
                     //release UI
                     case TAB:
                         view.toggleUI(model.getCurrentLocation(), model.getParty(), model.getGold());
                         UIVisible = false;
                         break;
-                    //release shift
-                    case SHIFT:
-                        shiftHeld = false;
-                        break;
+                        
                 }
             }
             else if(control.equals("menu")) {

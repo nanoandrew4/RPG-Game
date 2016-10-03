@@ -6,32 +6,55 @@ package main;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+
+import java.util.HashMap;
+
 import inmap.InMapController;
 import overworld.OverworldController;
-import java.sql.*;
 
 public class Main extends Application {
-
+    //controllers
     OverworldController overworldController;
     InMapController IMController;
     public DBManager dbManager;
+    //converts keycodes into control enums
+    private HashMap<KeyCode,Control> keybindings;
 
     Stage stage;
 
     public int mapSize;
-
     public double screenWidth, screenHeight;
 
     public static void main(String[] args){
         launch(args);
     }
 
+    @Override
     public void start(Stage stage){
         this.stage = stage;
+        
+        keybindings = new HashMap<>();
+        keybindings.put(KeyCode.W,Control.UP);
+        keybindings.put(KeyCode.A,Control.LEFT);
+        keybindings.put(KeyCode.S,Control.DOWN);
+        keybindings.put(KeyCode.D,Control.RIGHT);
+        keybindings.put(KeyCode.UP,Control.UP);
+        keybindings.put(KeyCode.LEFT,Control.LEFT);
+        keybindings.put(KeyCode.DOWN,Control.DOWN);
+        keybindings.put(KeyCode.RIGHT,Control.RIGHT);
+        keybindings.put(KeyCode.TAB,Control.TAB);
+        keybindings.put(KeyCode.C,Control.MENU);
+        keybindings.put(KeyCode.Z,Control.SELECT);
+        keybindings.put(KeyCode.X,Control.BACK);
+        //temporary keybindings
+        keybindings.put(KeyCode.R,Control.R);
+        keybindings.put(KeyCode.T,Control.T);
+        
         stage.setTitle("Rising Legend");
 
         getScreenSize();
@@ -135,5 +158,13 @@ public class Main extends Application {
     private void getScreenSize() {
         screenWidth = Screen.getPrimary().getVisualBounds().getWidth();
         screenHeight = Screen.getPrimary().getVisualBounds().getHeight();
+    }
+    
+    //returns control value of keycode with keybindings hashmap
+    public Control getControl(KeyCode k) {
+        if(keybindings.get(k) == null)
+            return Control.NULL;
+        else
+            return keybindings.get(k);
     }
 }

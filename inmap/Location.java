@@ -47,7 +47,7 @@ public class Location {
     void changeFloor(int floorMovement) {
         currentFloor += floorMovement;
         if(currentFloor < 0) currentFloor = 0;
-        floors[currentFloor].passControl(floorMovement > 0 ? Control.Up : Control.Down);
+        floors[currentFloor].passControl(floorMovement > 0 ? Control.UP : Control.DOWN);
     }
     
     //process input
