@@ -39,11 +39,13 @@ public class Floor {
             case UP:
                 party[0].x = enterX;
                 party[0].y = enterY;
+                chars[enterX][enterY].kill();
                 chars[enterX][enterY] = party[0];
                 break;
             case DOWN:
                 party[0].x = endX;
                 party[0].y = endY;
+                chars[endX][endY].kill();
                 chars[endX][endY] = party[0];
                 break;
         }
@@ -83,6 +85,27 @@ public class Floor {
                             dy = -1;
                         else if(party[0].y > n.y)
                             dy = 1;
+                        else dy = 0;
+                        //randomly move either vertically or horizontally
+                        if(Math.random() * 100 < 50)
+                            dx = (dy == 0 ? dx : 0);
+                        else 
+                            dy = (dx == 0 ? dy : 0);
+
+                        process(n.x, n.y, n.x+dx, n.y+dy);
+                        break;
+                    case "fleeing": 
+                        //x movement
+                        if(party[0].x < n.x)
+                            dx = 1;
+                        else if(party[0].x > n.x)
+                            dx = -1;
+                        else dx = 0;
+                        //y movement
+                        if(party[0].y < n.y)
+                            dy = 1;
+                        else if(party[0].y > n.y)
+                            dy = -1;
                         else dy = 0;
                         //randomly move either vertically or horizontally
                         if(Math.random() * 100 < 50)
@@ -434,7 +457,7 @@ public class Floor {
                 for(int x = 0, y = sizeY / 5 * 4 - 2; x < sizeX; x++) {
                     y += (int)(Math.random() * 3) - 1;
                     //don't close off
-                    if(tiles[x][y-2].isWall)
+                    if(y <= sizeY && tiles[x][y-2].isWall)
                         y++;
                     for(int i = (int)(Math.random() * 4 + 2); i > 0 && x < sizeX; i--, x++) {
                         for(int y2 = y; y2 < sizeY; y2++) {

@@ -44,7 +44,7 @@ public class InMapController implements Runnable {
 
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
 
-            //movement in floors
+            //movement in floor
             if(control.equals("floor")) {
                 //get control values for keycodes
                 switch(main.getControl(event.getCode())) {
@@ -55,6 +55,7 @@ public class InMapController implements Runnable {
                     case RIGHT: modelProcess(Control.RIGHT); break;
                     //open/close menu
                     case MENU:
+                        model.toggleMenu();
                         view.toggleMenu("", model.getParty(), model.getInventory(), model.getGold());
                         control = "menu";
                         break;
@@ -117,26 +118,6 @@ public class InMapController implements Runnable {
     //directional movement processing
     private void modelProcess(Control direction) {
         model.process(direction);
-        model.getCurrentLocation().getCurrentFloor().processAI();
-        
-//        Task<Void> task = new Task<Void>() {
-//            @Override
-//            public Void call() throws Exception {
-//                Thread.sleep(50);
-//                return null;
-//            }
-//        };
-//
-//        task.setOnSucceeded(event -> {
-//            System.out.println("a");
-//            model.process(direction);
-//            model.getCurrentLocation().getCurrentFloor().processAI();
-//            if(moving)
-//                new Thread(task).run();
-//        });
-//        
-//        Thread mThread = new Thread(task);
-//        mThread.run();
     }
     
 }

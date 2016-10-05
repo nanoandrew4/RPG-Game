@@ -10,7 +10,6 @@ import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
@@ -31,11 +30,28 @@ class Images {
     Image stairsdown;
     
     Image hero;
-    Image spider;
+    Image adelf;
     Image bat;
-    Image slug;
-    Image goblin;
-    Image boss;
+    Image bell;
+    Image chest;
+    Image chick;
+    Image chicken;
+    Image fishman;
+    Image flan;
+    Image ghost;
+    Image kingslime;
+    Image longcat;
+    Image manta;
+    Image mote;
+    Image skelebro;
+    Image snail;
+    Image spookyslime;
+    Image spookyslug;
+    
+//    Image spider;
+//    Image slug;
+//    Image goblin;
+//    Image boss;
     
     Image npc1;
     Image npc2;
@@ -53,15 +69,32 @@ class Images {
         stairsup = new Image("/media/graphics/inmap/stairsup.png", width, height, true, false);
         stairsdown = new Image("/media/graphics/inmap/stairsdown.png", width, height, true, false);
 
-        
-        hero = new Image("/media/graphics/inmap/trump.png", width, width, true, false);
         npc1 = new Image("/media/graphics/inmap/elonaSin.png", width, width, true, false);
         npc2 = new Image("/media/graphics/inmap/elonaGilbert.png", width, width, true, false);
-        spider = new Image("/media/graphics/inmap/spooder.png", width, width, true, false);
-        bat = new Image("/media/graphics/inmap/batman.png", width, width, true, false);
-        slug = new Image("/media/graphics/inmap/slug.png", width, width, true, false);
-        goblin = new Image("/media/graphics/inmap/harambe.png", width, width, true, false);
-        boss = new Image("/media/graphics/inmap/clinton.jpg", width, width, true, false);
+//        spider = new Image("/media/graphics/inmap/spooder.png", width, width, true, false);
+//        bat = new Image("/media/graphics/inmap/batman.png", width, width, true, false);
+//        slug = new Image("/media/graphics/inmap/slug.png", width, width, true, false);
+//        goblin = new Image("/media/graphics/inmap/harambe.png", width, width, true, false);
+//        boss = new Image("/media/graphics/inmap/clinton.jpg", width, width, true, false);
+        hero = new Image("/media/graphics/inmap/knight.png", width, width, true, false);
+//        hero = new Image("/media/graphics/inmap/trump.png", width, width, true, false);
+        adelf = new Image("/media/graphics/inmap/adelf.png", width, width, true, false);
+        bat = new Image("/media/graphics/inmap/bat.png", width, width, true, false);
+        bell = new Image("/media/graphics/inmap/bell.png", width, width, true, false);
+        chest = new Image("/media/graphics/inmap/chest.png", width, width, true, false);
+        chick = new Image("/media/graphics/inmap/chick.png", width, width, true, false);
+        chicken = new Image("/media/graphics/inmap/chicken.png", width, width, true, false);
+        fishman = new Image("/media/graphics/inmap/fishman.png", width, width, true, false);
+        flan = new Image("/media/graphics/inmap/flan.png", width, width, true, false);
+        ghost = new Image("/media/graphics/inmap/ghost.png", width, width, true, false);
+        kingslime = new Image("/media/graphics/inmap/kingslime.png", width, width, true, false);
+        longcat = new Image("/media/graphics/inmap/longcat.png", width, width, true, false);
+        manta = new Image("/media/graphics/inmap/manta.png", width, width, true, false);
+        mote = new Image("/media/graphics/inmap/mote.png", width, width, true, false);
+        skelebro = new Image("/media/graphics/inmap/skelebro.png", width, width, true, false);
+        snail = new Image("/media/graphics/inmap/snail.png", width, width, true, false);
+        spookyslime = new Image("/media/graphics/inmap/spookyslime.png", width, width, true, false);
+        spookyslug = new Image("/media/graphics/inmap/spookyslug.png", width, width, true, false);
         
         health = new Image("/media/graphics/inmap/health.jpg", width, width/5, true, false);
         
@@ -202,6 +235,17 @@ public class InMapView {
                     imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3].setVisible(false);
                 
                 inmapLayout.getChildren().add(imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3]);
+            }
+        }
+        
+        //fog
+        for(int x = 0; x < 24; x++) {
+            for(int y = 0; y < 16; y++) {
+                imageViews[x][y][5] = new ImageView(images.black);
+                imageViews[x][y][5].relocate(64*x-32, 64*y-32);
+                imageViews[x][y][5].setOpacity(Math.sqrt(Math.pow(Math.abs(x-10),2)+Math.pow(Math.abs(y-6),2))/10);
+                
+                inmapLayout.getChildren().add(imageViews[x][y][5]);
             }
         }
         
@@ -400,16 +444,49 @@ public class InMapView {
                 return null;
             if(type.equalsIgnoreCase("hero"))
                 return images.hero;
-            else if(type.equalsIgnoreCase("spider"))
-                return images.spider;
-            else if(type.equalsIgnoreCase("slug"))
-                return images.slug;
             else if(type.equalsIgnoreCase("bat"))
                 return images.bat;
-            else if(type.equalsIgnoreCase("goblin"))
-                return images.goblin;
-            else if(type.equalsIgnoreCase("clinton"))
-                return images.boss;
+            else if(type.equalsIgnoreCase("adelf"))
+                return images.adelf;
+            else if(type.equalsIgnoreCase("bell"))
+                return images.bell;
+            else if(type.equalsIgnoreCase("chest"))
+                return images.chest;
+            else if(type.equalsIgnoreCase("chick"))
+                return images.chick;
+            else if(type.equalsIgnoreCase("chicken"))
+                return images.chicken;
+            else if(type.equalsIgnoreCase("fishman"))
+                return images.fishman;
+            else if(type.equalsIgnoreCase("flan"))
+                return images.flan;
+            else if(type.equalsIgnoreCase("ghost"))
+                return images.ghost;
+            else if(type.equalsIgnoreCase("kingslime"))
+                return images.kingslime;
+            else if(type.equalsIgnoreCase("longcat"))
+                return images.longcat;
+            else if(type.equalsIgnoreCase("manta"))
+                return images.manta;
+            else if(type.equalsIgnoreCase("mote"))
+                return images.mote;
+            else if(type.equalsIgnoreCase("skelebro"))
+                return images.skelebro;
+            else if(type.equalsIgnoreCase("snail"))
+                return images.snail;
+            else if(type.equalsIgnoreCase("spookyslime"))
+                return images.spookyslime;
+            else if(type.equalsIgnoreCase("spookyslug"))
+                return images.spookyslug;
+            
+//            else if(type.equalsIgnoreCase("spider"))
+//                return images.spider;
+//            else if(type.equalsIgnoreCase("slug"))
+//                return images.slug;
+//            else if(type.equalsIgnoreCase("goblin"))
+//                return images.goblin;
+//            else if(type.equalsIgnoreCase("clinton"))
+//                return images.boss;
             else if(type.equalsIgnoreCase("npc"))
                 return images.npc1;
             else return null;

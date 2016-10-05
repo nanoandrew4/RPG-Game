@@ -67,12 +67,30 @@ public class Character {
     
     //random enemy generation
     void generateEnemy() {
-        switch((int)(Math.random() * 4)) {
-            //case: setStats(true, lvl, vit, int, acc, str, dex, wis, luk, name,     race,      ai,          hostile);
-            case 0: setStats(true,   2,   3,   1,  80,   2,   4,   1,   0, "Spider", "Monster", "wandering", true); break;
-            case 1: setStats(true,   1,   5,   1,  90,   1,   1,   1,   0, "Slug",   "Monster", "wandering", true); break;
-            case 2: setStats(true,   5,   8,   3,  75,   6,   3,   2,   3, "Goblin", "Monster", "wandering", true); break;
-            case 3: setStats(true,   3,   6,   3,  85,   3,   3,   1,   2, "Bat",    "Monster", "wandering", true); break;
+        switch((int)(Math.random() * 17)) {
+            //case: setStats(exist, lvl, vit, int, acc, str, dex, wis, luk, name,     race,      ai,          hostile);
+//            case 0: setStats(true,   2,   3,   1,  80,   2,   4,   1,   0, "Spider", "Monster", "wandering", true); break;
+//            case 1: setStats(true,   1,   5,   1,  90,   1,   1,   1,   0, "Slug",   "Monster", "wandering", true); break;
+//            case 2: setStats(true,   5,   8,   3,  75,   6,   3,   2,   3, "Goblin", "Monster", "wandering", true); break;
+//            case 3: setStats(true,   3,   6,   3,  85,   3,   3,   1,   2, "Bat",    "Monster", "wandering", true); break;
+            case 0:  setStats(true,   5,   9,   3,  90,   9,   5,   5,   5, "adelf", "Monster", "wandering", true); break;
+            case 1:  setStats(true,   2,   6,   3,  75,   3,   3,   3,   3, "bat", "Monster", "wandering", true); break;
+            case 2:  setStats(true,   2,   5,   3,  80,   2,   2,   2,   2, "bell", "Monster", "fleeing", false); break;
+            case 3:  setStats(true,  15,  10,   3,   0,   1,   1,   1,   1, "chest", "Monster", "stationary", false); break;
+            case 4:  setStats(true,   1,   3,   3,  60,   2,   1,   1,   1, "chick", "Monster", "wandering", false); break;
+            case 5:  setStats(true,   2,   5,   3,  85,   4,   1,   1,   1, "chicken", "Monster", "wandering", true); break;
+            case 6:  setStats(true,   4,  11,   3,  85,   8,   3,   3,   3, "fishman", "Monster", "wandering", true); break;
+            case 7:  setStats(true,   5,   8,   3,  80,   6,   5,   5,   5, "flan", "Monster", "wandering", true); break;
+            case 8:  setStats(true,   4,   7,   3,  50,   5,   3,   3,   3, "ghost", "Monster", "wandering", true); break;
+            case 9:  setStats(true,   8,   9,   3,  90,  10,   3,   3,   3, "kingslime", "Monster", "wandering", true); break;
+            case 10: setStats(true,   5,   8,   3,  90,   9,   3,   3,   3, "longcat", "Monster", "wandering", true); break;
+            case 11: setStats(true,  10,  15,   3,  85,  15,   3,   3,   3, "manta", "Monster", "wandering", true); break;
+            case 12: setStats(true,   2,   3,   3,  60,   2,   3,   3,   3, "mote", "Monster", "wandering", false); break;
+            case 13: setStats(true,  13,  17,   3,  90,  22,   3,   3,   3, "skelebro", "Monster", "wandering", true); break;
+            case 14: setStats(true,   4,   6,   3,  70,   4,   3,   3,   3, "snail", "Monster", "wandering", true); break;
+            case 15: setStats(true,   7,  15,   3,  60,  13,   3,   3,   3, "spookyslime", "Monster", "wandering", true); break;
+            case 16: setStats(true,   6,   9,   3,  85,  16,   3,   3,   3, "spookyslug", "Monster", "wandering", true); break;
+            
         }
     }
     
