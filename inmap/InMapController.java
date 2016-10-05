@@ -66,9 +66,11 @@ public class InMapController implements Runnable {
                             UIVisible = true;
                         }
                         break;
-                    //debug reset
+                    //debug
                     case R:
                         model.reset(); break;
+                    case T:
+                        model.getParty()[0].gainEXP(10000);
                     default: break;
                 }
 
