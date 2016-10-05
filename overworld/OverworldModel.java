@@ -17,7 +17,6 @@ public class OverworldModel {
     */
 
     private double mapTileSize;
-    private int zoom = 6;
     private int[] currPos = new int[2];
 
     private Map map;
@@ -34,7 +33,6 @@ public class OverworldModel {
         fileAccess.loadFile("src/data/player");
         currPos[0] = (int) fileAccess.getFromFile("locationX", "int");
         currPos[1] = (int) fileAccess.getFromFile("locationY", "int");
-
     }
 
     public Tile[][] getTiles() { // returns 2D array of type Tile
@@ -46,7 +44,7 @@ public class OverworldModel {
     }
 
     public int getZoom() { // returns zoom
-        return zoom;
+        return 6;
     }
 
     public double getMapTileSize() { // returns the tile size to be used
@@ -61,8 +59,8 @@ public class OverworldModel {
         return currPos[index];
     }
 
-    public void setCurrPos(int index, int sum) { // sets current pos at index to current value plus sum
-        currPos[index] += sum;
+    public void setCurrPos(int index, int pos) { // sets current pos at index to current value plus sum
+        currPos[index] = pos;
     }
 
     public void setMapTileSize(double mapTileSize) { // sets map tile size to be used by view
@@ -537,6 +535,7 @@ class Map {
         /*
             Called when algorithm gets too close to the limits of the array
             Turns the direction around by force placing tiles
+            TODO: FIX RANDOM BUG THAT HAPPENS WHEN THE ARRAY RUNS OUT (-1)
          */
 
         System.out.println("Force redirect activated");
@@ -585,49 +584,9 @@ class Map {
         return null; // should not
     }
 
-    /*private String returnDir(String genDir, String tile){
-        if(genDir.equals("east")){
-            if(tile.equals("WaterSWSE"))
-                return "north";
-            else if(tile.equals("WaterNWSW"))
-                return "east";
-            else if(tile.equals("WaterW"))
-                return "south";
-            else if(tile.equals("WaterS"))
-                return "east";
-        }
-        else if(genDir.equals("south")){
-            if(tile.equals("WaterNWSW"))
-                return "east";
-            else if(tile.equals("WaterNWNE"))
-                return "south";
-            else if(tile.equals("WaterN"))
-                return "west";
-            else if(tile.equals("WaterW"))
-                return "south";
-        }
-        else if(genDir.equals("west")){
-            if(tile.equals("WaterNESE"))
-                return "west";
-            else if(tile.equals("WaterNWNE"))
-                return "south";
-            else if(tile.equals("WaterN"))
-                return "west";
-            else if(tile.equals("WaterE"))
-                return "north";
-        }
-        else if(genDir.equals("north")){
-            if(tile.equals("WaterNESE"))
-                return "west";
-            else if(tile.equals("WaterSWSE"))
-                return "north";
-            else if(tile.equals("WaterE"))
-                return "north";
-            else if(tile.equals("WaterS"))
-                return "east";
-        }
-        return null;
-    }*/
+    private boolean returnCanGenWater(String tile){
+        return tile.equals("WaterE") || tile.equals("WaterN") || tile.equals("WaterNE");
+    }
 
     private Tile[][] genMap(int mapSize) {
 
@@ -682,6 +641,7 @@ class Map {
         y++;
 
         System.out.println("Eastward generation finished");
+        System.out.println("Last x,y positions : " + endPos + y);
 
         int x = endPos;
         genDir = "south";
@@ -709,6 +669,7 @@ class Map {
         x--;
 
         System.out.println("Southward generation finished");
+        System.out.println("Last x,y positions : " + x + endPos);
 
         y = endPos;
         genDir = "west";
@@ -736,6 +697,7 @@ class Map {
         y--;
 
         System.out.println("Westward generation finished");
+        System.out.println("Last x,y positions : " + endPos + y);
 
         x = endPos;
         genDir = "north";
@@ -759,22 +721,24 @@ class Map {
         }
 
         System.out.println("Northward generation finished");
+        System.out.println("Last x,y positions : " + x + endPos);
 
-        /*for (y = 0; y < mapSize; y++){
+        for (y = 0; y < mapSize; y++){
             boolean genAllWater = true;
             for (x = 0; x < mapSize; x++){
-                if(tiles[x][y] == null && genAllWater)
-                    tiles[x][y] = new Tile("WaterAll");
-                else {
-                    if (genAllWater)
-                        genAllWater = false;
-                    else if(tiles[x][y] == null){
-                        genAllWater = true;
+                if(tiles[x][y] == null) {
+                    if(genAllWater)
                         tiles[x][y] = new Tile("WaterAll");
-                    }
+                }
+                else {
+                    for (; x < mapSize; x++)
+                        if (tiles[x][y] == null && tiles[x - 1][y] != null && returnCanGenWater(tiles[x - 1][y].type)) {
+                            genAllWater = true;
+                            break;
+                        }
                 }
             }
-        }*/
+        }
 
         // END WATER TILES GEN
         //////////////////////////////////////////////////////////
@@ -826,8 +790,8 @@ class Map {
             while (true) {
                 int randX = rand.nextInt(mapSize) + 2;
                 int randY = rand.nextInt(mapSize) + 2;
-                if (isAreaEmpty(tiles, randX, randY, 1, mapSize)) {
-                    tiles[randX][randY] = new Tile("Settlement", "Village", "c", "Name,", 50);
+                if (isAreaEmpty(tiles, randX, randY, 2, mapSize)) {
+                    tiles[randX][randY] = new Tile("Settlement", "Village", "c", "Name", 50);
                     break;
                 }
             }
@@ -863,7 +827,6 @@ class Map {
             for (int b = x - radius; b < x + radius; b++)
                 if (a < 0 || b < 0 || a >= mapSize || b >= mapSize || tiles[a][b] != null)
                     return false;
-
         return true;
     }
 

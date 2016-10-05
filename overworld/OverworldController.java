@@ -21,11 +21,12 @@ public class OverworldController implements Runnable {
 
     private Main main;
     private Scene scene;
-    private boolean newTile;
-    private float zoomMultiplier = 2.5f;
+    private float zoomMultiplier = 2.0f;
     private boolean controlsLocked = false;
+    
+    private double xOffset = 0, yOffset = 0;
 
-    long start; // for timing the creation of the Model and View
+    private long start; // for timing the creation of the Model and View
 
     private OverworldView view;
     private OverworldModel model;
@@ -72,28 +73,19 @@ public class OverworldController implements Runnable {
         System.out.println("Scene creation took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
     }
 
-    private double[] calcAngles(double yOffset, double xOffset) {
+    private double[] calcAngles(double xOffset, double yOffset) {
 
         /*
             Calculates and returns angles from current position on tile to leftmost and rightmost point
          */
 
         double[] tmpArr = new double[2]; // stores langle, rangle
-        while (xOffset > model.getMapTileSize() / 2)
-            xOffset -= model.getMapTileSize();
-        while (yOffset > model.getMapTileSize() / 4)
-            yOffset -= model.getMapTileSize() / 2;
-        while (xOffset < -model.getMapTileSize() / 2)
-            xOffset += model.getMapTileSize();
-        while (yOffset < -model.getMapTileSize() / 4)
-            yOffset += model.getMapTileSize() / 2;
 
         tmpArr[0] = Math.toDegrees(Math.atan(yOffset / (xOffset + (model.getMapTileSize() / 2)))); // left
         tmpArr[1] = Math.toDegrees(Math.atan(yOffset / ((model.getMapTileSize() / 2) - xOffset))); // right
 
-        System.out.println("xOffset: " + xOffset);
-        System.out.println("yOffset: " + yOffset);
-        System.out.println(String.valueOf(newTile));
+        //System.out.println("xOffset: " + xOffset);
+        //System.out.println("yOffset: " + yOffset);
         //System.out.println();
         return tmpArr;
     }
@@ -106,56 +98,49 @@ public class OverworldController implements Runnable {
          */
 
         // getMapTileSize() / 2 is the max the actual offset from the centre of any tile, horizontally (vertically divide by 4)
-        double xOffset = -view.xOffset; // offset from centre of nearest tile, negative to make right positive
-        double yOffset = view.yOffset; // offset from centre of nearest tile
+        double totalXOffset = -view.xOffset; // offset from centre of nearest tile, negative to make right positive
+        double totalYOffset = view.yOffset; // offset from centre of nearest tile
 
         // do something with newTile to offset the offsets
 
-        double[] angles = calcAngles(yOffset, xOffset);
+        double tileXOffset = totalXOffset + xOffset;
+        double tileYOffset = totalYOffset + yOffset;
+
+        System.out.println("Curr tile x-offset: " + tileXOffset);
+        System.out.println("Curr tile y-offset: " + tileYOffset);
+
+        double[] angles = calcAngles(tileXOffset, tileYOffset);
         double leftAngle = angles[0];
         double rightAngle = angles[1];
-
-        if (newTile) {
-            newTile = false;
-            if (rightAngle >= 22.5) {
-                xOffset -= model.getMapTileSize() / 2;
-                yOffset -= model.getMapTileSize() / 4;
-            } else if (rightAngle <= -22.5) {
-                xOffset -= model.getMapTileSize() / 2;
-                yOffset += model.getMapTileSize() / 4;
-            } else if (leftAngle >= 22.5) {
-                xOffset += model.getMapTileSize() / 2;
-                yOffset -= model.getMapTileSize() / 4;
-            } else if (leftAngle <= -22.5) {
-                xOffset += model.getMapTileSize() / 2;
-                yOffset += model.getMapTileSize() / 4;
-            }
-            angles = calcAngles(yOffset, xOffset);
-            rightAngle = angles[0];
-            leftAngle = angles[1];
-        }
 
         System.out.println("Left side angle " + leftAngle);
         System.out.println("Right side angle " + rightAngle);
 
-        if ((leftAngle >= 22.5 || rightAngle >= 22.5 || leftAngle <= -22.5 || rightAngle <= -22.5) && !newTile) { // new tile
+        if (Math.abs(leftAngle) >= 22.5 || Math.abs(rightAngle) >= 22.5) { // new tile
             System.out.println("Moved tile");
+            System.out.println();
             if (rightAngle >= 22.5) {
-                model.setCurrPos(1, 1);
-                //view.addRow(model.getTiles(), main.screenWidth, main.screenHeight, (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.currPos, model.getMapSize(), false);
-            } else if (rightAngle <= -22.5) {
-                model.setCurrPos(0, 1);
-                //view.addColumn(model.getTiles(), main.screenWidth, main.screenHeight, (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.currPos, model.getMapSize(), false);
-            } else if (leftAngle >= 22.5) {
-                model.setCurrPos(0, -1);
-                //view.addColumn(model.getTiles(), main.screenWidth, main.screenHeight, (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.currPos, model.getMapSize(), false);
-            } else if (leftAngle <= -22.5) {
-                model.setCurrPos(1, -1);
-                //view.addRow(model.getTiles(), main.screenWidth, main.screenHeight, (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.currPos, model.getMapSize(), false);
+                xOffset -= model.getMapTileSize() / 2;
+                yOffset -= model.getMapTileSize() / 4;
+                model.setCurrPos(1, model.getCurrPos(1) - 1);
+                view.addRow(model.getTiles(), main.screenWidth, main.screenHeight, (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getMapSize(), true);
+            } if (rightAngle <= -22.5) {
+                xOffset -= model.getMapTileSize() / 2;
+                yOffset += model.getMapTileSize() / 4;
+                model.setCurrPos(0, model.getCurrPos(0) + 1);
+                //view.addColumn(model.getTiles(), main.screenWidth, main.screenHeight, (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getMapSize(), true);
+            } if (leftAngle >= 22.5) {
+                xOffset += model.getMapTileSize() / 2;
+                yOffset -= model.getMapTileSize() / 4;
+                model.setCurrPos(0, model.getCurrPos(0) - 1);
+                //view.addColumn(model.getTiles(), main.screenWidth, main.screenHeight, (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getMapSize(), false);
+            } if (leftAngle <= -22.5) {
+                xOffset += model.getMapTileSize() / 2;
+                yOffset += model.getMapTileSize() / 4;
+                model.setCurrPos(1, model.getCurrPos(1) + 1);
+                view.addRow(model.getTiles(), main.screenWidth, main.screenHeight, (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getMapSize(), false);
             }
-            if (!(xOffset < -model.getMapTileSize() / 2 || yOffset < -model.getMapTileSize() / 4 || xOffset > model.getMapTileSize() / 2 || yOffset > model.getMapTileSize() / 4))
-                newTile = true; // means moved tile so that even tho the offsets are < getMapTileSize() / 2 it will start calculating from the next tile
-            setMouseEvents();
+            //setMouseEvents();
         }
         System.out.println();
     }
@@ -168,10 +153,8 @@ public class OverworldController implements Runnable {
 
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
 
-            //System.out.println("XPos: " + model.getCurrPos(0));
-            //System.out.println("YPos: " + model.getCurrPos(1));
-            //System.out.println("Curr tile x-offset: " + view.xOffset);
-            //System.out.println("Curr tile y-offset: " + view.yOffset);
+            System.out.println("XPos: " + model.getCurrPos(0));
+            System.out.println("YPos: " + model.getCurrPos(1));
             //System.out.println("Tile size: " + model.getMapTileSize());
 
             // position on getTiles() needs work
@@ -182,8 +165,8 @@ public class OverworldController implements Runnable {
             if(event.getCode() == KeyCode.T){ // TEST CODE
                 System.out.print("Enter coords to move to: ");
                 Scanner scanner = new Scanner(System.in);
-                model.setCurrPos(0, scanner.nextInt() - model.getCurrPos(0));
-                model.setCurrPos(1, scanner.nextInt() - model.getCurrPos(1));
+                model.setCurrPos(0, scanner.nextInt());
+                model.setCurrPos(1, scanner.nextInt());
                 setTileSize();
                 System.out.println("New coords are: " + model.getCurrPos(0) + ", " + model.getCurrPos(1));
             }
@@ -200,10 +183,6 @@ public class OverworldController implements Runnable {
 
             if(event.getCode() == KeyCode.ESCAPE){ // for now save when hit escape
                 model.saveGame();
-            }
-
-            if (event.getCode() == KeyCode.M) {
-                main.setStage(view.displayMap(model.getTiles(), model.getMapSize(), main.screenWidth, main.screenHeight));
             }
 
             if (event.getCode() == KeyCode.A || event.getCode() == KeyCode.D || event.getCode() == KeyCode.W || event.getCode() == KeyCode.S) {
@@ -229,6 +208,9 @@ public class OverworldController implements Runnable {
 
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
 
+            System.out.println("XPos: " + model.getCurrPos(0));
+            System.out.println("YPos: " + model.getCurrPos(1));
+
             if (controlsLocked)
                 return;
 
@@ -242,10 +224,10 @@ public class OverworldController implements Runnable {
                 }
             }
 
-            if (event.getCode() == KeyCode.D || event.getCode() == KeyCode.A || event.getCode() == KeyCode.W || event.getCode() == KeyCode.S) {
+            if(event.getCode() == KeyCode.D || event.getCode() == KeyCode.A)
                 view.speedX.set(0);
+            else if(event.getCode() == KeyCode.W || event.getCode() == KeyCode.S)
                 view.speedY.set(0);
-            }
 
             if (event.getCode() == KeyCode.A || event.getCode() == KeyCode.D || event.getCode() == KeyCode.W || event.getCode() == KeyCode.S) {
                 if (model.getCurrPos(0) <= 0 || model.getCurrPos(0) >= model.getMapSize() || model.getCurrPos(1) <= 0 || model.getCurrPos(1) >= model.getMapSize())
