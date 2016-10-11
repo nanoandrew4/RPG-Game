@@ -80,12 +80,14 @@ class Images {
     }
 }
 
-public class OverworldView {
+@SuppressWarnings("ALL")
+class OverworldView {
 
     /*
         Displays all graphical elements of the overworld with data from the model provided by the controller
 
         TODO: CHANGE ALL STATIC ARBITRARY VALUES IN LOWER CLASSES TO WORK ON ALL DISPLAYS EQUALLY
+        TODO: FIX TILE POSITIONING SYSTEM, MUST BE FLAWLESS FOR ANY PROGRESS TO BE MADE (PROBLEM IS IN RELOCATE CALL)
      */
 
     Images images;
@@ -94,21 +96,22 @@ public class OverworldView {
         Vars to be used for moving animation
      */
 
-    public double speedXVal;
-    public double speedYVal;
-    public final DoubleProperty speedX = new SimpleDoubleProperty();
-    public final DoubleProperty speedY = new SimpleDoubleProperty();
+    double speedXVal;
+    double speedYVal;
+    final DoubleProperty speedX = new SimpleDoubleProperty();
+    final DoubleProperty speedY = new SimpleDoubleProperty();
     private final LongProperty lastUpdateTime = new SimpleLongProperty();
 
-    public ImageView[][][] imageViews; // for controller to access and add click events
+    ImageView[][][] imageViews; // for controller to access and add click events
 
-    public double xOffset = 0; // total offset from initial tile
-    public double yOffset = 0; // total offset from initial tile
+    double xOffset = 0; // total offset from initial tile
+    double yOffset = 0; // total offset from initial tile
 
-    public double screenWidth, screenHeight, padding = 15;
+    private double screenWidth, screenHeight, padding = 15;
 
     Button close = new Button("Close"), manageCity = new Button("Manage"), diplomacy = new Button("Diplomacy"), trade = new Button("Trade"); // for info window, so controller can access it - will be imagebutton
-    private Pane overworldLayout, infoBox, managmentBox, overworldMap;
+    private Pane overworldLayout;
+    private Pane infoBox;
 
     Stack<Pane> paneStack = new Stack<>(); // makes returning to previous window easier
     // if view controlled code for closing windows you could close one by one instead of all at once... since only one close button is global
@@ -121,7 +124,7 @@ public class OverworldView {
         this.screenHeight = screenHeight;
     }
 
-    public Scene initDisplay(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize) {
+    Scene initDisplay(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize) {
 
         /*
             Loads the initial set of tiles for display based on current position
@@ -133,8 +136,8 @@ public class OverworldView {
 
         long start = System.currentTimeMillis();
 
-        speedXVal = mapTileSize / 64;
-        speedYVal = mapTileSize / 128;
+        speedXVal = mapTileSize / 128;
+        speedYVal = mapTileSize / 256;
 
         overworldLayout = new Pane();
 
@@ -143,63 +146,84 @@ public class OverworldView {
                 int xPos = (currPos[0] + x < 0 ? (currPos[0] + x >= mapSize ? mapSize - 1 : 0) : currPos[0] + x);
                 int yPos = (currPos[1] + y < 0 ? (currPos[1] + y >= mapSize ? mapSize - 1 : 0) : currPos[1] + y);
 
-                imageViews[xPos][yPos][0] = genTile(xPos, yPos, tiles);
-
-                imageViews[xPos][yPos][0].relocate(0.5 * mapTileSize * (x - y) + (screenWidth / 2) - (mapTileSize / 2), 0.25 * mapTileSize * (x + y) + (screenHeight / 2) - (mapTileSize * 3 / 4));
-                overworldLayout.getChildren().add(imageViews[xPos][yPos][0]);
-
-                setMoveAnim(imageViews[xPos][yPos][0]);
+                drawTile(tiles, (float)(mapTileSize / 2), xPos,
+                        yPos, 0.5 * mapTileSize * (x - y) + (screenWidth / 2) - (xOffset),
+                        0.25 * mapTileSize * (x + y) + (screenHeight / 2) - (yOffset + mapTileSize / 2),
+                        0,
+                        0
+                );
             }
         }
 
-        for (int y = -zoom; y < zoom; y++) { // for the banners
-            for (int x = -zoom; x < zoom; x++) {
-                int xPos = (currPos[0] + x < 0 ? (currPos[0] + x >= mapSize ? mapSize - 1 : 0) : currPos[0] + x);
-                int yPos = (currPos[1] + y < 0 ? (currPos[1] + y >= mapSize ? mapSize - 1 : 0) : currPos[1] + y);
-                if (tiles[xPos][yPos].type.equalsIgnoreCase("Settlement")) {
-                    genBanner(mapTileSize, mapTileSize / 2, tiles[xPos][yPos]);
-                    tiles[xPos][yPos].banner.relocate(0.5 * mapTileSize * (x - y) + (screenWidth / 2) - (mapTileSize / 2), 0.25 * mapTileSize * (x + y) + (screenHeight / 2) - (mapTileSize / 8));
-                    overworldLayout.getChildren().add(tiles[xPos][yPos].banner);
-                    setMoveAnim(tiles[xPos][yPos].banner);
-                }
-            }
-        }
-
-        for (int y = -zoom; y < zoom; y++) { // for the tile borders
-            for (int x = -zoom; x < zoom; x++) {
-                int xPos = (currPos[0] + x < 0 ? (currPos[0] + x >= mapSize ? mapSize - 1 : 0) : currPos[0] + x);
-                int yPos = (currPos[1] + y < 0 ? (currPos[1] + y >= mapSize ? mapSize - 1 : 0) : currPos[1] + y);
-                imageViews[xPos][yPos][1] = new ImageView(images.tileBorder);
-                imageViews[xPos][yPos][1].relocate(0.5 * mapTileSize * (x - y) + (screenWidth / 2) - (mapTileSize / 2), 0.25 * mapTileSize * (x + y) + (screenHeight / 2) - (mapTileSize * 3 / 4));
-                imageViews[xPos][yPos][1].setVisible(false);
-                overworldLayout.getChildren().add(imageViews[xPos][yPos][1]);
-                setMoveAnim(imageViews[xPos][yPos][1]);
-            }
-        }
+        drawPlayers();
 
         System.out.println("Init load took " + (System.currentTimeMillis() - start) + "ms");
 
         return new Scene(overworldLayout, screenWidth, screenHeight);
     }
 
-    private void redrawPlayers(){
-        if(redDot != null)
+    private void drawPlayers() {
+        if (redDot != null)
             overworldLayout.getChildren().remove(redDot);
         redDot = new ImageView(new Image("/media/graphics/redDot.png", 6, 6, false, false));
         redDot.relocate((screenWidth / 2) - 3, (screenHeight / 2) - 3);
         overworldLayout.getChildren().add(redDot);
     }
 
-    private void reorganizeTiles(int[] currPos, int zoom){
-        for(int y = currPos[1] - zoom; y < currPos[1] + zoom; y++){
-            for(int x = currPos[0] - zoom; x < currPos[0] + zoom; x++){
-                overworldLayout.getChildren().remove(imageViews[x][y][0]);
-                overworldLayout.getChildren().add(imageViews[x][y][0]);
-            }
+    private void drawTile(Tile[][] tiles, float bannerSize, int xPos, int yPos, double pixelX, double pixelY, double currXOffset, double currYOffset) {
+        if(xOffset != 0.0 || yOffset != 0.0) {
+            overworldLayout.getChildren().remove(imageViews[xPos][yPos][0]);
+            overworldLayout.getChildren().remove(imageViews[xPos][yPos][1]);
+            if(tiles[xPos][yPos].type.equalsIgnoreCase("Settlement"))
+                overworldLayout.getChildren().remove(tiles[xPos][yPos].banner);
         }
+
+        // add tiles
+
+        if(imageViews[xPos][yPos][0] == null) {
+            System.out.print(".");
+            imageViews[xPos][yPos][0] = genTile(xPos, yPos, tiles);
+            imageViews[xPos][yPos][0].setTranslateX(currXOffset);
+            imageViews[xPos][yPos][0].setTranslateY(currYOffset);
+            imageViews[xPos][yPos][0].relocate(pixelX, pixelY);
+            setMoveAnim(imageViews[xPos][yPos][0]);
+        }
+        overworldLayout.getChildren().add(imageViews[xPos][yPos][0]);
+
+        // add settlement banners
+
+        if (tiles[xPos][yPos].type.equalsIgnoreCase("Settlement")) {
+            if(tiles[xPos][yPos].banner == null) {
+                genBanner(bannerSize, bannerSize / 2, tiles[xPos][yPos]);
+                tiles[xPos][yPos].banner.setTranslateX(currXOffset);
+                tiles[xPos][yPos].banner.setTranslateY(currYOffset);
+                tiles[xPos][yPos].banner.relocate(pixelX, pixelY);
+                setMoveAnim(tiles[xPos][yPos].banner);
+            }
+            overworldLayout.getChildren().add(tiles[xPos][yPos].banner);
+        }
+
+        // add tile borders
+
+        if(imageViews[xPos][yPos][1] == null) {
+            imageViews[xPos][yPos][1] = new ImageView(images.tileBorder);
+            imageViews[xPos][yPos][1].setTranslateX(currXOffset);
+            imageViews[xPos][yPos][1].setTranslateY(currYOffset);
+            imageViews[xPos][yPos][1].relocate(pixelX, pixelY);
+            imageViews[xPos][yPos][1].setVisible(false);
+            setMoveAnim(imageViews[xPos][yPos][1]);
+        }
+
+        overworldLayout.getChildren().add(imageViews[xPos][yPos][1]);
+
+        System.out.println("PixelX: " + pixelX);
+        System.out.println("PixelY: " + pixelY);
+        System.out.println("CurrXOffset: " + currXOffset);
+        System.out.println("CurrYOffset: " + currYOffset);
+        System.out.println();
     }
 
-    private void genBanner(double width, double height, Tile tile) {
+    private void genBanner(float width, float height, Tile tile) {
 
         /*
             Generates the banner graphical element to overlay over each settlement
@@ -207,10 +231,9 @@ public class OverworldView {
 
         tile.banner = new Pane();
 
-        double boxWidth = width;
         double boxHeight = height / 1.5;
 
-        Rectangle box = new Rectangle(boxWidth, boxHeight, Paint.valueOf("white"));
+        Rectangle box = new Rectangle((double) width, boxHeight, Paint.valueOf("white"));
 
         ImageView bannerL = new ImageView(images.banner);
         ImageView bannerR = new ImageView(images.banner);
@@ -223,12 +246,12 @@ public class OverworldView {
         relationship.setFont(new Font(10));
 
         bannerL.relocate(0, boxHeight / 3);
-        bannerR.relocate(boxWidth - boxWidth / 3, boxHeight / 3);
-        attack.relocate(boxWidth / 8, boxHeight * 2 / 3);
-        enter.relocate((boxWidth / 8) + (boxWidth / 4), boxHeight * 2 / 3);
-        diplomacy.relocate((boxWidth / 8) + (boxWidth / 2), boxHeight * 2 / 3);
-        name.relocate(boxWidth / 2 - calcStringWidth(tile.settlementTile.settlementName) / 2, boxHeight / 3);
-        relationship.relocate(boxWidth / 2 - calcStringWidth(" " + tile.settlementTile.relationship), 0);
+        bannerR.relocate((double) width - (double) width / 3, boxHeight / 3);
+        attack.relocate((double) width / 8, boxHeight * 2 / 3);
+        enter.relocate(((double) width / 8) + ((double) width / 4), boxHeight * 2 / 3);
+        diplomacy.relocate(((double) width / 8) + ((double) width / 2), boxHeight * 2 / 3);
+        name.relocate((double) width / 2 - calcStringWidth(tile.settlementTile.settlementName) / 2, boxHeight / 3);
+        relationship.relocate((double) width / 2 - calcStringWidth(" " + tile.settlementTile.relationship), 0);
 
         tile.banner.getChildren().addAll(box, bannerL, bannerR, attack, enter, diplomacy, name, relationship);
         tile.banner.setVisible(false);
@@ -287,39 +310,44 @@ public class OverworldView {
         return img;
     }
 
-    void addRow(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize, boolean top) {
+    void addRow(Tile[][] tiles, double screenWidth, double screenHeight, double tileXOffset, double tileYOffset, int zoom, double mapTileSize, int[] currPos, int mapSize, boolean top) {
 
         /*
             Adds a row when a tile change on the y axis is detected
             TODO: WIP
+            TODO: DO ALL TILES NEED TO BE REDRAWN?
          */
+
+        double currXOffset = xOffset;
+        double currYOffset = yOffset;
 
         System.out.println("Adding row");
         if ((top && currPos[1] + (zoom) + 1 < mapSize) || (!top && currPos[1] + (zoom) - 1 > 0)) {
-            int y = top ? -zoom: zoom;
-            for (int x = -zoom; x < zoom; x++) {
+            for(int x = -zoom; x < zoom; x++) {
+                int xPos = (currPos[0] + x < 0 ? (currPos[0] + x >= mapSize ? mapSize - 1 : 0) : currPos[0] + x);
+                for (int y = -zoom; y < zoom; y++) {
 
-                // Draw new tile
+                    // Draw new tile
 
-                int yPos = currPos[1] + y;
-                int xPos = currPos[0] + x;
-                imageViews[xPos][yPos][0] = genTile(xPos, yPos, tiles);
-                imageViews[xPos][yPos][0].setTranslateX(xOffset);
-                imageViews[xPos][yPos][0].setTranslateY(yOffset);
-                imageViews[xPos][yPos][0].relocate(0.5 * mapTileSize * (x - y) + (screenWidth / 2) - (xOffset),
-                        0.25 * mapTileSize * (x + y) + (screenHeight / 2) - (yOffset + mapTileSize / 2));
-                overworldLayout.getChildren().add(imageViews[xPos][yPos][0]);
-                setMoveAnim(imageViews[xPos][yPos][0]);
-                //setMoveAnim(imageViews[xPos][yPos][1])
+                    int yPos = (currPos[1] + y < 0 ? (currPos[1] + y >= mapSize ? mapSize - 1 : 0) : currPos[1] + y);
 
-                // Remove tile
+                    drawTile(tiles, (float) (mapTileSize / 2), xPos, yPos,
+                            0.5 * mapTileSize * (x - y) + (screenWidth / 2) - (currXOffset),
+                            0.25 * mapTileSize * (x + y) + (screenHeight / 2) - (currYOffset + mapTileSize / 2) - tileYOffset,
+                            currXOffset,
+                            currYOffset
+                    );
+                }
+                // Remove tiles
 
-                yPos = currPos[1] - y;
-                overworldLayout.getChildren().remove(imageViews[xPos][yPos][0]);
+                int yPos = currPos[1] - (top ? -zoom : zoom);
+                //System.out.println(yPos);
+                overworldLayout.getChildren().remove(imageViews[currPos[0] + x][yPos][0]);
+                overworldLayout.getChildren().remove(imageViews[currPos[0] + x][yPos][1]);
+                // remove banners
                 imageViews[xPos][yPos][0] = null;
             }
-            redrawPlayers();
-            reorganizeTiles(currPos, zoom);
+            drawPlayers();
         }
     }
 
@@ -332,30 +360,21 @@ public class OverworldView {
 
         System.out.println("Adding column");
         if ((right && currPos[0] + (zoom) + 1 < mapSize) || (!right && currPos[0] + (zoom) - 1 > 0)) {
-            int x = right ? -zoom: zoom;
+            int x = right ? -zoom : zoom;
             for (int y = -zoom; y < zoom; y++) {
-
-                // Draw new tile
-
-                int xPos = currPos[0] + x;
-                int yPos = currPos[1] + y;
-                imageViews[xPos][yPos][0] = genTile(xPos, yPos, tiles);
-                imageViews[xPos][yPos][0].setTranslateX(xOffset);
-                imageViews[xPos][yPos][0].setTranslateY(yOffset);
-                imageViews[xPos][yPos][0].relocate(0.5 * mapTileSize * (x - y) + (screenWidth / 2) - (mapTileSize / 2) + imageViews[xPos][yPos][0].getTranslateX() % (mapTileSize),
-                        0.25 * mapTileSize * (x + y) + (screenHeight / 2) - (mapTileSize * 3 / 4) - imageViews[xPos][yPos][0].getTranslateY() % (mapTileSize / 2));
-                overworldLayout.getChildren().add(imageViews[xPos][yPos][0]);
-                setMoveAnim(imageViews[xPos][yPos][0]);
-                //setMoveAnim(imageViews[xPos][yPos][1]);
-
+                /*
+                drawTile(tiles, (float)(mapTileSize / 2), currPos[0] + x, currPos[1] + y,
+                        0.5 * mapTileSize * (x - y) + (screenWidth / 2) - (xOffset),
+                        0.25 * mapTileSize * (x + y) + (screenHeight / 2) - (yOffset + mapTileSize / 2)
+                );
+*/
                 // Remove tile
 
-                xPos = currPos[0] - x;
-                overworldLayout.getChildren().remove(imageViews[xPos][yPos][0]);
-                imageViews[xPos][yPos][0] = null;
+                int xPos = currPos[0] - x;
+                overworldLayout.getChildren().remove(imageViews[xPos][currPos[1] + y][0]);
+                imageViews[xPos][currPos[1] + y][0] = null;
             }
-            redrawPlayers();
-            reorganizeTiles(currPos, zoom);
+            drawPlayers();
         }
     }
 
@@ -415,7 +434,7 @@ public class OverworldView {
         }.start();
     }
 
-    public void showTileInfo(Tile tile) {
+    void showTileInfo(Tile tile) {
 
         /*
             Shows the information of the clicked tile. Click event handled by controller
@@ -445,7 +464,7 @@ public class OverworldView {
         overworldLayout.getChildren().add(infoBox);
     }
 
-    public void showSettlementInfo(SettlementTile tile) {
+    void showSettlementInfo(SettlementTile tile) {
 
         /*
             Shows the information of a settlement tile. Click event handled by controller
@@ -463,8 +482,8 @@ public class OverworldView {
 
         infoBox.getChildren().addAll(
                 box,
-                createButton(close, (screenWidth / 2) - calcStringWidth("Close") / 2, screenHeight / 2 + (boxHeight / 2) - 30, "Close"),
-                createButton(manageCity, (screenWidth / 2) - boxWidth / 2 + padding, screenHeight / 2 + boxHeight / 2 - 50, "Manage"),
+                createButton(close, (screenWidth / 2) - calcStringWidth("Close") / 2, screenHeight / 2 + (boxHeight / 2) - 30),
+                createButton(manageCity, (screenWidth / 2) - boxWidth / 2 + padding, screenHeight / 2 + boxHeight / 2 - 50),
                 //createButton(diplomacy, screenWidth / 2 - calcStringWidth("Diplomacy") / 2, screenHeight / 2 + boxHeight / 2 - 50, "Diplomacy"),
                 //createButton(trade, screenWidth / 2 + boxWidth / 2 - padding - calcStringWidth("Trade"), screenHeight / 2 + boxHeight / 2 - 50, "Trade"),
                 createText(screenWidth / 2 - calcStringWidth(tile.settlementName) / 2, screenHeight / 2 - (boxHeight / 2) + 20, tile.settlementName, 24),
@@ -487,7 +506,7 @@ public class OverworldView {
         return text;
     }
 
-    private Button createButton(Button button, double x, double y, String string) {
+    private Button createButton(Button button, double x, double y) {
 
         /*
             Creates and returns a button object at coords x, y and with text string
@@ -509,7 +528,7 @@ public class OverworldView {
         return fm.stringWidth(string); // for variable font size
     }
 
-    public void removePane(Pane pane) {
+    void removePane(Pane pane) {
 
         /*
             Removes a pane (window) from the GUI
@@ -518,13 +537,13 @@ public class OverworldView {
         overworldLayout.getChildren().remove(pane);
     }
 
-    public void showCityManagement(SettlementTile tile) {
+    void showCityManagement(SettlementTile tile) {
 
         /*
             Creates and displays the city management window
          */
 
-        managmentBox = new Pane();
+        Pane managmentBox = new Pane();
 
         paneStack.push(managmentBox);
 
@@ -542,7 +561,7 @@ public class OverworldView {
 
         managmentBox.getChildren().addAll(
                 box,
-                createButton(close, screenWidth / 2 - calcStringWidth("Close") / 2, BOXBOTTOMBOUND - 30, "Close"),
+                createButton(close, screenWidth / 2 - calcStringWidth("Close") / 2, BOXBOTTOMBOUND - 30),
                 createText(screenWidth / 2 - calcStringWidth("City Managment") / 2, BOXTOPBOUND + 10, "City Management", 20),
 
                 createText(BOXLEFTBOUND, BOXTOPBOUND + 50, "Economy", 16),

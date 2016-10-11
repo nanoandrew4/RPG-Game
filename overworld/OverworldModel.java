@@ -5,9 +5,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
 import main.*;
 
-public class OverworldModel {
+class OverworldModel {
 
     /*
         Data holder and handler for all non-graphical code
@@ -20,7 +21,6 @@ public class OverworldModel {
     private int[] currPos = new int[2];
 
     private Map map;
-    private FileAccess fileAccess = new FileAccess();
 
     OverworldModel(int mapSize, boolean newGame, DBManager dbManager) {
 
@@ -30,44 +30,45 @@ public class OverworldModel {
             e.printStackTrace();
         }
 
+        FileAccess fileAccess = new FileAccess();
         fileAccess.loadFile("src/data/player");
         currPos[0] = (int) fileAccess.getFromFile("locationX", "int");
         currPos[1] = (int) fileAccess.getFromFile("locationY", "int");
     }
 
-    public Tile[][] getTiles() { // returns 2D array of type Tile
+    Tile[][] getTiles() { // returns 2D array of type Tile
         return map.getTiles();
     }
 
-    public int getMapSize() { // returns map size
+    int getMapSize() { // returns map size
         return map.getMapSize();
     }
 
-    public int getZoom() { // returns zoom
+    int getZoom() { // returns zoom
         return 6;
     }
 
-    public double getMapTileSize() { // returns the tile size to be used
+    double getMapTileSize() { // returns the tile size to be used
         return mapTileSize;
     }
 
-    public int[] getCurrPos() { // returns current position on overworld, x -> 0 and y -> 1
+    int[] getCurrPos() { // returns current position on overworld, x -> 0 and y -> 1
         return currPos;
     }
 
-    public int getCurrPos(int index) { // returns position specified by index, x -> 0 and y -> 1
+    int getCurrPos(int index) { // returns position specified by index, x -> 0 and y -> 1
         return currPos[index];
     }
 
-    public void setCurrPos(int index, int pos) { // sets current pos at index to current value plus sum
+    void setCurrPos(int index, int pos) { // sets current pos at index to current value plus sum
         currPos[index] = pos;
     }
 
-    public void setMapTileSize(double mapTileSize) { // sets map tile size to be used by view
+    void setMapTileSize(double mapTileSize) { // sets map tile size to be used by view
         this.mapTileSize = mapTileSize;
     }
 
-    public void saveGame() { // saves game
+    void saveGame() { // saves game
         try {
             map.save();
         } catch (SQLException e) {
@@ -122,7 +123,7 @@ class Map {
         MAX_MOUNTAIN = (int) (3.5 * mapSize);
         MIN_FOREST = 15 * mapSize;
         MAX_FOREST = 20 * mapSize;
-        MIN_SETTLEMENT = 1 * mapSize;
+        MIN_SETTLEMENT = (int)(1.1 * mapSize);
         MAX_SETTLEMENT = 2 * mapSize;
 
         if (newGame) {
@@ -137,15 +138,15 @@ class Map {
         }
     }
 
-    public int getMapSize() { // returns map size
+    int getMapSize() { // returns map size
         return mapSize;
     }
 
-    public Tile[][] getTiles() {
+    Tile[][] getTiles() {
         return tiles;
     }
 
-    public void load() throws SQLException {
+    private void load() throws SQLException {
 
         System.out.println("Starting world load");
 
@@ -181,7 +182,7 @@ class Map {
         System.out.println("Load took: " + ((double) (System.currentTimeMillis() - start) / 1000) + "s");
     }
 
-    public void save() throws SQLException {
+    void save() throws SQLException {
 
         System.out.println("Starting game save");
         long start = System.currentTimeMillis();
@@ -207,12 +208,12 @@ class Map {
         System.out.println("Game save took: " + ((float) (System.currentTimeMillis() - start) / 1000) + "s");
     }
 
-    private int returnDiffTileBonus(int sameTileCount){
+    private int returnDiffTileBonus(int sameTileCount) {
         return (int) (5 * (Math.pow(2, -0.5 * sameTileCount)));
     }
 
-    private int returnProximityBonus(int var, int mapSize){
-            return (int) ((1 / 8) * Math.pow(var - ((2 + (mapSize / 50)) / 2), 2));
+    private int returnProximityBonus(int var, int mapSize) {
+        return (int) ((1 / 8) * Math.pow(var - ((2 + (mapSize / 50)) / 2), 2));
     }
 
     private String nextWaterTile(String prev, String dir, int x, int y, int mapSize, int sameTileCount) {
@@ -287,7 +288,7 @@ class Map {
             Chooses a random direction to go in, but statistically the better choices have higher chances of being picked
          */
 
-        if(priority.length == 3) {
+        if (priority.length == 3) {
             int num = rand.nextInt(priority[0] + priority[1] + priority[2]);
             if (num < priority[0])
                 return 0;
@@ -295,15 +296,13 @@ class Map {
                 return 1;
             else
                 return 2;
-        }
-        else if(priority.length == 2){
+        } else if (priority.length == 2) {
             int num = rand.nextInt(priority[0] + priority[1]);
             if (num < priority[0])
                 return 0;
             else
                 return 1;
-        }
-        else
+        } else
             return -1;
     }
 
@@ -315,138 +314,111 @@ class Map {
 
         String[] dirs = new String[3];
 
-        if(genDir.equalsIgnoreCase("north")){
-            if(prev.contains("NESE")){
+        if (genDir.equalsIgnoreCase("north")) {
+            if (prev.contains("NESE")) {
                 dirs[0] = "WaterE";
                 dirs[1] = "WaterNE";
-            }
-            else if(prev.contains("SWSE")){
+            } else if (prev.contains("SWSE")) {
                 dirs[0] = "WaterSE";
                 dirs[1] = "WaterNESE";
                 dirs[2] = "WaterS";
-            }
-            else if(prev.contains("SE")){
+            } else if (prev.contains("SE")) {
                 dirs[0] = "WaterNESE";
                 dirs[1] = "WaterS";
                 dirs[2] = "WaterSE";
-            }
-            else if(prev.contains("NE")){
+            } else if (prev.contains("NE")) {
                 dirs[0] = "WaterE";
                 dirs[1] = "WaterNE";
-            }
-            else if(prev.contains("SW")){
+            } else if (prev.contains("SW")) {
                 dirs[0] = "WaterSWSE";
                 dirs[1] = "WaterSW";
-            }
-            else if(prev.contains("E")){
+            } else if (prev.contains("E")) {
                 dirs[0] = "WaterSE";
                 dirs[1] = "WaterNESE";
                 dirs[2] = "WaterS";
-            }
-            else if(prev.contains("S")){
+            } else if (prev.contains("S")) {
                 dirs[0] = "WaterSW";
                 dirs[1] = "WaterSWSE";
             }
-        }
-        else if(genDir.equalsIgnoreCase("east")){
-            if(prev.contains("SWSE")){
+        } else if (genDir.equalsIgnoreCase("east")) {
+            if (prev.contains("SWSE")) {
                 dirs[0] = "WaterSE";
                 dirs[1] = "WaterS";
-            }
-            else if(prev.contains("NWSW")){
+            } else if (prev.contains("NWSW")) {
                 dirs[0] = "WaterSW";
                 dirs[1] = "WaterW";
                 dirs[2] = "WaterSWSE";
-            }
-            else if(prev.contains("NW")){
+            } else if (prev.contains("NW")) {
                 dirs[0] = "WaterNWSW";
                 dirs[1] = "WaterNW";
-            }
-            else if(prev.contains("SE")){
+            } else if (prev.contains("SE")) {
                 dirs[0] = "WaterS";
                 dirs[1] = "WaterSE";
-            }
-            else if(prev.contains("SW")){
+            } else if (prev.contains("SW")) {
                 dirs[0] = "WaterSW";
                 dirs[1] = "WaterW";
                 dirs[2] = "WaterSWSE";
-            }
-            else if(prev.contains("S")){
+            } else if (prev.contains("S")) {
                 dirs[0] = "WaterW";
                 dirs[1] = "WaterSW";
                 dirs[2] = "WaterSWSE";
-            }
-            else if(prev.contains("W")){
+            } else if (prev.contains("W")) {
                 dirs[0] = "WaterNW";
                 dirs[1] = "WaterNWSW";
             }
-        }
-        else if(genDir.equalsIgnoreCase("south")){
-            if(prev.contains("NWSW")){
+        } else if (genDir.equalsIgnoreCase("south")) {
+            if (prev.contains("NWSW")) {
                 dirs[0] = "WaterSW";
                 dirs[1] = "WaterW";
-            }
-            else if(prev.contains("NWNE")){
+            } else if (prev.contains("NWNE")) {
                 dirs[0] = "WaterNW";
                 dirs[1] = "WaterN";
-            }
-            else if(prev.contains("NW")){
+            } else if (prev.contains("NW")) {
                 dirs[0] = "WaterNWSW";
                 dirs[1] = "WaterNW";
                 dirs[2] = "WaterN";
-            }
-            else if(prev.contains("NE")){
+            } else if (prev.contains("NE")) {
                 dirs[0] = "WaterNWNE";
                 dirs[1] = "WaterNE";
-            }
-            else if(prev.contains("SW")){
+            } else if (prev.contains("SW")) {
                 dirs[0] = "WaterSW";
                 dirs[1] = "WaterW";
-            }
-            else if(prev.contains("N")){
+            } else if (prev.contains("N")) {
                 dirs[0] = "WaterNE";
                 dirs[1] = "WaterNWNE";
-            }
-            else if(prev.contains("W")){
+            } else if (prev.contains("W")) {
                 dirs[0] = "WaterNW";
                 dirs[1] = "WaterNWSW";
                 dirs[2] = "WaterN";
             }
-        }
-        else if(genDir.equalsIgnoreCase("west")){
-            if(prev.contains("NESE")){
+        } else if (genDir.equalsIgnoreCase("west")) {
+            if (prev.contains("NESE")) {
                 dirs[0] = "WaterNE";
                 dirs[1] = "WaterE";
-            }
-            else if(prev.contains("NWNE")){
+            } else if (prev.contains("NWNE")) {
                 dirs[0] = "WaterNW";
                 dirs[1] = "WaterN";
-            }
-            else if(prev.contains("NE")){
+            } else if (prev.contains("NE")) {
                 dirs[0] = "WaterNE";
                 dirs[1] = "WaterE";
                 dirs[2] = "WaterNWNE";
-            }
-            else if(prev.contains("NW")){
+            } else if (prev.contains("NW")) {
                 dirs[0] = "WaterNW";
                 dirs[1] = "WaterN";
-            }
-            else if(prev.contains("SE")){
+            } else if (prev.contains("SE")) {
                 dirs[0] = "WaterSE";
                 dirs[1] = "WaterNESE";
-            }
-            else if(prev.contains("E")){
+            } else if (prev.contains("E")) {
                 dirs[0] = "WaterSE";
                 dirs[1] = "WaterNESE";
-            }
-            else if(prev.contains("N")){
+            } else if (prev.contains("N")) {
                 dirs[0] = "WaterNE";
                 dirs[1] = "WaterNWNE";
                 dirs[2] = "WaterE";
             }
         }
 
-        if(dirs[2] == null){
+        if (dirs[2] == null) {
             String[] tmp = new String[2];
             tmp[0] = dirs[0];
             tmp[1] = dirs[1];
@@ -456,7 +428,7 @@ class Map {
         return dirs;
     }
 
-    private int changeOnAxis(String tile, boolean x, String genDir) {
+    private int changeOnAxis(String tile, boolean x) {
 
         /*
             Returns change in position the algorithm should make to continue generating the coastline
@@ -584,7 +556,7 @@ class Map {
         return null; // should not
     }
 
-    private boolean returnCanGenWater(String tile){
+    private boolean returnCanGenWater(String tile) {
         return tile.equals("WaterE") || tile.equals("WaterN") || tile.equals("WaterNE");
     }
 
@@ -608,22 +580,24 @@ class Map {
         int waterLineMax = mapSize / 20;
         System.out.println("MaxWaterline: " + waterLineMax);
         String genDir = "east";
-        String currDir = "east";
+        //String currDir = "east";
 
         int endPos = mapSize - (rand.nextInt(waterLineMax) + 3);
         int y = rand.nextInt(waterLineMax) + 3;
         String tile = "";
-        String prevTile = "";
+        String prevTile;
         int sameTileCount = 0;
-        for (int x = rand.nextInt(waterLineMax) + 3; x < mapSize - endPos; x += changeOnAxis(tile, true, currDir)) { // first iteration of coastline defining
+
+        for (int x = rand.nextInt(waterLineMax) + 3; x < mapSize - endPos; x += changeOnAxis(tile, true)) { // first iteration of coastline defining
             prevTile = tile;
-            if(prevTile.equals(tile))
+            if (prevTile.equals(tile))
                 sameTileCount++;
             else
                 sameTileCount = 0;
             tile = nextWaterTile(tile, genDir, x, y, mapSize, sameTileCount);
             if (tile == null) {
                 tile = forceRedirect(tiles, x, y, genDir);
+                assert tile != null;
                 if (tile.equals("WaterNWSW")) {
                     x++;
                     y++;
@@ -633,7 +607,7 @@ class Map {
                 if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
                     tiles[x][y] = new Tile(tile);
             }
-            y += changeOnAxis(tile, false, currDir);
+            y += changeOnAxis(tile, false);
         }
 
         tile = "WaterW";
@@ -646,9 +620,10 @@ class Map {
         int x = endPos;
         genDir = "south";
         endPos = mapSize - (rand.nextInt(waterLineMax) + 3);
-        for (; y < mapSize - endPos; y += changeOnAxis(tile, false, currDir)) { // second iteration of coastline defining
+        for (; y < mapSize - endPos; y += changeOnAxis(tile, false)) { // second iteration of coastline defining
             prevTile = tile;
-            if(prevTile.equals(tile))
+            assert prevTile != null;
+            if (prevTile.equals(tile))
                 sameTileCount++;
             else
                 sameTileCount = 0;
@@ -661,7 +636,7 @@ class Map {
                 if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
                     tiles[x][y] = new Tile(tile);
             }
-            x += changeOnAxis(tile, true, currDir);
+            x += changeOnAxis(tile, true);
         }
 
         tile = "WaterN";
@@ -674,9 +649,9 @@ class Map {
         y = endPos;
         genDir = "west";
         endPos = (rand.nextInt(waterLineMax) + 3);
-        for (; x > endPos; x += changeOnAxis(tile, true, currDir)) { // third iteration of coastline defining
+        for (; x > endPos; x += changeOnAxis(tile, true)) { // third iteration of coastline defining
             prevTile = tile;
-            if(prevTile.equals(tile))
+            if (prevTile.equals(tile))
                 sameTileCount++;
             else
                 sameTileCount = 0;
@@ -689,7 +664,7 @@ class Map {
                 if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
                     tiles[x][y] = new Tile(tile);
             }
-            y += changeOnAxis(tile, false, currDir);
+            y += changeOnAxis(tile, false);
         }
 
         tile = "WaterE";
@@ -702,9 +677,10 @@ class Map {
         x = endPos;
         genDir = "north";
         endPos = (rand.nextInt(waterLineMax) + 3);
-        for (; y > endPos; y += changeOnAxis(tile, false, currDir)) { // fourth iteration of coastline defining
+        for (; y > endPos; y += changeOnAxis(tile, false)) { // fourth iteration of coastline defining
             prevTile = tile;
-            if(prevTile.equals(tile))
+            assert prevTile != null;
+            if (prevTile.equals(tile))
                 sameTileCount++;
             else
                 sameTileCount = 0;
@@ -717,20 +693,19 @@ class Map {
                 if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
                     tiles[x][y] = new Tile(tile);
             }
-            x += changeOnAxis(tile, true, currDir);
+            x += changeOnAxis(tile, true);
         }
 
         System.out.println("Northward generation finished");
         System.out.println("Last x,y positions : " + x + endPos);
 
-        for (y = 0; y < mapSize; y++){
+        for (y = 0; y < mapSize; y++) {
             boolean genAllWater = true;
-            for (x = 0; x < mapSize; x++){
-                if(tiles[x][y] == null) {
-                    if(genAllWater)
+            for (x = 0; x < mapSize; x++) {
+                if (tiles[x][y] == null) {
+                    if (genAllWater)
                         tiles[x][y] = new Tile("WaterAll");
-                }
-                else {
+                } else {
                     for (; x < mapSize; x++)
                         if (tiles[x][y] == null && tiles[x - 1][y] != null && returnCanGenWater(tiles[x - 1][y].type)) {
                             genAllWater = true;
@@ -841,6 +816,44 @@ class Map {
                 if (tiles[a][b] == null && rand.nextInt(10) < 7) // 70 percent chance of spawning tile
                     tiles[a][b] = new Tile(type);
     }
+}
+
+class Party {
+    /*
+        Class contains all data for different parties that exist on the overworld map
+     */
+
+    private double xOffset, yOffset; // pixel offset from center of tile (only within tile)
+    private int tileX, tileY; // position on global map in terms of tile
+    private String[] members; // members of party (will be something other than string but for now...)
+    private String faction; // what faction they owe allegiance to
+
+    //TODO: NEED SPEED AND OTHER STATS, LIKE FOV, MERGE WITH INMAP CHARACTER STATS?
+
+    Party(){
+
+    }
+
+    private void chase(Party target){ // chase another party to provoke combat
+
+    }
+
+    private void wander(){ // wander around with no target
+
+    }
+
+    private void flee(Party[] parties){ // flee from one or more parties
+
+    }
+
+    private void travelTo(String settlementName){ // travel to desired settlement
+
+    }
+
+    private void travelTo(int destinationTileX, int destinationTileY){ // travel to coords
+
+    }
+
 }
 
 class Faction {

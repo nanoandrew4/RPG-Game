@@ -106,15 +106,15 @@ public class OverworldController implements Runnable {
         double tileXOffset = totalXOffset + xOffset;
         double tileYOffset = totalYOffset + yOffset;
 
-        System.out.println("Curr tile x-offset: " + tileXOffset);
-        System.out.println("Curr tile y-offset: " + tileYOffset);
+        //System.out.println("Curr tile x-offset: " + tileXOffset);
+        //System.out.println("Curr tile y-offset: " + tileYOffset);
 
         double[] angles = calcAngles(tileXOffset, tileYOffset);
         double leftAngle = angles[0];
         double rightAngle = angles[1];
 
-        System.out.println("Left side angle " + leftAngle);
-        System.out.println("Right side angle " + rightAngle);
+        //System.out.println("Left side angle " + leftAngle);
+        //System.out.println("Right side angle " + rightAngle);
 
         if (Math.abs(leftAngle) >= 22.5 || Math.abs(rightAngle) >= 22.5) { // new tile
             System.out.println("Moved tile");
@@ -123,7 +123,8 @@ public class OverworldController implements Runnable {
                 xOffset -= model.getMapTileSize() / 2;
                 yOffset -= model.getMapTileSize() / 4;
                 model.setCurrPos(1, model.getCurrPos(1) - 1);
-                view.addRow(model.getTiles(), main.screenWidth, main.screenHeight, (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getMapSize(), true);
+                view.addRow(model.getTiles(), main.screenWidth, main.screenHeight, tileXOffset - model.getMapTileSize() / 2, tileYOffset - model.getMapTileSize() / 4,
+                        (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getMapSize(), true);
             } if (rightAngle <= -22.5) {
                 xOffset -= model.getMapTileSize() / 2;
                 yOffset += model.getMapTileSize() / 4;
@@ -138,10 +139,21 @@ public class OverworldController implements Runnable {
                 xOffset += model.getMapTileSize() / 2;
                 yOffset += model.getMapTileSize() / 4;
                 model.setCurrPos(1, model.getCurrPos(1) + 1);
-                view.addRow(model.getTiles(), main.screenWidth, main.screenHeight, (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getMapSize(), false);
+                view.addRow(model.getTiles(), main.screenWidth, main.screenHeight, tileXOffset + model.getMapTileSize() / 2, tileYOffset + model.getMapTileSize() / 4,
+                        (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getMapSize(), false);
             }
             //setMouseEvents();
         }
+/*
+        while (totalXOffset + xOffset > model.getMapTileSize() / 2)
+            xOffset -= model.getMapTileSize() / 2;
+        while (totalXOffset + xOffset < -model.getMapTileSize() / 2)
+            xOffset += model.getMapTileSize() / 2;
+        while (totalYOffset + yOffset > model.getMapTileSize() / 4)
+            yOffset -= model.getMapTileSize() / 4;
+        while (totalYOffset + yOffset < -model.getMapTileSize() / 4)
+            yOffset += model.getMapTileSize() / 4;
+*/
         System.out.println();
     }
 
@@ -253,51 +265,30 @@ public class OverworldController implements Runnable {
                 if(x < 0 || y < 0 || x >= model.getMapSize() || y >= model.getMapSize())
                     return;
                 if (model.getTiles()[x][y].settlementTile != null) {
-                    model.getTiles()[x][y].banner.getChildren().get(3).addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent event) {
-                            System.out.println("Attack");
-                        }
+                    model.getTiles()[x][y].banner.getChildren().get(3).addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                        System.out.println("Attack");
                     });
-                    model.getTiles()[x][y].banner.getChildren().get(4).addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent event) {
-                            System.out.println("Enter");
-                        }
+                    model.getTiles()[x][y].banner.getChildren().get(4).addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                        System.out.println("Enter");
                     });
-                    model.getTiles()[x][y].banner.getChildren().get(5).addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent event) {
-                            System.out.println("Diplomacy");
-                        }
+                    model.getTiles()[x][y].banner.getChildren().get(5).addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                        System.out.println("Diplomacy");
                     });
-                    view.imageViews[x][y][0].addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent event) {
-                            // if mouse is on a settlement tile, show banner for settlement
-                            model.getTiles()[finalX][finalY].banner.setVisible(true);
-                        }
+                    view.imageViews[x][y][0].addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
+                        // if mouse is on a settlement tile, show banner for settlement
+                        model.getTiles()[finalX][finalY].banner.setVisible(true);
                     });
-                    view.imageViews[x][y][0].addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent event) {
-                            // if mouse leaves settlement tile, hide banner
-                            model.getTiles()[finalX][finalY].banner.setVisible(false);
-                        }
+                    view.imageViews[x][y][0].addEventHandler(MouseEvent.MOUSE_EXITED, event -> {
+                        // if mouse leaves settlement tile, hide banner
+                        model.getTiles()[finalX][finalY].banner.setVisible(false);
                     });
-                    model.getTiles()[finalX][finalY].banner.addEventHandler(MouseEvent.MOUSE_ENTERED, new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent event) {
-                            // if mouse is on banner, show banner
-                            model.getTiles()[finalX][finalY].banner.setVisible(true);
-                        }
+                    model.getTiles()[finalX][finalY].banner.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
+                        // if mouse is on banner, show banner
+                        model.getTiles()[finalX][finalY].banner.setVisible(true);
                     });
-                    model.getTiles()[finalX][finalY].banner.addEventHandler(MouseEvent.MOUSE_EXITED, new EventHandler<MouseEvent>() {
-                        @Override
-                        public void handle(MouseEvent event) {
-                            // if mouse leaves banner, hide banner
-                            model.getTiles()[finalX][finalY].banner.setVisible(false);
-                        }
+                    model.getTiles()[finalX][finalY].banner.addEventHandler(MouseEvent.MOUSE_EXITED, event -> {
+                        // if mouse leaves banner, hide banner
+                        model.getTiles()[finalX][finalY].banner.setVisible(false);
                     });
                 }
                 view.imageViews[x][y][0].addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
