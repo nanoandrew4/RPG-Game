@@ -43,7 +43,7 @@ public class InMapController implements Runnable {
     private void setInput(Scene scene) {
 
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-
+            
             //movement in floor
             if(control.equals("floor")) {
                 //get control values for keycodes
@@ -80,13 +80,28 @@ public class InMapController implements Runnable {
             //menu scrolling
             else if(control.equals("menu")) {
                 switch(main.getControl(event.getCode())) {
-                    //switching menus
-                    case LEFT: view.changeMenu(-1, model.getParty(), model.getInventory(), model.getGold()); break;
-                    case RIGHT: view.changeMenu(1, model.getParty(), model.getInventory(), model.getGold()); break;
+                    //menu movement
+                    case LEFT: 
+                        view.changeMenu(-1, model.getParty(), model.getInventory(), model.getGold()); 
+                        break;
+                    case RIGHT: 
+                        view.changeMenu(1, model.getParty(), model.getInventory(), model.getGold()); 
+                        break;
+                    case UP:
+                        break;
+                    case DOWN:
+                        break;
+                        
+                    //selection
+                    case SELECT:
+                        break;
+                    case BACK:
+                        break;
                     
                     //close menu
                     case MENU:
                         view.toggleMenu("", model.getParty(), model.getInventory(), model.getGold());
+                        model.toggleMenu();
                         control = "floor";
                         break;
                 }

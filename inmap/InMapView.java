@@ -76,8 +76,8 @@ class Images {
 //        slug = new Image("/media/graphics/inmap/slug.png", width, width, true, false);
 //        goblin = new Image("/media/graphics/inmap/harambe.png", width, width, true, false);
 //        boss = new Image("/media/graphics/inmap/clinton.jpg", width, width, true, false);
-        hero = new Image("/media/graphics/inmap/knight.png", width, width, true, false);
-//        hero = new Image("/media/graphics/inmap/trump.png", width, width, true, false);
+//        hero = new Image("/media/graphics/inmap/knight.png", width, width, true, false);
+        hero = new Image("/media/graphics/inmap/trump.png", width, width, true, false);
         adelf = new Image("/media/graphics/inmap/adelf.png", width, width, true, false);
         bat = new Image("/media/graphics/inmap/bat.png", width, width, true, false);
         bell = new Image("/media/graphics/inmap/bell.png", width, width, true, false);
@@ -117,6 +117,8 @@ public class InMapView {
     private Text rip; //rip text
     private Text charT, levelT, goldT; //quickinfo text
     private Text diffT, floorT, nameT, typeT; //location text
+    
+    private Rectangle menuFocus;
     
     //animation
 //    private final LongProperty lastUpdateTime = new SimpleLongProperty();
@@ -184,9 +186,24 @@ public class InMapView {
         
         //initialize menu
         Rectangle box4 = new Rectangle(screenWidth*4/5, screenHeight*2/3, Paint.valueOf("WHITE"));
-        box4.relocate((screenWidth/2)-(screenWidth*2/5), screenHeight/2-(screenHeight/3));
-
-        menuBox.getChildren().add(box4);
+        box4.relocate(screenWidth/10, screenHeight/6);
+        
+        menuFocus = new Rectangle(screenWidth*4/25, screenHeight/10, Paint.valueOf("PINK"));
+        menuFocus.relocate(screenWidth/10, screenHeight/6);
+        
+        Text[] menuText = new Text[5];
+        for(int i = 0; i < 5; i++) {
+            menuText[i] = new Text(screenWidth/8+screenWidth*4*i/25, screenHeight/6+40, "");
+            menuText[i].setFont(Font.font("Arial", FontWeight.BOLD, 28));
+        }
+        menuText[0].setText(" INV");
+        menuText[1].setText(" CHAR");
+        menuText[2].setText(" PARTY");
+        menuText[3].setText(" NOTES");
+        menuText[4].setText("OPTIONS");
+        
+        menuBox.getChildren().addAll(box4, menuFocus);
+        menuBox.getChildren().addAll(menuText);
     }
 
     //set tile size
@@ -320,21 +337,53 @@ public class InMapView {
     public void changeMenu(int change, Character[] party, Item[] inv, int gold) {
         if(change == 1) {
             switch(menuWindow) {
-                case "inv": menuWindow = "char"; break;
-                case "char": menuWindow = "party"; break;
-                case "party": menuWindow = "notes"; break;
-                case "notes": menuWindow = "options"; break;
-                case "options": menuWindow = "inv"; break;
-                default: menuWindow = "inv"; break;
+                case "inv":
+                    menuWindow = "char"; 
+                    menuFocus.setLayoutX(screenWidth/10+screenWidth*4/25); 
+                    break;
+                case "char": 
+                    menuWindow = "party"; 
+                    menuFocus.setLayoutX(screenWidth/10+screenWidth*8/25); 
+                    break;
+                case "party": 
+                    menuWindow = "notes";
+                    menuFocus.setLayoutX(screenWidth/10+screenWidth*12/25);
+                    break;
+                case "notes": 
+                    menuWindow = "options"; 
+                    menuFocus.setLayoutX(screenWidth/10+screenWidth*16/25); 
+                    break;
+                case "options": 
+                    menuWindow = "inv"; 
+                    menuFocus.setLayoutX(screenWidth/10);
+                    break;
+                default: 
+                    menuWindow = "inv"; 
+                    break;
             }
         }
         else if(change == -1) {
             switch(menuWindow) {
-                case "inv": menuWindow = "options"; break;
-                case "char": menuWindow = "inv"; break;
-                case "party": menuWindow = "char"; break;
-                case "notes": menuWindow = "party"; break;
-                case "options": menuWindow = "notes"; break;
+                case "inv": 
+                    menuWindow = "options";
+                    menuFocus.setLayoutX(screenWidth/10+screenWidth*16/25); 
+                    break;
+                case "char":
+                    menuWindow = "inv";
+                    menuFocus.setLayoutX(screenWidth/10);
+                    break;
+                case "party": 
+                    menuWindow = "char";
+                    menuFocus.setLayoutX(screenWidth/10+screenWidth*4/25); 
+                    break;
+                case "notes": 
+                    menuWindow = "party"; 
+                    menuFocus.setLayoutX(screenWidth/10+screenWidth*8/25);
+                    break;
+                case "options":
+                    menuWindow = "notes"; 
+                    menuFocus.setLayoutX(screenWidth/10+screenWidth*12/25); 
+                    break;
                 default: menuWindow = "inv"; break;
             }
         }
@@ -354,37 +403,44 @@ public class InMapView {
     //fill menu with info
     public void updateMenu(Character[] party, Item[] inv, int gold) {
         //remove all nodes except for background
-        menuBox.getChildren().remove(1, menuBox.getChildren().toArray().length);
+        menuBox.getChildren().remove(7, menuBox.getChildren().toArray().length);
         
         //add objects depending on window
         if(menuWindow.equals("inv")) {
             Text[] invText = new Text[64];
             
-            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "inv screen");
-            t.setFont(Font.font(null, FontWeight.NORMAL, 24));
-            
-            menuBox.getChildren().addAll(t);
+            for(int i = 0; i < 64; i++) {
+                invText[i] = new Text(screenWidth/10+60+180*(int)(i/16), screenHeight/6+100+26*(i%16), inv[i].name);
+                if(!inv[i].exists)
+                    invText[i].setText("-");
+                if(inv[i].name.length() > 15)
+                    invText[i].setText(inv[i].name.substring(0, 12) + "...");
+                
+                invText[i].setFill(Paint.valueOf("BLUE"));
+                invText[i].setFont(Font.font("Monaco", FontWeight.NORMAL, 14));
+                menuBox.getChildren().addAll(invText[i]);
+            }
         }
         else if(menuWindow.equals("char")) {
-            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "char screen");
+            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "your skills: none");
             t.setFont(Font.font(null, FontWeight.NORMAL, 24));
             
             menuBox.getChildren().addAll(t);
         }
         else if(menuWindow.equals("party")) {
-            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "party screen");
+            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you have no friends");
             t.setFont(Font.font(null, FontWeight.NORMAL, 24));
             
             menuBox.getChildren().addAll(t);
         }
         else if(menuWindow.equals("notes")) {
-            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "notes screen");
+            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you are illiterate");
             t.setFont(Font.font(null, FontWeight.NORMAL, 24));
             
             menuBox.getChildren().addAll(t);
         }
         else if(menuWindow.equals("options")) {
-            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "options screen");
+            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you have no options in life");
             t.setFont(Font.font(null, FontWeight.NORMAL, 24));
             
             menuBox.getChildren().addAll(t);

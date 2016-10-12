@@ -6,6 +6,7 @@
 package inmap;
 
 import main.Control;
+import main.Path;
 
 public class Floor {
     InMapModel model;

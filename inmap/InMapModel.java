@@ -6,6 +6,7 @@
 package inmap;
 
 import main.Control;
+import main.Path;
 
 public class InMapModel {
     private final Location[] maps;
@@ -13,7 +14,7 @@ public class InMapModel {
     private Character[] party;
     private Item[] inv;
     private int gold;
-    private String focus;
+    private String focus, menuFocus;
     private int menuX;
     private int menuY;
     
@@ -33,12 +34,17 @@ public class InMapModel {
         maps[currentMap].getCurrentFloor().passControl(Control.UP);
         inv = new Item[64];
         
+        for(int i = 0; i < 64; i++)
+            inv[i] = new Item();
+        
         //testing
         inv[0] = new Item("thing");
         inv[1] = new Item("thing2");
         inv[3] = new Item("fish");
+        inv[30] = new Item("Great Knight Halberd");
         gold = 500;
         focus = "floor";
+        menuFocus = "inv";
         menuX = 0;
         menuY = -1;
     }
@@ -51,7 +57,20 @@ public class InMapModel {
         }
         else if(focus.equals("menu")) {
             switch(input) {
-
+                case LEFT:
+                    break;
+                case RIGHT:
+                    break;
+                case UP:
+                    break;
+                case DOWN:
+                    break;
+                case SELECT:
+                    break;
+                case BACK:
+                    break;
+                default:
+                    break;
             }
         }
         else System.out.println("Failed focus.");
@@ -64,7 +83,7 @@ public class InMapModel {
         else focus = "menu";
     }
     
-    //reset location
+    //debug: reset location
     void reset() {
         party[0].currentHP = party[0].maxHP;
         party[0].exists = true;
@@ -74,6 +93,25 @@ public class InMapModel {
             case 2: maps[0] = new Location(this, "cave", (int)(Math.random()*3+1), party); break;
         }
         maps[currentMap].getCurrentFloor().passControl(Control.UP);
+    }
+    
+    //A* pathfinding
+    Path pathfind(Floor floor, int sx, int sy, int ex, int ey) {
+        Path path = new Path(floor.sizeX, floor.sizeY, sx, sy, ex, ey);
+        
+        for(int x = 0; x < floor.sizeX; x++) {
+            for(int y = 0; y < floor.sizeY; y++) {
+                if((floor.tiles[x][y].isWall && !floor.tiles[x][y].openable) 
+                        || (floor.chars[x][y].exists))
+                    path.setMap(x, y, 1);
+                else
+                    path.setMap(x, y, 0);
+            }
+        }
+        
+        path.search(sx, sy, ex, ey);
+        
+        return path;
     }
     
     //return current map
