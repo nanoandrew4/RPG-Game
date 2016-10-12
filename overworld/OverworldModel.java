@@ -19,6 +19,7 @@ class OverworldModel {
 
     private double mapTileSize;
     private int[] currPos = new int[2];
+    private int[] startPos = new int[2];
 
     private Map map;
 
@@ -32,8 +33,10 @@ class OverworldModel {
 
         FileAccess fileAccess = new FileAccess();
         fileAccess.loadFile("src/data/player");
-        currPos[0] = (int) fileAccess.getFromFile("locationX", "int");
-        currPos[1] = (int) fileAccess.getFromFile("locationY", "int");
+        startPos[0] = (int) fileAccess.getFromFile("locationX", "int");
+        startPos[1] = (int) fileAccess.getFromFile("locationY", "int");
+        currPos[0] = startPos[0];
+        currPos[1] = startPos[1];
     }
 
     Tile[][] getTiles() { // returns 2D array of type Tile
@@ -56,9 +59,13 @@ class OverworldModel {
         return currPos;
     }
 
+    int[] getStartPos() {return startPos;}
+
     int getCurrPos(int index) { // returns position specified by index, x -> 0 and y -> 1
         return currPos[index];
     }
+
+    int getStartPos(int index) {return startPos[index];}
 
     void setCurrPos(int index, int pos) { // sets current pos at index to current value plus sum
         currPos[index] = pos;

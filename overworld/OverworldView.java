@@ -124,7 +124,7 @@ class OverworldView {
         this.screenHeight = screenHeight;
     }
 
-    Scene initDisplay(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int mapSize) {
+    Scene initDisplay(Tile[][] tiles, double screenWidth, double screenHeight, int zoom, double mapTileSize, int[] currPos, int[] startPos, int mapSize) {
 
         /*
             Loads the initial set of tiles for display based on current position
@@ -146,9 +146,12 @@ class OverworldView {
                 int xPos = (currPos[0] + x < 0 ? (currPos[0] + x >= mapSize ? mapSize - 1 : 0) : currPos[0] + x);
                 int yPos = (currPos[1] + y < 0 ? (currPos[1] + y >= mapSize ? mapSize - 1 : 0) : currPos[1] + y);
 
-                drawTile(tiles, (float)(mapTileSize / 2), xPos,
-                        yPos, 0.5 * mapTileSize * (x - y) + (screenWidth / 2) - (xOffset),
-                        0.25 * mapTileSize * (x + y) + (screenHeight / 2) - (yOffset + mapTileSize / 2),
+                System.out.println((xPos - startPos[0]));
+                System.out.println((yPos - startPos[1]));
+
+                drawTile(tiles, (float)(mapTileSize / 2), xPos, yPos,
+                        0.5 * mapTileSize * ((xPos - startPos[0]) - (yPos - startPos[1])) + (screenWidth / 2),
+                        0.25 * mapTileSize * ((xPos - startPos[0]) + (yPos - startPos[1])) + (screenHeight / 2),
                         0,
                         0
                 );
@@ -183,9 +186,8 @@ class OverworldView {
         if(imageViews[xPos][yPos][0] == null) {
             System.out.print(".");
             imageViews[xPos][yPos][0] = genTile(xPos, yPos, tiles);
-            imageViews[xPos][yPos][0].setTranslateX(currXOffset);
-            imageViews[xPos][yPos][0].setTranslateY(currYOffset);
-            imageViews[xPos][yPos][0].relocate(pixelX, pixelY);
+            imageViews[xPos][yPos][0].setLayoutX(pixelX);
+            imageViews[xPos][yPos][0].setLayoutY(pixelY);
             setMoveAnim(imageViews[xPos][yPos][0]);
         }
         overworldLayout.getChildren().add(imageViews[xPos][yPos][0]);
@@ -195,9 +197,9 @@ class OverworldView {
         if (tiles[xPos][yPos].type.equalsIgnoreCase("Settlement")) {
             if(tiles[xPos][yPos].banner == null) {
                 genBanner(bannerSize, bannerSize / 2, tiles[xPos][yPos]);
+                tiles[xPos][yPos].banner.relocate(pixelX, pixelY);
                 tiles[xPos][yPos].banner.setTranslateX(currXOffset);
                 tiles[xPos][yPos].banner.setTranslateY(currYOffset);
-                tiles[xPos][yPos].banner.relocate(pixelX, pixelY);
                 setMoveAnim(tiles[xPos][yPos].banner);
             }
             overworldLayout.getChildren().add(tiles[xPos][yPos].banner);
@@ -207,9 +209,9 @@ class OverworldView {
 
         if(imageViews[xPos][yPos][1] == null) {
             imageViews[xPos][yPos][1] = new ImageView(images.tileBorder);
+            imageViews[xPos][yPos][1].relocate(pixelX, pixelY);
             imageViews[xPos][yPos][1].setTranslateX(currXOffset);
             imageViews[xPos][yPos][1].setTranslateY(currYOffset);
-            imageViews[xPos][yPos][1].relocate(pixelX, pixelY);
             imageViews[xPos][yPos][1].setVisible(false);
             setMoveAnim(imageViews[xPos][yPos][1]);
         }
@@ -218,8 +220,9 @@ class OverworldView {
 
         System.out.println("PixelX: " + pixelX);
         System.out.println("PixelY: " + pixelY);
-        System.out.println("CurrXOffset: " + currXOffset);
-        System.out.println("CurrYOffset: " + currYOffset);
+        System.out.println("Y: " + imageViews[xPos][yPos][0].getLayoutY());
+        //System.out.println("CurrXOffset: " + currXOffset);
+        //System.out.println("CurrYOffset: " + currYOffset);
         System.out.println();
     }
 
@@ -310,7 +313,7 @@ class OverworldView {
         return img;
     }
 
-    void addRow(Tile[][] tiles, double screenWidth, double screenHeight, double tileXOffset, double tileYOffset, int zoom, double mapTileSize, int[] currPos, int mapSize, boolean top) {
+    void addRow(Tile[][] tiles, double screenWidth, double screenHeight, double tileXOffset, double tileYOffset, int zoom, double mapTileSize, int[] currPos, int[] startPos, int mapSize, boolean top) {
 
         /*
             Adds a row when a tile change on the y axis is detected
@@ -324,24 +327,23 @@ class OverworldView {
         System.out.println("Adding row");
         if ((top && currPos[1] + (zoom) + 1 < mapSize) || (!top && currPos[1] + (zoom) - 1 > 0)) {
             for(int x = -zoom; x < zoom; x++) {
+                int yPos = currPos[1] + (top ? -zoom : zoom);
                 int xPos = (currPos[0] + x < 0 ? (currPos[0] + x >= mapSize ? mapSize - 1 : 0) : currPos[0] + x);
-                for (int y = -zoom; y < zoom; y++) {
 
-                    // Draw new tile
+                System.out.println((xPos - startPos[0]));
+                System.out.println((yPos - startPos[1]));
 
-                    int yPos = (currPos[1] + y < 0 ? (currPos[1] + y >= mapSize ? mapSize - 1 : 0) : currPos[1] + y);
+                // Draw new tile
+                drawTile(tiles, (float) (mapTileSize / 2), xPos, yPos,
+                        0.5 * mapTileSize * ((xPos - startPos[0]) - (yPos - startPos[1])) + (screenWidth / 2),
+                        0.25 * mapTileSize * ((xPos - startPos[0]) + (yPos - startPos[1])) + (screenHeight / 2),
+                        currXOffset,
+                        currYOffset
+                );
 
-                    drawTile(tiles, (float) (mapTileSize / 2), xPos, yPos,
-                            0.5 * mapTileSize * (x - y) + (screenWidth / 2) - (currXOffset),
-                            0.25 * mapTileSize * (x + y) + (screenHeight / 2) - (currYOffset + mapTileSize / 2) - tileYOffset,
-                            currXOffset,
-                            currYOffset
-                    );
-                }
                 // Remove tiles
 
-                int yPos = currPos[1] - (top ? -zoom : zoom);
-                //System.out.println(yPos);
+                yPos = currPos[1] - (top ? -zoom : zoom);
                 overworldLayout.getChildren().remove(imageViews[currPos[0] + x][yPos][0]);
                 overworldLayout.getChildren().remove(imageViews[currPos[0] + x][yPos][1]);
                 // remove banners
@@ -385,21 +387,20 @@ class OverworldView {
          */
 
         new AnimationTimer() {
+
             @Override
             public void handle(long timestamp) {
                 if (lastUpdateTime.get() > 0) {
-                    if (imageView == null) { // if redundant delete if statement
+                    if (imageView == null) {
                         stop();
                         return;
                     }
-                    final double oldX = imageView.getTranslateX();
+                    final double oldX = imageView.getLayoutX();
                     final double newX = oldX + speedX.get();
-                    final double oldY = imageView.getTranslateY();
+                    final double oldY = imageView.getLayoutY();
                     final double newY = oldY + speedY.get();
-                    imageView.setTranslateX(newX);
-                    imageView.setTranslateY(newY);
-                    xOffset = imageView.getTranslateX();
-                    yOffset = imageView.getTranslateY();
+                    imageView.setLayoutX(newX);
+                    imageView.setLayoutY(newY);
                 }
                 lastUpdateTime.set(timestamp);
             }

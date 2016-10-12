@@ -21,7 +21,7 @@ public class OverworldController implements Runnable {
 
     private Main main;
     private Scene scene;
-    private float zoomMultiplier = 2.0f;
+    private float zoomMultiplier = 2.2f;
     private boolean controlsLocked = false;
     
     private double xOffset = 0, yOffset = 0;
@@ -66,7 +66,7 @@ public class OverworldController implements Runnable {
             Gets scene from the View and passes it to main to be displayed
          */
 
-        scene = view.initDisplay(model.getTiles(), main.screenWidth, main.screenHeight, (int) (model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getMapSize());
+        scene = view.initDisplay(model.getTiles(), main.screenWidth, main.screenHeight, (int) (model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getStartPos(),  model.getMapSize());
         setMouseEvents();
         setInput(scene);
         Platform.runLater(() -> main.setStage(scene)); // to update UI from non-javafx thread
@@ -106,15 +106,15 @@ public class OverworldController implements Runnable {
         double tileXOffset = totalXOffset + xOffset;
         double tileYOffset = totalYOffset + yOffset;
 
-        //System.out.println("Curr tile x-offset: " + tileXOffset);
-        //System.out.println("Curr tile y-offset: " + tileYOffset);
+        System.out.println("Curr tile x-offset: " + tileXOffset);
+        System.out.println("Curr tile y-offset: " + tileYOffset);
 
         double[] angles = calcAngles(tileXOffset, tileYOffset);
         double leftAngle = angles[0];
         double rightAngle = angles[1];
 
-        //System.out.println("Left side angle " + leftAngle);
-        //System.out.println("Right side angle " + rightAngle);
+        System.out.println("Left side angle " + leftAngle);
+        System.out.println("Right side angle " + rightAngle);
 
         if (Math.abs(leftAngle) >= 22.5 || Math.abs(rightAngle) >= 22.5) { // new tile
             System.out.println("Moved tile");
@@ -124,7 +124,7 @@ public class OverworldController implements Runnable {
                 yOffset -= model.getMapTileSize() / 4;
                 model.setCurrPos(1, model.getCurrPos(1) - 1);
                 view.addRow(model.getTiles(), main.screenWidth, main.screenHeight, tileXOffset - model.getMapTileSize() / 2, tileYOffset - model.getMapTileSize() / 4,
-                        (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getMapSize(), true);
+                        (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getStartPos(), model.getMapSize(), true);
             } if (rightAngle <= -22.5) {
                 xOffset -= model.getMapTileSize() / 2;
                 yOffset += model.getMapTileSize() / 4;
@@ -140,7 +140,7 @@ public class OverworldController implements Runnable {
                 yOffset += model.getMapTileSize() / 4;
                 model.setCurrPos(1, model.getCurrPos(1) + 1);
                 view.addRow(model.getTiles(), main.screenWidth, main.screenHeight, tileXOffset + model.getMapTileSize() / 2, tileYOffset + model.getMapTileSize() / 4,
-                        (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getMapSize(), false);
+                        (int)(model.getZoom() * zoomMultiplier), model.getMapTileSize(), model.getCurrPos(), model.getStartPos(), model.getMapSize(), false);
             }
             //setMouseEvents();
         }
@@ -220,8 +220,8 @@ public class OverworldController implements Runnable {
 
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
 
-            System.out.println("XPos: " + model.getCurrPos(0));
-            System.out.println("YPos: " + model.getCurrPos(1));
+            //System.out.println("XPos: " + model.getCurrPos(0));
+            //System.out.println("YPos: " + model.getCurrPos(1));
 
             if (controlsLocked)
                 return;
