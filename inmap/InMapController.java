@@ -5,11 +5,9 @@
 package inmap;
 
 import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 
 import main.Main;
-import main.Control;
 
 public class InMapController implements Runnable {
     
@@ -17,8 +15,6 @@ public class InMapController implements Runnable {
     private Scene scene;
     private final InMapModel model;
     private final InMapView view;
-    private String control = "floor";
-    private boolean UIVisible, shiftHeld, moving;
     
     //constructor
     public InMapController(Main main) {
@@ -34,78 +30,16 @@ public class InMapController implements Runnable {
         setInput(scene);
     }
     
-    //update display
-    private void updateDisplay() {
-        view.updateDisplay(model.getCurrentLocation().getCurrentFloor());
-    }
-    
     //keyboard input
     private void setInput(Scene scene) {
 
+        //key press events
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             
-            //movement in floor
-            if(control.equals("floor")) {
-                //get control values for keycodes
-                switch(main.getControl(event.getCode())) {
-                    //directional movement
-                    case UP: modelProcess(Control.UP); break;
-                    case LEFT: modelProcess(Control.LEFT); break;
-                    case DOWN: modelProcess(Control.DOWN); break;
-                    case RIGHT: modelProcess(Control.RIGHT); break;
-                    //open/close menu
-                    case MENU:
-                        model.toggleMenu();
-                        view.toggleMenu("", model.getParty(), model.getInventory(), model.getGold());
-                        control = "menu";
-                        break;
-                    //toggle UI
-                    case TAB:
-                        if(!UIVisible) {
-                            view.toggleUI(model.getCurrentLocation(), model.getParty(), model.getGold());
-                            UIVisible = true;
-                        }
-                        break;
-                    //debug
-                    case R:
-                        model.reset(); break;
-                    case T:
-                        model.getParty()[0].gainEXP(10000);
-                    default: break;
-                }
-
-                updateDisplay();
-            }
-            
-            //menu scrolling
-            else if(control.equals("menu")) {
-                switch(main.getControl(event.getCode())) {
-                    //menu movement
-                    case LEFT: 
-                        view.changeMenu(-1, model.getParty(), model.getInventory(), model.getGold()); 
-                        break;
-                    case RIGHT: 
-                        view.changeMenu(1, model.getParty(), model.getInventory(), model.getGold()); 
-                        break;
-                    case UP:
-                        break;
-                    case DOWN:
-                        break;
-                        
-                    //selection
-                    case SELECT:
-                        break;
-                    case BACK:
-                        break;
-                    
-                    //close menu
-                    case MENU:
-                        view.toggleMenu("", model.getParty(), model.getInventory(), model.getGold());
-                        model.toggleMenu();
-                        control = "floor";
-                        break;
-                }
-            }
+            model.process(main.getControl(event.getCode()));
+            view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
+                    model.getMenuPoint(), model.getMenuWindow(), model.getParty(), 
+                    model.getInventory(), model.getGold(), model.getQIVisible());
             
             event.consume();
         });
@@ -113,28 +47,13 @@ public class InMapController implements Runnable {
         //key release events
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
             
-            if(control.equals("floor"))
-            {
-                switch(main.getControl(event.getCode())) {
-                    //release UI
-                    case TAB:
-                        view.toggleUI(model.getCurrentLocation(), model.getParty(), model.getGold());
-                        UIVisible = false;
-                        break;
-                        
-                }
-            }
-            else if(control.equals("menu")) {
-                
-            }
+            model.processRelease(main.getControl(event.getCode()));
+            view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
+                    model.getMenuPoint(), model.getMenuWindow(), model.getParty(), 
+                    model.getInventory(), model.getGold(), model.getQIVisible());
             
             event.consume();
         });
-    }
-    
-    //directional movement processing
-    private void modelProcess(Control direction) {
-        model.process(direction);
     }
     
 }

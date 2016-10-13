@@ -4,11 +4,13 @@
 
 package inmap;
 
-import javafx.animation.AnimationTimer;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.LongProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleLongProperty;
+import java.awt.Point;
+
+//import javafx.animation.AnimationTimer;
+//import javafx.beans.property.DoubleProperty;
+//import javafx.beans.property.LongProperty;
+//import javafx.beans.property.SimpleDoubleProperty;
+//import javafx.beans.property.SimpleLongProperty;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -18,6 +20,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.FontWeight;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Circle;
 
 class Images {
     //contains images
@@ -112,13 +115,13 @@ public class InMapView {
     public double speedYVal;
     double width, height;
     final double zoom;
-    private String menuWindow;
     
     private Text rip; //rip text
     private Text charT, levelT, goldT; //quickinfo text
     private Text diffT, floorT, nameT, typeT; //location text
     
     private Rectangle menuFocus;
+    private Circle menuCursor;
     
     //animation
 //    private final LongProperty lastUpdateTime = new SimpleLongProperty();
@@ -145,7 +148,6 @@ public class InMapView {
         inmapLayout = new Pane();
         UIBox = new Pane();
         menuBox = new Pane();
-        menuWindow = "inv";
         speedXVal = 16;
         speedYVal = 16;
         
@@ -191,18 +193,21 @@ public class InMapView {
         menuFocus = new Rectangle(screenWidth*4/25, screenHeight/10, Paint.valueOf("PINK"));
         menuFocus.relocate(screenWidth/10, screenHeight/6);
         
+        menuCursor = new Circle(screenWidth/8, screenHeight/6+40, 3, Paint.valueOf("RED"));
+        menuCursor.setOpacity(0);
+        
         Text[] menuText = new Text[5];
         for(int i = 0; i < 5; i++) {
             menuText[i] = new Text(screenWidth/8+screenWidth*4*i/25, screenHeight/6+40, "");
             menuText[i].setFont(Font.font("Arial", FontWeight.BOLD, 28));
         }
-        menuText[0].setText(" INV");
+        menuText[0].setText("  INV");
         menuText[1].setText(" CHAR");
         menuText[2].setText(" PARTY");
         menuText[3].setText(" NOTES");
         menuText[4].setText("OPTIONS");
         
-        menuBox.getChildren().addAll(box4, menuFocus);
+        menuBox.getChildren().addAll(box4, menuFocus, menuCursor);
         menuBox.getChildren().addAll(menuText);
     }
 
@@ -284,126 +289,121 @@ public class InMapView {
         return new Scene(inmapLayout, screenWidth, screenHeight);
     }
     
-    //update display
-    public void updateDisplay(Floor floor) {
-        //tiles
-        for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
-            for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
-                imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][0].setImage(genTile(x, y, floor));
+    //update
+    public void update(String focus, Floor floor, Point menuP, String menuWindow, 
+            Character[] party, Item[] inv, int gold, boolean qiVisible) {
+        if(focus.equals("floor")) {
+            //remove menu window
+            if(inmapLayout.getChildren().contains(menuBox))
+                inmapLayout.getChildren().remove(menuBox);
+            
+            //show quick info ui
+            if(qiVisible && !inmapLayout.getChildren().contains(UIBox)) {
+                nameT.setText(floor.location.name);
+                typeT.setText(floor.location.type);
+                diffT.setText("Difficulty: " + floor.location.difficulty);
+                floorT.setText("Floor " + floor.location.currentFloor);
+                charT.setText(party[0].name);
+                levelT.setText("Level " + party[0].LVL);
+                goldT.setText("Gold: " + String.valueOf(gold));
+                inmapLayout.getChildren().add(UIBox);
             }
-        }
-        
-        //characters
-        for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
-            for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
-                imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][2].setImage(genChar(x, y, floor));
-            }
-        }
-        
-        //health
-        for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
-            for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
-                if(x >= 0 && x < floor.sizeX && y >= 0 && y < floor.sizeY && floor.chars[x][y].exists) {
-                    imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3].setVisible(true);
-                    imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3].setFitWidth(64 * 
-                            (double)floor.chars[x][y].currentHP / floor.chars[x][y].maxHP);
+            else if(!qiVisible)
+                inmapLayout.getChildren().remove(UIBox);
+            
+            //tiles
+            for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
+                for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
+                    imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][0].setImage(genTile(x, y, floor));
                 }
-                else
-                    imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3].setVisible(false);
+            }
+
+            //characters
+            for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
+                for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
+                    imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][2].setImage(genChar(x, y, floor));
+                }
+            }
+
+            //health
+            for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
+                for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
+                    if(x >= 0 && x < floor.sizeX && y >= 0 && y < floor.sizeY && floor.chars[x][y].exists) {
+                        imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3].setVisible(true);
+                        imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3].setFitWidth(64 * 
+                                (double)floor.chars[x][y].currentHP / floor.chars[x][y].maxHP);
+                    }
+                    else
+                        imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3].setVisible(false);
+                }
+            }
+
+            //floor text
+            floorT.setText("Floor " + floor.location.currentFloor);
+
+            //rip
+            if(!floor.party[0].exists)
+                rip.setVisible(true);
+            else
+                rip.setVisible(false);
+        }
+        else if(focus.equals("menu")) {
+            //add menu window
+            if(!inmapLayout.getChildren().contains(menuBox))
+                inmapLayout.getChildren().add(menuBox);
+            
+            //remove quick info box
+            inmapLayout.getChildren().remove(UIBox);
+            
+            if(menuP.x == -1) {
+                toggleMenu("", party, inv, gold);
+            }
+            if(menuP.y == -1) {
+                menuFocus.setOpacity(1);
+                menuCursor.setOpacity(0);
+                changeMenu(menuWindow, party, inv, gold);
+            }
+            else {
+                menuFocus.setOpacity(0);
+                menuCursor.setOpacity(1);
+                switch(menuWindow) {
+                    case "inv":
+                        menuCursor.relocate(screenWidth/10+50+180*menuP.x, screenHeight/6+90+26*menuP.y);
+                        break;
+                    case "char":
+                        break;
+                    case "party":
+                        break;
+                    case "notes":
+                        break;
+                    case "options":
+                        break;
+                }
             }
         }
-        
-        //floor text
-        floorT.setText("Floor " + floor.location.currentFloor);
-        
-        //rip
-        if(!floor.party[0].exists)
-            rip.setVisible(true);
-        else
-            rip.setVisible(false);
     }
     
     //toggle menu
-    public void toggleMenu(String window, Character[] party, Item[] inv, int gold) {
+    public void toggleMenu(String menuWindow, Character[] party, Item[] inv, int gold) {
         if(inmapLayout.getChildren().contains(menuBox)) {
             inmapLayout.getChildren().remove(menuBox);
         }
         else {
-            inmapLayout.getChildren().add(getMenu(menuWindow, party, inv, gold));
+            changeMenu(menuWindow, party, inv, gold);
+            inmapLayout.getChildren().add(menuBox);
         }
     }
     
-    //change pages in menu
-    public void changeMenu(int change, Character[] party, Item[] inv, int gold) {
-        if(change == 1) {
-            switch(menuWindow) {
-                case "inv":
-                    menuWindow = "char"; 
-                    menuFocus.setLayoutX(screenWidth/10+screenWidth*4/25); 
-                    break;
-                case "char": 
-                    menuWindow = "party"; 
-                    menuFocus.setLayoutX(screenWidth/10+screenWidth*8/25); 
-                    break;
-                case "party": 
-                    menuWindow = "notes";
-                    menuFocus.setLayoutX(screenWidth/10+screenWidth*12/25);
-                    break;
-                case "notes": 
-                    menuWindow = "options"; 
-                    menuFocus.setLayoutX(screenWidth/10+screenWidth*16/25); 
-                    break;
-                case "options": 
-                    menuWindow = "inv"; 
-                    menuFocus.setLayoutX(screenWidth/10);
-                    break;
-                default: 
-                    menuWindow = "inv"; 
-                    break;
-            }
-        }
-        else if(change == -1) {
-            switch(menuWindow) {
-                case "inv": 
-                    menuWindow = "options";
-                    menuFocus.setLayoutX(screenWidth/10+screenWidth*16/25); 
-                    break;
-                case "char":
-                    menuWindow = "inv";
-                    menuFocus.setLayoutX(screenWidth/10);
-                    break;
-                case "party": 
-                    menuWindow = "char";
-                    menuFocus.setLayoutX(screenWidth/10+screenWidth*4/25); 
-                    break;
-                case "notes": 
-                    menuWindow = "party"; 
-                    menuFocus.setLayoutX(screenWidth/10+screenWidth*8/25);
-                    break;
-                case "options":
-                    menuWindow = "notes"; 
-                    menuFocus.setLayoutX(screenWidth/10+screenWidth*12/25); 
-                    break;
-                default: menuWindow = "inv"; break;
-            }
-        }
+    //change pages in menu and move rectangle thing
+    public void changeMenu(String menuWindow, Character[] party, Item[] inv, int gold) {
+        if(menuWindow.equals("inv")) menuFocus.setLayoutX(screenWidth/10);
+        else if(menuWindow.equals("char")) menuFocus.setLayoutX(screenWidth/10+screenWidth*4/25);
+        else if(menuWindow.equals("party")) menuFocus.setLayoutX(screenWidth/10+screenWidth*8/25);
+        else if(menuWindow.equals("notes")) menuFocus.setLayoutX(screenWidth/10+screenWidth*12/25);
+        else if(menuWindow.equals("options")) menuFocus.setLayoutX(screenWidth/10+screenWidth*16/25);
         
-        updateMenu(party, inv, gold);
-    }
-    
-    //create menu
-    public Pane getMenu(String window, Character[] party, Item[] inv, int gold) {
-        menuWindow = window;
-        
-        updateMenu(party, inv, gold);
-        
-        return menuBox;
-    }
-    
-    //fill menu with info
-    public void updateMenu(Character[] party, Item[] inv, int gold) {
         //remove all nodes except for background
-        menuBox.getChildren().remove(7, menuBox.getChildren().toArray().length);
+        menuBox.getChildren().remove(8, menuBox.getChildren().toArray().length);
         
         //add objects depending on window
         if(menuWindow.equals("inv")) {
@@ -444,23 +444,6 @@ public class InMapView {
             t.setFont(Font.font(null, FontWeight.NORMAL, 24));
             
             menuBox.getChildren().addAll(t);
-        }
-    }
-    
-    //toggle UI
-    public void toggleUI(Location loc, Character[] party, int gold) {
-        if(inmapLayout.getChildren().contains(UIBox)) {
-            inmapLayout.getChildren().remove(UIBox);
-        }
-        else {
-            nameT.setText(loc.name);
-            typeT.setText(loc.type);
-            diffT.setText("Difficulty: " + loc.difficulty);
-            floorT.setText("Floor " + loc.currentFloor);
-            charT.setText(party[0].name);
-            levelT.setText("Level " + party[0].LVL);
-            goldT.setText("Gold: " + String.valueOf(gold));
-            inmapLayout.getChildren().add(UIBox);
         }
     }
     

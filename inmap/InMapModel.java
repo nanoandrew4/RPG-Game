@@ -5,18 +5,23 @@
 
 package inmap;
 
+import java.awt.Point;
+
 import main.Control;
 import main.Path;
 
 public class InMapModel {
+    //saved variables
     private final Location[] maps;
     private int currentMap;
     private Character[] party;
     private Item[] inv;
     private int gold;
-    private String focus, menuFocus;
-    private int menuX;
-    private int menuY;
+    
+    //temporary variables
+    private String focus, menuWindow;
+    private Point menuP; //menu cursor pointer
+    private boolean qiVisible; //quick info window
     
     //default constructor
     InMapModel() {
@@ -24,7 +29,7 @@ public class InMapModel {
         party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, "Hero", "Human", "NA", false);
         currentMap = 0;
         maps = new Location[1];
-//        maps[0] = new Location(this, "city", 2, party);
+        
         switch((int)(Math.random()*3)) {
             case 0: maps[0] = new Location(this, "tower", (int)(Math.random()*3+1), party); break;
             case 1: maps[0] = new Location(this, "dungeon", (int)(Math.random()*3+1), party); break;
@@ -41,34 +46,109 @@ public class InMapModel {
         inv[0] = new Item("thing");
         inv[1] = new Item("thing2");
         inv[3] = new Item("fish");
+        inv[10] = new Item("comb");
         inv[30] = new Item("Great Knight Halberd");
         gold = 500;
         focus = "floor";
-        menuFocus = "inv";
-        menuX = 0;
-        menuY = -1;
+        menuWindow = "inv";
+        menuP = new Point(0, -1);
     }
     
     //process input
     void process(Control input) {
         if(focus.equals("floor")) {
-            maps[currentMap].process(input);
-            maps[currentMap].getCurrentFloor().processAI();
+            switch (input) {
+                case MENU:
+                    toggleMenu(true);
+                    break;
+                case TAB:
+                    qiVisible = true;
+                    break;
+                case R:
+                    reset();
+                    break;
+                case T:
+                    party[0].gainEXP(10000);
+                    break;
+                default:
+                    maps[currentMap].process(input);
+                    maps[currentMap].getCurrentFloor().processAI();
+                    break;
+            }
         }
         else if(focus.equals("menu")) {
             switch(input) {
                 case LEFT:
+                    //shift page left
+                    if(menuP.y == -1) {
+                        if(menuWindow.equals("inv")) menuWindow = "options";
+                        else if(menuWindow.equals("char")) menuWindow = "inv";
+                        else if(menuWindow.equals("party")) menuWindow = "char";
+                        else if(menuWindow.equals("notes")) menuWindow = "party";
+                        else if(menuWindow.equals("options")) menuWindow = "notes";
+                        else menuWindow = "inv";
+                    }
+                    else
+                        menuP.x--;
+                    
+                    if(menuWindow.equals("inv") && menuP.x < 0)
+                        menuP.x = 3;
                     break;
+                    
                 case RIGHT:
+                    //shift page right
+                    if(menuP.y == -1) {
+                        if(menuWindow.equals("inv")) menuWindow = "char";
+                        else if(menuWindow.equals("char")) menuWindow = "party";
+                        else if(menuWindow.equals("party")) menuWindow = "notes";
+                        else if(menuWindow.equals("notes")) menuWindow = "options";
+                        else if(menuWindow.equals("options")) menuWindow = "inv";
+                    }
+                    else 
+                        menuP.x++;
+                    
+                    if(menuWindow.equals("inv") && menuP.x > 3)
+                        menuP.x = 0;
                     break;
+                    
                 case UP:
+                    if(menuP.y == -1) break;
+                    
+                    menuP.y--;
+                    
+                    if(menuWindow.equals("inv") && menuP.y < 0)
+                        menuP.y = 15;                 
                     break;
+                    
                 case DOWN:
+                    if(menuP.y != -1)
+                        menuP.y++;
+                    
+                    if(menuWindow.equals("inv") && menuP.y > 15)
+                        menuP.y = 0;
                     break;
+                    
+                case MENU:
+                    toggleMenu(false);
+                    menuP.y = -1;
+                    menuP.x = 0;
+                    break;
+                    
                 case SELECT:
+                    menuP.y = 0;
+                    menuP.x = 0;
                     break;
+                    
                 case BACK:
+                    if(menuP.y == -1) {
+                        toggleMenu(false);
+                    }
+                    else {
+                        menuP.y = -1;
+                        menuP.x = 0;
+                    }
                     break;
+                    
                 default:
                     break;
             }
@@ -76,12 +156,16 @@ public class InMapModel {
         else System.out.println("Failed focus.");
     }
     
-    //switch to menu
-    void toggleMenu() {
-        if(focus.equals("menu"))
-            focus = "floor";
-        else focus = "menu";
+    //process release of input
+    public void processRelease(Control input) {
+        if(input == Control.TAB) {
+            qiVisible = false;
+        }
     }
+    
+    //switch menu focus
+    void toggleMenu() { focus = focus.equals("menu") ? "floor" : "menu"; }
+    void toggleMenu(boolean on) { focus = on ? "menu" : "floor"; }
     
     //debug: reset location
     void reset() {
@@ -114,23 +198,13 @@ public class InMapModel {
         return path;
     }
     
-    //return current map
-    Location getCurrentLocation() {
-        return maps[currentMap];
-    }
-    
-    //return party
-    Character[] getParty() {
-        return party;
-    }
-    
-    //return inventory
-    Item[] getInventory() {
-        return inv;
-    }
-    
-    //return gold
-    int getGold() {
-        return gold;
-    }
+    //getters
+    Location getCurrentLocation() { return maps[currentMap]; }
+    Character[] getParty() { return party; }
+    Item[] getInventory() { return inv; }
+    int getGold() { return gold; }
+    Point getMenuPoint() { return menuP; }
+    String getMenuWindow() { return menuWindow; }
+    String getFocus() { return focus; }
+    boolean getQIVisible() { return qiVisible; }
 }
