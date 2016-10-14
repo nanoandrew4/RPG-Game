@@ -4,7 +4,7 @@
 
 package inmap;
 
-public class Race {
+class Race {
     String name;
     
     Race() {

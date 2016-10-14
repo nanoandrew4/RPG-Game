@@ -5,7 +5,7 @@ import javafx.scene.layout.Pane;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Tile {
+class Tile {
 
     boolean tresspassable;
     boolean accessible; // for entering cities

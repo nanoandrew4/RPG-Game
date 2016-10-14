@@ -4,7 +4,7 @@
 
 package inmap;
 
-public class Tile {
+class Tile {
     boolean isWall, openable;
     String name;
     int floorMovement;

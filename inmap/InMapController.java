@@ -5,6 +5,7 @@
 package inmap;
 
 import javafx.scene.Scene;
+import javafx.scene.layout.Pane;
 import javafx.scene.input.KeyEvent;
 
 import main.Main;
@@ -15,6 +16,7 @@ public class InMapController implements Runnable {
     private Scene scene;
     private final InMapModel model;
     private final InMapView view;
+    boolean inControl;
     
     //constructor
     public InMapController(Main main) {
@@ -25,6 +27,11 @@ public class InMapController implements Runnable {
     
     @Override
     public void run() {
+        scene = new Scene(new Pane());
+        setInput(scene);
+    }
+    
+    public void passControl() {
         scene = view.initDisplay(model.getCurrentLocation().getCurrentFloor());
         main.setStage(scene);
         setInput(scene);

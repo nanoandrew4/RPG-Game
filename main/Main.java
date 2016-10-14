@@ -123,6 +123,7 @@ public class Main extends Application {
         
         inMap.setOnAction(event -> {
             startInMapController();
+            IMController.passControl();
         });
         
         stage.setScene(new Scene(layout, screenWidth, screenHeight));

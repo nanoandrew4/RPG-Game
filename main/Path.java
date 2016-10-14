@@ -1,48 +1,34 @@
-/* 
-    Path class for A* pathfinding.
+/*
+    Path class containing queued Control actions.
  */
 
 package main;
 
-import java.util.PriorityQueue;
+import java.util.ArrayDeque;
 import java.awt.Point;
 
 public class Path {
-    byte[][] map;
-    PriorityQueue<Point> frontier;
-    Point start, end;
-    /* 
-    0: empty space
-    1: wall
-    2: path
-    */
+    ArrayDeque<Control> path;
     
-    //size constructor
-    public Path(int sizeX, int sizeY, int sx, int sy, int ex, int ey) {
-        map = new byte[sizeX][sizeY];
-        frontier = new PriorityQueue();
-        start.x = sx;
-        start.y = sy;
-        end.x = ex;
-        end.y = ey;
-        
-        for(Point p: frontier) {
-            
-        }
-//        frontier.offer();
+    //constructor
+    Path() {
+        path = new ArrayDeque();
     }
     
-    //set value of map tile
-    public void setMap(int x, int y, int value) {
-        map[x][y] = (byte)value;
+    //pathfind with a overall map and boundaries
+    public void pathFind(boolean[][] map, Point areaStart, Point areaEnd, Point start, Point end) {
+        AStar a = new AStar(map, areaStart, areaEnd, start, end);
+        a.search(path);
     }
     
-    //pathfind
-    public void search(int sx, int sy, int ex, int ey) {
-        
+    //pathfind with a limited map
+    public void pathFind(boolean[][] map, Point start, Point end) {
+        AStar a = new AStar(map, new Point(0, 0), new Point(map.length, map[0].length), start, end);
+        a.search(path);
     }
     
-    public Control nextDirection() {
-        return Control.LEFT;
+    //get next control
+    public Control next() {
+        return path.poll();
     }
 }

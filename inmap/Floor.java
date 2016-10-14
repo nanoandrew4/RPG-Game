@@ -8,7 +8,7 @@ package inmap;
 import main.Control;
 import main.Path;
 
-public class Floor {
+class Floor {
     InMapModel model;
     Location location;
     int size, sizeX, sizeY; //size is arbitrary, affects sizeX/Y

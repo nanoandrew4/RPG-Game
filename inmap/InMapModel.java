@@ -6,14 +6,15 @@
 package inmap;
 
 import java.awt.Point;
+import java.util.HashMap;
 
 import main.Control;
 import main.Path;
 
-public class InMapModel {
+class InMapModel {
     //saved variables
-    private final Location[] maps;
-    private int currentMap;
+    private final HashMap<Point, Location> maps;
+    private Point currentMap;
     private Character[] party;
     private Item[] inv;
     private int gold;
@@ -27,16 +28,17 @@ public class InMapModel {
     InMapModel() {
         party = new Character[1];
         party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, "Hero", "Human", "NA", false);
-        currentMap = 0;
-        maps = new Location[1];
+        currentMap = new Point(0, 0);
+        maps = new HashMap();
+        maps.put(new Point(0, 0), new Location(this, "tower", (int)(Math.random()*3+1), party));
         
-        switch((int)(Math.random()*3)) {
-            case 0: maps[0] = new Location(this, "tower", (int)(Math.random()*3+1), party); break;
-            case 1: maps[0] = new Location(this, "dungeon", (int)(Math.random()*3+1), party); break;
-            case 2: maps[0] = new Location(this, "cave", (int)(Math.random()*3+1), party); break;
-        }
+//        switch((int)(Math.random()*3)) {
+//            case 0: maps[0] = new Location(this, "tower", (int)(Math.random()*3+1), party); break;
+//            case 1: maps[0] = new Location(this, "dungeon", (int)(Math.random()*3+1), party); break;
+//            case 2: maps[0] = new Location(this, "cave", (int)(Math.random()*3+1), party); break;
+//        }
         
-        maps[currentMap].getCurrentFloor().passControl(Control.UP);
+        maps.get(currentMap).getCurrentFloor().passControl(Control.UP);
         inv = new Item[64];
         
         for(int i = 0; i < 64; i++)
@@ -71,8 +73,8 @@ public class InMapModel {
                     party[0].gainEXP(10000);
                     break;
                 default:
-                    maps[currentMap].process(input);
-                    maps[currentMap].getCurrentFloor().processAI();
+                    maps.get(currentMap).process(input);
+                    maps.get(currentMap).getCurrentFloor().processAI();
                     break;
             }
         }
@@ -171,35 +173,26 @@ public class InMapModel {
     void reset() {
         party[0].currentHP = party[0].maxHP;
         party[0].exists = true;
+        Location temp;
         switch((int)(Math.random()*3)) {
-            case 0: maps[0] = new Location(this, "tower", (int)(Math.random()*3+1), party); break;
-            case 1: maps[0] = new Location(this, "dungeon", (int)(Math.random()*3+1), party); break;
-            case 2: maps[0] = new Location(this, "cave", (int)(Math.random()*3+1), party); break;
+            case 0: temp = new Location(this, "tower", (int)(Math.random()*3+1), party); break;
+            case 1: temp = new Location(this, "dungeon", (int)(Math.random()*3+1), party); break;
+            case 2: temp = new Location(this, "cave", (int)(Math.random()*3+1), party); break;
+            default: temp = new Location(this, "city", 2, party); break;
         }
-        maps[currentMap].getCurrentFloor().passControl(Control.UP);
+        maps.replace(new Point(0, 0), temp);
+        maps.get(currentMap).getCurrentFloor().passControl(Control.UP);
     }
     
-    //A* pathfinding
-    Path pathfind(Floor floor, int sx, int sy, int ex, int ey) {
-        Path path = new Path(floor.sizeX, floor.sizeY, sx, sy, ex, ey);
-        
-        for(int x = 0; x < floor.sizeX; x++) {
-            for(int y = 0; y < floor.sizeY; y++) {
-                if((floor.tiles[x][y].isWall && !floor.tiles[x][y].openable) 
-                        || (floor.chars[x][y].exists))
-                    path.setMap(x, y, 1);
-                else
-                    path.setMap(x, y, 0);
-            }
-        }
-        
-        path.search(sx, sy, ex, ey);
-        
-        return path;
+    //make a dungeon
+    void makeDungeon(Point p, String type) {
+        if(!maps.containsKey(p))
+            maps.put(p, new Location(this, type, (int)(Math.random()*3+1), party));
     }
     
     //getters
-    Location getCurrentLocation() { return maps[currentMap]; }
+    Location getCurrentLocation() { return maps.get(currentMap); }
+    Location getLocation(Point id) { return maps.get(id); }
     Character[] getParty() { return party; }
     Item[] getInventory() { return inv; }
     int getGold() { return gold; }

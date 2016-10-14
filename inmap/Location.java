@@ -7,7 +7,7 @@ package inmap;
 
 import main.Control;
 
-public class Location {
+class Location {
     InMapModel model;
     int currentFloor, difficulty, numFloors;
     String name, type;
