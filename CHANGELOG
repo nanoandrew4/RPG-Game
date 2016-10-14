@@ -1,3 +1,28 @@
+------------------------13/10/2016------------------------
+
+General:
+++ Simplified input processing
+
++ Started pathfinding work
+
+++ Overworld and InMap now interact with each other, towers can be accessed throught the tower tiles
+
+Overworld:
++- Modified OverworldView, still WIP but near fully functional
+
+++ Fixed tile change detection fully
+
++ Fixed some crashes related to coastline gen, though bugs remain 
+
+InMap:
+++ Added NPC's and fog, different screen resolution support remains to be implemented
+
+++ Three types of dungeons can be generated
+
++ Updated though not final graphics added
+
+++ Implemented menu and quickmenus, as well as other UI related work
+
 ------------------------14/09/2016------------------------
 
 +++ Merged overworld and inmap, created isolated main class

@@ -10,14 +10,15 @@ import javafx.scene.input.KeyEvent;
 
 import main.Main;
 
+import java.awt.*;
+
 public class InMapController implements Runnable {
     
     final Main main;
     private Scene scene;
     private final InMapModel model;
     private final InMapView view;
-    boolean inControl;
-    
+
     //constructor
     public InMapController(Main main) {
         this.main = main;
@@ -31,10 +32,23 @@ public class InMapController implements Runnable {
         setInput(scene);
     }
     
-    public void passControl() {
+    public void passControl(Point p) {
+        model.setCurrentMap(p);
         scene = view.initDisplay(model.getCurrentLocation().getCurrentFloor());
         main.setStage(scene);
         setInput(scene);
+    }
+
+    public void newLocation(Point p, String type) {
+        model.makeLocation(p, type);
+    }
+
+    public String getName(Point p) {
+        return model.getLocation(p).name;
+    }
+
+    public String getDifficulty(Point p){
+        return "Easy peasy"; // temp
     }
     
     //keyboard input

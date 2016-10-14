@@ -183,9 +183,14 @@ class InMapModel {
         maps.replace(new Point(0, 0), temp);
         maps.get(currentMap).getCurrentFloor().passControl(Control.UP);
     }
-    
+
+    //set current map
+    void setCurrentMap(Point p) {
+        currentMap = p;
+    }
+
     //make a dungeon
-    void makeDungeon(Point p, String type) {
+    void makeLocation(Point p, String type) {
         if(!maps.containsKey(p))
             maps.put(p, new Location(this, type, (int)(Math.random()*3+1), party));
     }
