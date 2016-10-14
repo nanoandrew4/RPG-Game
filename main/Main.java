@@ -13,6 +13,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 import java.util.HashMap;
+import java.awt.Point;
 
 import inmap.InMapController;
 import overworld.OverworldController;
@@ -123,7 +124,7 @@ public class Main extends Application {
         
         inMap.setOnAction(event -> {
             startInMapController();
-            IMController.passControl();
+            IMController.passControl(new Point(0, 0));
         });
         
         stage.setScene(new Scene(layout, screenWidth, screenHeight));

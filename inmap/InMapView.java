@@ -5,7 +5,6 @@
 package inmap;
 
 import java.awt.Point;
-import javafx.event.EventType;
 
 //import javafx.animation.AnimationTimer;
 //import javafx.beans.property.DoubleProperty;

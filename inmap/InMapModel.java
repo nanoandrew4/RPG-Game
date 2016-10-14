@@ -9,7 +9,6 @@ import java.awt.Point;
 import java.util.HashMap;
 
 import main.Control;
-import main.Path;
 
 class InMapModel {
     //saved variables
@@ -184,8 +183,13 @@ class InMapModel {
         maps.get(currentMap).getCurrentFloor().passControl(Control.UP);
     }
     
-    //make a dungeon
-    void makeDungeon(Point p, String type) {
+    //set current map
+    void setCurrentMap(Point p) {
+        currentMap = p;
+    }
+    
+    //make a location
+    void makeLocation(Point p, String type) {
         if(!maps.containsKey(p))
             maps.put(p, new Location(this, type, (int)(Math.random()*3+1), party));
     }

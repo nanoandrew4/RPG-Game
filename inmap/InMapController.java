@@ -4,6 +4,8 @@
 
 package inmap;
 
+import java.awt.Point;
+
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.input.KeyEvent;
@@ -16,7 +18,6 @@ public class InMapController implements Runnable {
     private Scene scene;
     private final InMapModel model;
     private final InMapView view;
-    boolean inControl;
     
     //constructor
     public InMapController(Main main) {
@@ -31,10 +32,17 @@ public class InMapController implements Runnable {
         setInput(scene);
     }
     
-    public void passControl() {
+    //take control of stage
+    public void passControl(Point p) {
+        model.setCurrentMap(p);
         scene = view.initDisplay(model.getCurrentLocation().getCurrentFloor());
         main.setStage(scene);
         setInput(scene);
+    }
+    
+    //create new location
+    public void newLocation(Point p, String type) {
+        model.makeLocation(p, type);
     }
     
     //keyboard input
