@@ -52,7 +52,7 @@ public class OverworldController implements Runnable {
         setScene();
     }
     
-    //temporary method to pass control
+    //pass control back
     public void passControl() {
         main.setStage(scene);
         controlsLocked = false;
@@ -313,9 +313,9 @@ public class OverworldController implements Runnable {
                             if (model.getTiles()[x][y].type.equalsIgnoreCase("Settlement")) // will change
                                 view.showSettlementInfo(model.getTiles()[x][y].settlementTile);
                             else if (model.getTiles()[x][y].type.equalsIgnoreCase("InMap")) {
-                                main.IMController.newLocation(new Point(model.getCurrPos(0), model.getCurrPos(1)), model.getTiles()[x][y].inMapTile.inmapType.toLowerCase());
-                                view.showInMapInfo(main.IMController.getName(new Point(model.getCurrPos(0), model.getCurrPos(1))),
-                                        main.IMController.getDifficulty(new Point(model.getCurrPos(0), model.getCurrPos(1))));
+                                main.IMController.newLocation(new Point(x, y), model.getTiles()[x][y].inMapTile.inmapType.toLowerCase());
+                                view.showInMapInfo(main.IMController.getName(new Point(x, y)),
+                                        main.IMController.getDifficulty(new Point(x, y)));
                             }
                             controlsLocked = true;
                         }
@@ -333,7 +333,7 @@ public class OverworldController implements Runnable {
 
                         });
                         view.enterDungeon.setOnAction(event1 -> {
-                            main.IMController.passControl(new Point(model.getCurrPos(0), model.getCurrPos(1)));
+                            main.IMController.passControl(new Point(x, y));
                         });
                     }
                 });

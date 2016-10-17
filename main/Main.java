@@ -12,7 +12,6 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
-import java.awt.*;
 import java.util.HashMap;
 import java.awt.Point;
 

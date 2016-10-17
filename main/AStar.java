@@ -19,7 +19,8 @@ class AStar {
     */
     boolean[][] open;
     boolean[][] closed;
-    int[][] f, g, h;
+    double[][] f, h;
+    int[][] g;
     int x, y;
     Control[][] camefrom;
     PriorityQueue<Point> frontier;
@@ -43,16 +44,22 @@ class AStar {
     AStar(boolean[][] boolMap, Point areaS, Point areaE, Point start, Point end) {
         //initialize
         map = new byte[areaE.x-areaS.x][areaE.y-areaS.y];
+        open = new boolean[areaE.x-areaS.x][areaE.y-areaS.y];
+        closed = new boolean[areaE.x-areaS.x][areaE.y-areaS.y];
+        camefrom = new Control[areaE.x-areaS.x][areaE.y-areaS.y];
+        f = new double[areaE.x-areaS.x][areaE.y-areaS.y];
+        g = new int[areaE.x-areaS.x][areaE.y-areaS.y];
+        h = new double[areaE.x-areaS.x][areaE.y-areaS.y];
         frontier = new PriorityQueue(1, new fCompare());
-        this.start.setLocation(start);
-        this.end.setLocation(end);
+        this.start = start;
+        this.end = end;
         x = start.x;
         y = start.y;
         
         //populate map
         for(int i = 0; i < map.length; i++)
             for(int j = 0; j < map[0].length; j++)
-                map[x][y] = boolMap[x][y] ? (byte)1 : 0;
+                map[i][j] = boolMap[i][j] ? (byte)1 : 0;
     }
     
     //pathfind
@@ -69,7 +76,7 @@ class AStar {
                 open[x+1][y] = true;
                 camefrom[x+1][y] = Control.LEFT;
                 g[x+1][y] = g[x][y] + 1;
-                h[x+1][y] = Math.abs(map.length - x - 1) + Math.abs(map[0].length - y);
+                h[x+1][y] = Point.distance(x, y, end.x, end.y);
                 f[x+1][y] = g[x+1][y] + h[x+1][y];
                 frontier.add(new Point(x+1, y));
             }
@@ -77,7 +84,7 @@ class AStar {
                 open[x-1][y] = true;
                 camefrom[x-1][y] = Control.RIGHT;
                 g[x-1][y] = g[x][y] + 1;
-                h[x-1][y] = Math.abs(map.length - x + 1) + Math.abs(map[0].length - y);
+                h[x-1][y] = Math.abs(end.x - x) + Math.abs(end.y - y);
                 f[x-1][y] = g[x-1][y] + h[x-1][y];
                 frontier.add(new Point(x-1, y));
             }
@@ -85,7 +92,7 @@ class AStar {
                 open[x][y+1] = true;
                 camefrom[x][y+1] = Control.UP;
                 g[x][y+1] = g[x][y] + 1;
-                h[x][y+1] = Math.abs(map.length - x) + Math.abs(map[0].length - y - 1);
+                h[x][y+1] = Math.abs(end.x - x) + Math.abs(end.y - y);
                 f[x][y+1] = g[x][y+1] + h[x][y+1];
                 frontier.add(new Point(x, y+1));
             }
@@ -93,27 +100,28 @@ class AStar {
                 open[x][y-1] = true;
                 camefrom[x][y-1] = Control.DOWN;
                 g[x][y-1] = g[x][y] + 1;
-                h[x][y-1] = Math.abs(map.length - x) + Math.abs(map[0].length - y + 1);
+                h[x][y-1] = Math.abs(end.x - x) + Math.abs(end.y - y);
                 f[x][y-1] = g[x][y-1] + h[x][y-1];
                 frontier.add(new Point(x, y-1));
             }
             
-            Point temp = frontier.poll();
-            x = temp.x;
-            y = temp.y;
+            if(!frontier.isEmpty()) {
+                Point temp = frontier.poll();
+                x = temp.x;
+                y = temp.y;
+            }
+            else 
+                break;
         }
         
         //find path back
         while(x != start.x || y != start.y) {
-            path.add(camefrom[x][y]);
             switch(camefrom[x][y]) {
-                case UP: y--; break;
-                case DOWN: y++; break;
-                case LEFT: x--; break;
-                case RIGHT: x++; break;
+                case UP: y--; path.addFirst(Control.DOWN); break;
+                case DOWN: y++; path.addFirst(Control.UP); break;
+                case LEFT: x--; path.addFirst(Control.RIGHT); break;
+                case RIGHT: x++; path.addFirst(Control.LEFT); break;
             }
         }
-        
-        path.add(camefrom[x][y]);
     }
 }

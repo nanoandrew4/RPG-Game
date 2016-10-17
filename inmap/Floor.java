@@ -5,8 +5,9 @@
 
 package inmap;
 
+import java.awt.Point;
+
 import main.Control;
-import main.Path;
 
 class Floor {
     InMapModel model;
@@ -72,26 +73,19 @@ class Floor {
     void processAI() {
         for(Character n : npcs) {
             if(n.exists) {
-                int dx, dy;
+                
+                int dx = 0, dy = 0;
                 switch(n.AIMode) {
                     case "attacking":
-                        //x movement
-                        if(party[0].x < n.x)
-                            dx = -1;
-                        else if(party[0].x > n.x)
-                            dx = 1;
-                        else dx = 0;
-                        //y movement
-                        if(party[0].y < n.y)
-                            dy = -1;
-                        else if(party[0].y > n.y)
-                            dy = 1;
-                        else dy = 0;
-                        //randomly move either vertically or horizontally
-                        if(Math.random() * 100 < 50)
-                            dx = (dy == 0 ? dx : 0);
-                        else 
-                            dy = (dx == 0 ? dy : 0);
+                        //make new path
+                        n.pathTo(new Point(party[0].x, party[0].y), booleanMap());
+                        //get next direction from npc path
+                        switch(n.getNext()) {
+                            case UP: dy = -1; break;
+                            case DOWN: dy = 1; break;
+                            case RIGHT: dx = 1; break;
+                            case LEFT: dx = -1; break;
+                        }
 
                         process(n.x, n.y, n.x+dx, n.y+dy);
                         break;
@@ -223,6 +217,19 @@ class Floor {
         chars[sx][sy].y = sy;
         chars[ex][ey].x = ex;
         chars[ex][ey].y = ey;
+    }
+    
+    //convert map to boolean
+    private boolean[][] booleanMap() {
+        boolean[][] boolMap = new boolean[sizeX][sizeY];
+        for(int x = 0; x < sizeX; x++) {
+            for(int y = 0; y < sizeY; y++) {
+                if(tiles[x][y].isWall && !tiles[x][y].openable)
+                    boolMap[x][y] = true;
+            }
+        }
+        
+        return boolMap;
     }
     
     //generate a floor given parameters

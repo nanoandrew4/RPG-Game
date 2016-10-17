@@ -9,6 +9,7 @@ import java.awt.Point;
 import java.util.HashMap;
 
 import main.Control;
+import main.Path;
 
 class InMapModel {
     //saved variables
@@ -27,7 +28,7 @@ class InMapModel {
     //default constructor
     InMapModel() {
         party = new Character[1];
-        party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, "Hero", "Human", "NA", false);
+        party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, "Hero", "Human", "NA", new Path(), false);
         currentMap = new Point(0, 0);
         maps = new HashMap();
         gold = 500;
