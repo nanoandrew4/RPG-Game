@@ -7,7 +7,6 @@ package inmap;
 import java.awt.Point;
 
 import javafx.scene.Scene;
-import javafx.scene.layout.Pane;
 import javafx.scene.input.KeyEvent;
 
 import main.Main;
@@ -18,31 +17,44 @@ public class InMapController implements Runnable {
     private Scene scene;
     private final InMapModel model;
     private final InMapView view;
+    boolean hasControl;
     
     //constructor
     public InMapController(Main main) {
         this.main = main;
         model = new InMapModel();
         view = new InMapView(main.screenWidth, main.screenHeight);
+        hasControl = false;
     }
     
     @Override
     public void run() {
-        scene = new Scene(new Pane());
+        scene = view.initDisplay();
         setInput(scene);
     }
     
     //take control of stage
     public void passControl(Point p) {
+        hasControl = true;
+        model.hasControl = true;
         model.setCurrentMap(p);
-        scene = view.initDisplay(model.getCurrentLocation().getCurrentFloor());
+        view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
+                model.getMenuPoint(), model.getMenuWindow(), model.getParty(), 
+                model.getInventory(), model.getGold(), model.getQIVisible());
         main.setStage(scene);
-        setInput(scene);
     }
-    
+
     //create new location
     public void newLocation(Point p, String type) {
         model.makeLocation(p, type);
+    }
+
+    public String getName(Point p) {
+        return model.getLocation(p).name;
+    }
+
+    public String getDifficulty(Point p){
+        return "Easy peasy"; // temp
     }
     
     //keyboard input
@@ -52,20 +64,27 @@ public class InMapController implements Runnable {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             
             model.process(main.getControl(event.getCode()));
-            view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
-                    model.getMenuPoint(), model.getMenuWindow(), model.getParty(), 
-                    model.getInventory(), model.getGold(), model.getQIVisible());
+            if(model.hasControl)
+                view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
+                        model.getMenuPoint(), model.getMenuWindow(), model.getParty(), 
+                        model.getInventory(), model.getGold(), model.getQIVisible());
             
             event.consume();
+            
+            if(!model.hasControl && hasControl) {
+                hasControl = false;
+                main.overworldController.passControl();
+            }
         });
 
         //key release events
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
             
             model.processRelease(main.getControl(event.getCode()));
-            view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
-                    model.getMenuPoint(), model.getMenuWindow(), model.getParty(), 
-                    model.getInventory(), model.getGold(), model.getQIVisible());
+            if(model.hasControl)
+                view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
+                        model.getMenuPoint(), model.getMenuWindow(), model.getParty(), 
+                        model.getInventory(), model.getGold(), model.getQIVisible());
             
             event.consume();
         });

@@ -5,13 +5,15 @@ import javafx.scene.layout.Pane;
 import java.util.ArrayList;
 import java.util.List;
 
-class Tile {
+public class Tile {
 
     boolean tresspassable;
     boolean accessible; // for entering cities
     String type;
     SettlementTile settlementTile;
     Pane banner;
+
+    InMapTile inMapTile;
 
     Tile(){
         tresspassable = false;
@@ -32,6 +34,15 @@ class Tile {
         }
     }
 
+    // for dungeons
+
+    Tile(String type, String subtype){
+        this.type = type;
+        this.tresspassable = true;
+        this.accessible = true;
+        inMapTile = new InMapTile(subtype);
+    }
+
     // for settlements
     Tile(String type, String subType, String branch, String name, int relationship){
         this.type = type;
@@ -44,6 +55,15 @@ class Tile {
 
 }
 
+class InMapTile extends Tile {
+
+    String inmapType;
+
+    InMapTile(String inmapType){
+        this.inmapType = inmapType;
+    }
+}
+
 class SettlementTile extends Tile {
 
     public String subType; // village, city...
@@ -53,13 +73,6 @@ class SettlementTile extends Tile {
     public boolean capitalSettlement;
     public String settlementName;
     public CityPolitics cityPolitics = new CityPolitics(); // read from SQL database
-
-    SettlementTile(){
-        accessible = true;
-        tresspassable = false;
-        settlementName = "";
-        capitalSettlement = false;
-    }
 
     SettlementTile(String subType, String branch, String name, int relationship){
         accessible = true;

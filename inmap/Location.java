@@ -8,7 +8,7 @@ package inmap;
 import main.Control;
 
 class Location {
-    InMapModel model;
+    private InMapModel model;
     int currentFloor, difficulty, numFloors;
     String name, type;
     private Floor[] floors;
@@ -46,8 +46,11 @@ class Location {
     //changing floors
     void changeFloor(int floorMovement) {
         currentFloor += floorMovement;
-        if(currentFloor < 0) currentFloor = 0;
-        floors[currentFloor].passControl(floorMovement > 0 ? Control.UP : Control.DOWN);
+        //exit location
+        if(currentFloor < 0)
+            model.hasControl = false;
+        else 
+            floors[currentFloor].passControl(floorMovement > 0 ? Control.UP : Control.DOWN);
     }
     
     //process input

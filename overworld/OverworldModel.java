@@ -14,10 +14,9 @@ class OverworldModel {
         Data holder and handler for all non-graphical code
         Also handles any interaction with model related classes (such as Map) to retrieve data
         TODO: FIX OUTOFBOUNDS THAT HAPPENS AT FORCE REDIRECT
-        TODO: FIX COASTLINE GEN
+        TODO: FIX COASTLINE GEN (CHECK getPossibleDirections() and changeOnAxis northbound definitely has an issue)
     */
 
-    private double mapTileSize;
     private int[] currPos = new int[2];
     private int[] startPos = new int[2];
 
@@ -47,14 +46,6 @@ class OverworldModel {
         return map.getMapSize();
     }
 
-    int getZoom() { // returns zoom
-        return 6;
-    }
-
-    double getMapTileSize() { // returns the tile size to be used
-        return mapTileSize;
-    }
-
     int[] getCurrPos() { // returns current position on overworld, x -> 0 and y -> 1
         return currPos;
     }
@@ -69,10 +60,6 @@ class OverworldModel {
 
     void setCurrPos(int index, int pos) { // sets current pos at index to current value plus sum
         currPos[index] = pos;
-    }
-
-    void setMapTileSize(double mapTileSize) { // sets map tile size to be used by view
-        this.mapTileSize = mapTileSize;
     }
 
     void saveGame() { // saves game
@@ -106,6 +93,8 @@ class Map {
     private final int MAX_FOREST;
     private final int MIN_SETTLEMENT;
     private final int MAX_SETTLEMENT;
+    private final int MIN_DUNGEON;
+    private final int MAX_DUNGEON;
 
     Map(int mapSize, boolean newGame, DBManager dbManager) throws SQLException {
         this.dbManager = dbManager;
@@ -126,12 +115,14 @@ class Map {
 
         dbManager.setMapSize(this.mapSize);
 
-        MIN_MOUNTAIN = (int) (2.5 * mapSize);
-        MAX_MOUNTAIN = (int) (3.5 * mapSize);
-        MIN_FOREST = 15 * mapSize;
-        MAX_FOREST = 20 * mapSize;
+        MIN_MOUNTAIN = (int) (1.5 * mapSize);
+        MAX_MOUNTAIN = (int) (2.5 * mapSize);
+        MIN_FOREST = 5 * mapSize;
+        MAX_FOREST = (int)(12.5 * mapSize);
         MIN_SETTLEMENT = (int)(1.1 * mapSize);
         MAX_SETTLEMENT = 2 * mapSize;
+        MIN_DUNGEON = (int)(0.7 * mapSize);
+        MAX_DUNGEON = (int)(1.5 * mapSize);
 
         if (newGame) {
             tiles = genMap(mapSize);
@@ -729,9 +720,11 @@ class Map {
 
         // GEN MOUNTAINS
 
+        int numOfType = rand.nextInt(MAX_MOUNTAIN) + MIN_MOUNTAIN;
+
         System.out.println("Starting mountain tiles gen");
 
-        for (int a = 0; a < rand.nextInt(MAX_MOUNTAIN) + MIN_MOUNTAIN; a++) {
+        for (int a = 0; a < numOfType; a++) {
             while (true) {
                 int randX = rand.nextInt(mapSize) + 2;
                 int randY = rand.nextInt(mapSize) + 2;
@@ -749,7 +742,9 @@ class Map {
 
         System.out.println("Starting forest tiles gen");
 
-        for (int a = 0; a < rand.nextInt(MAX_FOREST) + MIN_FOREST; a++) {
+        numOfType = rand.nextInt(MAX_FOREST) + MIN_FOREST;
+
+        for (int a = 0; a < numOfType; a++) {
             while (true) {
                 int randX = rand.nextInt(mapSize) + 2;
                 int randY = rand.nextInt(mapSize) + 2;
@@ -764,6 +759,21 @@ class Map {
         }
 
         System.out.println("Finished forest tiles gen");
+
+        System.out.println("Starting dungeon tile gen");
+
+        numOfType = rand.nextInt(MAX_DUNGEON) + MIN_DUNGEON;
+
+        for (int a = 0; a < numOfType; a++){
+            while (true){
+                int randX = rand.nextInt(mapSize) + 2;
+                int randY = rand.nextInt(mapSize) + 2;
+                if (isAreaEmpty(tiles, randX, randY, 2, mapSize)) {
+                    tiles[randX][randY] = new Tile("InMap", "Tower");
+                    break;
+                }
+            }
+        }
 
         System.out.println("Starting settlement tiles gen");
 
@@ -789,12 +799,6 @@ class Map {
         }
 
         System.out.println("World gen done!");
-/*
-        for (int a = 0; a < mapSize; a++)
-            for (int b = 0; b < mapSize; b++)
-                if (tiles[b][a].type.contains("Water"))
-                    System.out.println(tiles[b][a].type);
-*/
         return tiles;
     }
 

@@ -223,53 +223,42 @@ class InMapView {
     }
     
     //initialize display
-    public Scene initDisplay(Floor floor) {
+    public Scene initDisplay() {
         
-        //tiles
-        for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
-            for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
-                imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][0] = new ImageView(genTile(x, y, floor));
-                
-                imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][0].relocate(64*(x-floor.party[0].x+10) - 32, 64*(y-floor.party[0].y+6) - 64);
-                inmapLayout.getChildren().add(imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][0]);
-            }
-        }
-        
-        //characters
-        for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
-            for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
-                imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][2] = new ImageView(genChar(x, y, floor));
-
-                imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][2].setFitWidth(64);
-                imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][2].setFitHeight(64);
-
-                imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][2].relocate(64*(x-floor.party[0].x+10) - 32, 64*(y-floor.party[0].y+6) - 32);
-                inmapLayout.getChildren().add(imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][2]);
-            }
-        }
-        
-        //health
-        for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
-            for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
-                imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3] = new ImageView(images.health);
-                imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3].relocate(64*(x-floor.party[0].x+10) - 32, 64*(y-floor.party[0].y+6) + 32);
-                if(x < 0 || x >= floor.sizeX || y < 0 || y >= floor.sizeY || !floor.chars[x][y].exists)
-                    imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3].setVisible(false);
-                
-                inmapLayout.getChildren().add(imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3]);
-            }
-        }
-        
-        //fog
         for(int x = 0; x < 24; x++) {
             for(int y = 0; y < 16; y++) {
+                //tiles
+                imageViews[x][y][0] = new ImageView();
+                imageViews[x][y][0].relocate(64*x - 96, 64*y - 128);
+                
+                //characters
+                imageViews[x][y][2] = new ImageView();
+                imageViews[x][y][2].relocate(64*x - 96, 64*y - 96);
+                
+                //health
+                imageViews[x][y][3] = new ImageView(images.health);
+                imageViews[x][y][3].relocate(64*x - 96, 64*y - 32);
+                imageViews[x][y][3].setVisible(false);
+                
+                //fog
                 imageViews[x][y][5] = new ImageView(images.black);
                 imageViews[x][y][5].relocate(64*x-32, 64*y-32);
                 imageViews[x][y][5].setOpacity(Math.sqrt(Math.pow(Math.abs(x-10),2)+Math.pow(Math.abs(y-6),2))/10);
-                
-                inmapLayout.getChildren().add(imageViews[x][y][5]);
             }
         }
+        
+        for(int x = 0; x < 24; x++)
+            for(int y = 0; y < 16; y++)
+                inmapLayout.getChildren().add(imageViews[x][y][0]);
+        for(int x = 0; x < 24; x++)
+            for(int y = 0; y < 16; y++)
+                inmapLayout.getChildren().add(imageViews[x][y][2]);
+        for(int x = 0; x < 24; x++)
+            for(int y = 0; y < 16; y++)
+                inmapLayout.getChildren().add(imageViews[x][y][3]);
+        for(int x = 0; x < 24; x++)
+            for(int y = 0; y < 16; y++)
+                inmapLayout.getChildren().add(imageViews[x][y][5]);
         
         //add all animations
 //        for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {

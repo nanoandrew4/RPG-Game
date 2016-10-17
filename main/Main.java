@@ -12,6 +12,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.awt.Point;
 
@@ -20,8 +21,8 @@ import overworld.OverworldController;
 
 public class Main extends Application {
     //controllers
-    OverworldController overworldController;
-    InMapController IMController;
+    public OverworldController overworldController;
+    public InMapController IMController;
     public DBManager dbManager;
     //converts keycodes into control enums
     private HashMap<KeyCode,Control> keybindings;
@@ -52,9 +53,11 @@ public class Main extends Application {
         keybindings.put(KeyCode.C,Control.MENU);
         keybindings.put(KeyCode.Z,Control.SELECT);
         keybindings.put(KeyCode.X,Control.BACK);
+        keybindings.put(KeyCode.ESCAPE, Control.ESC);
         //temporary keybindings
         keybindings.put(KeyCode.R,Control.R);
         keybindings.put(KeyCode.T,Control.T);
+        keybindings.put(KeyCode.ALT, Control.ALT);
         
         stage.setTitle("Rising Legend");
 
@@ -124,6 +127,7 @@ public class Main extends Application {
         
         inMap.setOnAction(event -> {
             startInMapController();
+            IMController.newLocation(new Point(0, 0), "cave");
             IMController.passControl(new Point(0, 0));
         });
         
@@ -135,10 +139,12 @@ public class Main extends Application {
     private void startOverworldController(int mapSize, boolean newGame) {
         this.mapSize = mapSize;
         // if controllers need to talk, initialize objects and run instead of instance of new class
-        overworldController = new OverworldController(this, newGame);
+        overworldController = new OverworldController(this, mapSize, newGame);
         Thread overworldThread = new Thread(overworldController);
         overworldThread.setDaemon(true);
         overworldThread.run();
+
+        startInMapController();
 
         System.out.println("All threads started");
     }

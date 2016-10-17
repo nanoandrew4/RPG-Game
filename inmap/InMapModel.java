@@ -22,6 +22,7 @@ class InMapModel {
     private String focus, menuWindow;
     private Point menuP; //menu cursor pointer
     private boolean qiVisible; //quick info window
+    boolean hasControl;
     
     //default constructor
     InMapModel() {
@@ -29,15 +30,11 @@ class InMapModel {
         party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, "Hero", "Human", "NA", false);
         currentMap = new Point(0, 0);
         maps = new HashMap();
-        maps.put(new Point(0, 0), new Location(this, "tower", (int)(Math.random()*3+1), party));
-        
-//        switch((int)(Math.random()*3)) {
-//            case 0: maps[0] = new Location(this, "tower", (int)(Math.random()*3+1), party); break;
-//            case 1: maps[0] = new Location(this, "dungeon", (int)(Math.random()*3+1), party); break;
-//            case 2: maps[0] = new Location(this, "cave", (int)(Math.random()*3+1), party); break;
-//        }
-        
-        maps.get(currentMap).getCurrentFloor().passControl(Control.UP);
+        gold = 500;
+        focus = "floor";
+        menuWindow = "inv";
+        menuP = new Point(0, -1);
+        hasControl = false;
         inv = new Item[64];
         
         for(int i = 0; i < 64; i++)
@@ -49,10 +46,6 @@ class InMapModel {
         inv[3] = new Item("fish");
         inv[10] = new Item("comb");
         inv[30] = new Item("Great Knight Halberd");
-        gold = 500;
-        focus = "floor";
-        menuWindow = "inv";
-        menuP = new Point(0, -1);
     }
     
     //process input
@@ -73,7 +66,8 @@ class InMapModel {
                     break;
                 default:
                     maps.get(currentMap).process(input);
-                    maps.get(currentMap).getCurrentFloor().processAI();
+                    if(hasControl)
+                        maps.get(currentMap).getCurrentFloor().processAI();
                     break;
             }
         }
@@ -186,6 +180,8 @@ class InMapModel {
     //set current map
     void setCurrentMap(Point p) {
         currentMap = p;
+        getCurrentLocation().currentFloor = 0;
+        getCurrentLocation().getCurrentFloor().passControl(Control.UP);
     }
     
     //make a location
