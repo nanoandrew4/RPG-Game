@@ -17,25 +17,30 @@ class OverworldModel {
         TODO: FIX COASTLINE GEN (CHECK getPossibleDirections() and changeOnAxis northbound definitely has an issue)
     */
 
-    private int[] currPos = new int[2];
     private int[] startPos = new int[2];
 
     private Map map;
+    private Party[] parties;
 
     OverworldModel(int mapSize, boolean newGame, DBManager dbManager) {
+        parties = new Party[10];
+        for (int x = 0; x < parties.length; x++)
+            parties[x] = new Party();
 
-        try {
-            map = new Map(mapSize, newGame, dbManager);
-        } catch (SQLException e) {
-            e.printStackTrace();
+        if(newGame) {
+            try {
+                newGame(mapSize, dbManager);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
 
         FileAccess fileAccess = new FileAccess();
         fileAccess.loadFile("src/data/player");
         startPos[0] = (int) fileAccess.getFromFile("locationX", "int");
         startPos[1] = (int) fileAccess.getFromFile("locationY", "int");
-        currPos[0] = startPos[0];
-        currPos[1] = startPos[1];
+        parties[0].setTileX(startPos[0]);
+        parties[0].setTileY(startPos[1]);
     }
 
     Tile[][] getTiles() { // returns 2D array of type Tile
@@ -46,20 +51,30 @@ class OverworldModel {
         return map.getMapSize();
     }
 
-    int[] getCurrPos() { // returns current position on overworld, x -> 0 and y -> 1
-        return currPos;
-    }
-
     int[] getStartPos() {return startPos;}
-
-    int getCurrPos(int index) { // returns position specified by index, x -> 0 and y -> 1
-        return currPos[index];
-    }
 
     int getStartPos(int index) {return startPos[index];}
 
+    Party[] getParties(){return parties;}
+
+    Party getParty(int index){return parties[index];}
+
     void setCurrPos(int index, int pos) { // sets current pos at index to current value plus sum
-        currPos[index] = pos;
+        if(index == 0)
+            parties[0].setTileX(pos);
+        else
+            parties[0].setTileY(pos);
+    }
+
+    int getCurrPos(int index){
+        if(index == 0)
+            return parties[0].getTileX();
+        else
+            return parties[0].getTileY();
+    }
+
+    void newGame(int mapSize, DBManager dbManager) throws SQLException {
+        map = new Map(mapSize, true, dbManager);
     }
 
     void saveGame() { // saves game
@@ -106,10 +121,7 @@ class Map {
             while (rs.next()) {
                 this.mapSize = rs.getRow();
             }
-
             this.mapSize = (int) Math.sqrt(this.mapSize) + 1;
-
-            System.out.println(this.mapSize);
         } else
             this.mapSize = mapSize;
 
@@ -125,15 +137,20 @@ class Map {
         MAX_DUNGEON = (int)(1.5 * mapSize);
 
         if (newGame) {
-            tiles = genMap(mapSize);
             try {
-                dbManager.createTables();
+                newMap();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         } else {
             load();
         }
+    }
+
+    private void newMap() throws SQLException {
+        dbManager.setMapSize(mapSize);
+        tiles = genMap(mapSize);
+        dbManager.createTables();
     }
 
     int getMapSize() { // returns map size
@@ -613,7 +630,7 @@ class Map {
         y++;
 
         System.out.println("Eastward generation finished");
-        System.out.println("Last x,y positions : " + endPos + y);
+        System.out.println("Last x,y positions : " + endPos + ", " + y);
 
         int x = endPos;
         genDir = "south";
@@ -642,7 +659,7 @@ class Map {
         x--;
 
         System.out.println("Southward generation finished");
-        System.out.println("Last x,y positions : " + x + endPos);
+        System.out.println("Last x,y positions : " + x + ", " + endPos);
 
         y = endPos;
         genDir = "west";
@@ -670,7 +687,7 @@ class Map {
         y--;
 
         System.out.println("Westward generation finished");
-        System.out.println("Last x,y positions : " + endPos + y);
+        System.out.println("Last x,y positions : " + endPos + ", " + y);
 
         x = endPos;
         genDir = "north";
@@ -695,7 +712,7 @@ class Map {
         }
 
         System.out.println("Northward generation finished");
-        System.out.println("Last x,y positions : " + x + endPos);
+        System.out.println("Last x,y positions : " + x + ", " + endPos);
 
         for (y = 0; y < mapSize; y++) {
             boolean genAllWater = true;
@@ -838,12 +855,38 @@ class Party {
     private int tileX, tileY; // position on global map in terms of tile
     private String[] members; // members of party (will be something other than string but for now...)
     private String faction; // what faction they owe allegiance to
+    boolean onScreen;
 
     //TODO: NEED SPEED AND OTHER STATS, LIKE FOV, MERGE WITH INMAP CHARACTER STATS?
 
     Party(){
-
+        xOffset = 0d; yOffset = 0d;
+        tileX = 0; tileY = 0;
+        members = null;
+        faction = "";
+        onScreen = false;
     }
+
+    Party(double xOffset, double yOffset, int tileX, int tileY, String[] members, String faction){
+        this.xOffset = xOffset;
+        this.yOffset = yOffset;
+        this.tileX = tileX;
+        this.tileY = tileY;
+        this.members = members;
+        this.faction = faction;
+    }
+
+    int getTileX(){return tileX;}
+
+    void setTileX(int tileX){this.tileX = tileX;}
+
+    int getTileY(){return tileY;}
+
+    void setTileY(int tileY){this.tileY = tileY;}
+
+    double getxOffset(){return xOffset;}
+
+    double getyOffset(){return yOffset;}
 
     private void chase(Party target){ // chase another party to provoke combat
 
