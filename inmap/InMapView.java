@@ -15,6 +15,8 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -64,13 +66,13 @@ class Images {
     Image black;
     
     Images(double width, double height) {
-        stoneFloor = new Image("/media/graphics/inmap/StoneFloor.png", width, height, true, false);
-        stoneWall = new Image("/media/graphics/inmap/StoneWall.png", width, height, true, false);
-        stoneTop = new Image("/media/graphics/inmap/StoneTop.png", width, height, true, false);
-        door = new Image("/media/graphics/inmap/door.png", width, height, true, false);
-        opendoor = new Image("/media/graphics/inmap/opendoor.png", width, height, true, false);
-        stairsup = new Image("/media/graphics/inmap/stairsup.png", width, height, true, false);
-        stairsdown = new Image("/media/graphics/inmap/stairsdown.png", width, height, true, false);
+        stoneFloor = new Image("/media/graphics/inmap/StoneFloor.png", width, height, false, false);
+        stoneWall = new Image("/media/graphics/inmap/StoneWall.png", width, height, false, false);
+        stoneTop = new Image("/media/graphics/inmap/StoneTop.png", width, height, false, false);
+        door = new Image("/media/graphics/inmap/door.png", width, height, false, false);
+        opendoor = new Image("/media/graphics/inmap/opendoor.png", width, height, false, false);
+        stairsup = new Image("/media/graphics/inmap/stairsup.png", width, height, false, false);
+        stairsdown = new Image("/media/graphics/inmap/stairsdown.png", width, height, false, false);
 
         npc1 = new Image("/media/graphics/inmap/elonaSin.png", width, width, true, false);
         npc2 = new Image("/media/graphics/inmap/elonaGilbert.png", width, width, true, false);
@@ -110,9 +112,7 @@ class InMapView {
     Images images;
     ImageView[][][] imageViews;
     public double screenWidth, screenHeight;
-    private Pane inmapLayout, menuBox, UIBox;
-    public double speedXVal;
-    public double speedYVal;
+    private Pane inmapLayout, floorPane, menuPane, UIPane;
     double width, height;
     final double zoom;
     
@@ -127,8 +127,8 @@ class InMapView {
 //    private final LongProperty lastUpdateTime = new SimpleLongProperty();
 //    public final DoubleProperty speedX = new SimpleDoubleProperty();
 //    public final DoubleProperty speedY = new SimpleDoubleProperty();
-//    public double xOffset;
-//    public double yOffset;
+//    public double speedXVal;
+//    public double speedYVal;
     
     //constructor
     InMapView(double screenWidth, double screenHeight) {
@@ -138,7 +138,6 @@ class InMapView {
         //3: health
         //4: overlay
         //5: fog
-        //setTileSize();
         imageViews = new ImageView[24][16][6];
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
@@ -146,10 +145,11 @@ class InMapView {
         setTileSize();
         images = new Images(width, height);
         inmapLayout = new Pane();
-        UIBox = new Pane();
-        menuBox = new Pane();
-        speedXVal = 16;
-        speedYVal = 16;
+        floorPane = new Pane();
+        UIPane = new Pane();
+        menuPane = new Pane();
+//        speedXVal = 64;
+//        speedYVal = 64;
         
         //initialize UI
         Rectangle box = new Rectangle(screenWidth/5, screenHeight*1/3, Paint.valueOf("WHITE"));
@@ -184,7 +184,7 @@ class InMapView {
         goldT = new Text(30, screenHeight*3/4+140, "");
         goldT.setFont(Font.font(null, FontWeight.NORMAL, 24));
         
-        UIBox.getChildren().addAll(box, box2, box3, nameT, typeT, diffT, floorT, charT, levelT, goldT);
+        UIPane.getChildren().addAll(box, box2, box3, nameT, typeT, diffT, floorT, charT, levelT, goldT);
         
         //initialize menu
         Rectangle box4 = new Rectangle(screenWidth*4/5, screenHeight*2/3, Paint.valueOf("WHITE"));
@@ -207,8 +207,8 @@ class InMapView {
         menuText[3].setText(" NOTES");
         menuText[4].setText("OPTIONS");
         
-        menuBox.getChildren().addAll(box4, menuFocus, menuCursor);
-        menuBox.getChildren().addAll(menuText);
+        menuPane.getChildren().addAll(box4, menuFocus, menuCursor);
+        menuPane.getChildren().addAll(menuText);
     }
 
     //set tile size
@@ -220,6 +220,10 @@ class InMapView {
             width = (screenWidth / zoom);
             height = (screenWidth / zoom) * 1.5;
         }
+        width = Math.floor(width);
+        height = Math.floor(height);
+        System.out.println("w:"+width);
+        System.out.println("h:"+height);
     }
     
     //initialize display
@@ -229,43 +233,45 @@ class InMapView {
             for(int y = 0; y < 16; y++) {
                 //tiles
                 imageViews[x][y][0] = new ImageView();
-                imageViews[x][y][0].relocate(64*x - 96, 64*y - 128);
+                imageViews[x][y][0].relocate(width*x - width*3/2, width*y - width*2);
                 
                 //characters
                 imageViews[x][y][2] = new ImageView();
-                imageViews[x][y][2].relocate(64*x - 96, 64*y - 96);
+                imageViews[x][y][2].relocate(width*x - width*3/2, width*y - width*3/2);
                 
                 //health
                 imageViews[x][y][3] = new ImageView(images.health);
-                imageViews[x][y][3].relocate(64*x - 96, 64*y - 32);
+                imageViews[x][y][3].relocate(width*x - width*3/2, width*y - width/2);
                 imageViews[x][y][3].setVisible(false);
                 
                 //fog
                 imageViews[x][y][5] = new ImageView(images.black);
-                imageViews[x][y][5].relocate(64*x-32, 64*y-32);
+                imageViews[x][y][5].relocate(width*x-width/2, width*y-width/2);
                 imageViews[x][y][5].setOpacity(Math.sqrt(Math.pow(Math.abs(x-10),2)+Math.pow(Math.abs(y-6),2))/10);
             }
         }
         
         for(int x = 0; x < 24; x++)
             for(int y = 0; y < 16; y++)
-                inmapLayout.getChildren().add(imageViews[x][y][0]);
+                floorPane.getChildren().add(imageViews[x][y][0]);
         for(int x = 0; x < 24; x++)
             for(int y = 0; y < 16; y++)
-                inmapLayout.getChildren().add(imageViews[x][y][2]);
+                floorPane.getChildren().add(imageViews[x][y][2]);
         for(int x = 0; x < 24; x++)
             for(int y = 0; y < 16; y++)
-                inmapLayout.getChildren().add(imageViews[x][y][3]);
+                floorPane.getChildren().add(imageViews[x][y][3]);
         for(int x = 0; x < 24; x++)
             for(int y = 0; y < 16; y++)
-                inmapLayout.getChildren().add(imageViews[x][y][5]);
+                floorPane.getChildren().add(imageViews[x][y][5]);
+        
+        inmapLayout.getChildren().add(floorPane);
         
         //add all animations
-//        for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
-//            for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
-//                setMoveAnim(imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][0]);
-//                setMoveAnim(imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][2]);
-//                setMoveAnim(imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3]);
+//        for(int x = 0; x < 24; x++) {
+//            for(int y = 0; y < 16; y++) {
+//                setMoveAnim(imageViews[x][y][0]);
+//                setMoveAnim(imageViews[x][y][2]);
+//                setMoveAnim(imageViews[x][y][3]);
 //            }
 //        }
         
@@ -283,11 +289,11 @@ class InMapView {
             Character[] party, Item[] inv, int gold, boolean qiVisible) {
         if(focus.equals("floor")) {
             //remove menu window
-            if(inmapLayout.getChildren().contains(menuBox))
-                inmapLayout.getChildren().remove(menuBox);
+            inmapLayout.getChildren().remove(menuPane);
+            inmapLayout.setBackground(new Background(new BackgroundFill(Paint.valueOf("BLACK"), null, null)));
             
             //show quick info ui
-            if(qiVisible && !inmapLayout.getChildren().contains(UIBox)) {
+            if(qiVisible && !inmapLayout.getChildren().contains(UIPane)) {
                 nameT.setText(floor.location.name);
                 typeT.setText(floor.location.type);
                 diffT.setText("Difficulty: " + floor.location.difficulty);
@@ -295,10 +301,10 @@ class InMapView {
                 charT.setText(party[0].name);
                 levelT.setText("Level " + party[0].LVL);
                 goldT.setText("Gold: " + String.valueOf(gold));
-                inmapLayout.getChildren().add(UIBox);
+                inmapLayout.getChildren().add(UIPane);
             }
             else if(!qiVisible)
-                inmapLayout.getChildren().remove(UIBox);
+                inmapLayout.getChildren().remove(UIPane);
             
             //tiles
             for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
@@ -338,11 +344,11 @@ class InMapView {
         }
         else if(focus.equals("menu")) {
             //add menu window
-            if(!inmapLayout.getChildren().contains(menuBox))
-                inmapLayout.getChildren().add(menuBox);
+            if(!inmapLayout.getChildren().contains(menuPane))
+                inmapLayout.getChildren().add(menuPane);
             
             //remove quick info box
-            inmapLayout.getChildren().remove(UIBox);
+            inmapLayout.getChildren().remove(UIPane);
             
             if(menuP.x == -1) {
                 toggleMenu("", party, inv, gold);
@@ -374,12 +380,12 @@ class InMapView {
     
     //toggle menu
     public void toggleMenu(String menuWindow, Character[] party, Item[] inv, int gold) {
-        if(inmapLayout.getChildren().contains(menuBox)) {
-            inmapLayout.getChildren().remove(menuBox);
+        if(inmapLayout.getChildren().contains(menuPane)) {
+            inmapLayout.getChildren().remove(menuPane);
         }
         else {
             changeMenu(menuWindow, party, inv, gold);
-            inmapLayout.getChildren().add(menuBox);
+            inmapLayout.getChildren().add(menuPane);
         }
     }
     
@@ -392,7 +398,7 @@ class InMapView {
         else if(menuWindow.equals("options")) menuFocus.setLayoutX(screenWidth/10+screenWidth*16/25);
         
         //remove all nodes except for background
-        menuBox.getChildren().remove(8, menuBox.getChildren().toArray().length);
+        menuPane.getChildren().remove(8, menuPane.getChildren().toArray().length);
         
         //add objects depending on window
         if(menuWindow.equals("inv")) {
@@ -407,32 +413,32 @@ class InMapView {
                 
                 invText[i].setFill(Paint.valueOf("BLUE"));
                 invText[i].setFont(Font.font("Monaco", FontWeight.NORMAL, 14));
-                menuBox.getChildren().addAll(invText[i]);
+                menuPane.getChildren().addAll(invText[i]);
             }
         }
         else if(menuWindow.equals("char")) {
             Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "your skills: none");
             t.setFont(Font.font(null, FontWeight.NORMAL, 24));
             
-            menuBox.getChildren().addAll(t);
+            menuPane.getChildren().addAll(t);
         }
         else if(menuWindow.equals("party")) {
             Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you have no friends");
             t.setFont(Font.font(null, FontWeight.NORMAL, 24));
             
-            menuBox.getChildren().addAll(t);
+            menuPane.getChildren().addAll(t);
         }
         else if(menuWindow.equals("notes")) {
             Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you are illiterate");
             t.setFont(Font.font(null, FontWeight.NORMAL, 24));
             
-            menuBox.getChildren().addAll(t);
+            menuPane.getChildren().addAll(t);
         }
         else if(menuWindow.equals("options")) {
             Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you have no options in life");
             t.setFont(Font.font(null, FontWeight.NORMAL, 24));
             
-            menuBox.getChildren().addAll(t);
+            menuPane.getChildren().addAll(t);
         }
     }
     
@@ -457,10 +463,8 @@ class InMapView {
                 return images.stairsdown;
             else if(type.equalsIgnoreCase(""))
                 return images.stoneFloor;
-            else
-                return images.black;
         }
-        else return images.black;
+        return null;
     }
     
     //choose character image based on model data
@@ -524,9 +528,15 @@ class InMapView {
     
     //animates imageview movement
 //    private void setMoveAnim(ImageView imageView) {
+//        
 //        new AnimationTimer() {
+//            double oldX = 0;
+//            double oldY = 0;
+//            boolean waiting = false;
+//            
 //            @Override
 //            public void handle(long timestamp) {
+//                
 //                if (lastUpdateTime.get() > 0) {
 //                    final double oldX = imageView.getTranslateX();
 //                    final double newX = oldX + speedX.get();
@@ -534,8 +544,6 @@ class InMapView {
 //                    final double newY = oldY + speedY.get();
 //                    imageView.setTranslateX(newX);
 //                    imageView.setTranslateY(newY);
-//                    xOffset = imageView.getTranslateX();
-//                    yOffset = imageView.getTranslateY();
 //                }
 //                lastUpdateTime.set(timestamp);
 //            }

@@ -69,6 +69,13 @@ public class InMapController implements Runnable {
                         model.getMenuPoint(), model.getMenuWindow(), model.getParty(), 
                         model.getInventory(), model.getGold(), model.getQIVisible());
             
+//            switch(main.getControl(event.getCode())) {
+//                case UP: view.speedY.set(view.speedYVal); break;
+//                case RIGHT: view.speedX.set(-view.speedXVal); break;
+//                case DOWN: view.speedY.set(-view.speedYVal); break;
+//                case LEFT: view.speedX.set(view.speedXVal); break;
+//            }
+            
             event.consume();
             
             if(!model.hasControl && hasControl) {
@@ -85,6 +92,13 @@ public class InMapController implements Runnable {
                 view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
                         model.getMenuPoint(), model.getMenuWindow(), model.getParty(), 
                         model.getInventory(), model.getGold(), model.getQIVisible());
+            
+//            switch(main.getControl(event.getCode())) {
+//                case UP: view.speedY.set(0); break;
+//                case RIGHT: view.speedX.set(0); break;
+//                case DOWN: view.speedY.set(0); break;
+//                case LEFT: view.speedX.set(0); break;
+//            }
             
             event.consume();
         });

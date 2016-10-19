@@ -127,7 +127,7 @@ class Floor {
                         }
                         //start attacking if within range
                         if(n.hostile && Math.sqrt(Math.pow((party[0].x-n.x),2)+
-                                Math.pow((party[0].y-n.y),2)) < 7) {
+                                Math.pow((party[0].y-n.y),2)) < 5) {
                             n.AIMode = "attacking";
                         }
                         break;
@@ -225,6 +225,8 @@ class Floor {
         for(int x = 0; x < sizeX; x++) {
             for(int y = 0; y < sizeY; y++) {
                 if(tiles[x][y].isWall && !tiles[x][y].openable)
+                    boolMap[x][y] = true;
+                else if(chars[x][y].exists && !chars[x][y].equals(party[0]))
                     boolMap[x][y] = true;
             }
         }
