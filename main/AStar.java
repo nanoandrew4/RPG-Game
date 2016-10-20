@@ -63,7 +63,7 @@ class AStar {
     }
     
     //pathfind
-    public void search(ArrayDeque path) {
+    public void search(ArrayDeque path, boolean diagonalAllowed) {
         path.clear();
         
         //loop until finished
@@ -104,6 +104,40 @@ class AStar {
                 f[x][y-1] = g[x][y-1] + h[x][y-1];
                 frontier.add(new Point(x, y-1));
             }
+            if(diagonalAllowed) {
+                if(x < map.length-1 && y > 0 && map[x+1][y-1] != 1 && !closed[x+1][y-1] && !open[x+1][y-1]) {
+                    open[x+1][y-1] = true;
+                    camefrom[x+1][y-1] = Control.DOWNLEFT;
+                    g[x+1][y-1] = g[x][y] + 1;
+                    h[x+1][y-1] = Point.distance(x, y, end.x, end.y);
+                    f[x+1][y-1] = g[x+1][y-1] + h[x+1][y-1];
+                    frontier.add(new Point(x+1, y-1));
+                }
+                if(x > 0 && y < map[0].length-1 && map[x-1][y+1] != 1 && !closed[x-1][y+1] && !open[x-1][y+1]) {
+                    open[x-1][y+1] = true;
+                    camefrom[x-1][y+1] = Control.UPRIGHT;
+                    g[x-1][y+1] = g[x][y] + 1;
+                    h[x-1][y+1] = Math.abs(end.x - x) + Math.abs(end.y - y);
+                    f[x-1][y+1] = g[x-1][y+1] + h[x-1][y+1];
+                    frontier.add(new Point(x-1, y+1));
+                }
+                if(x < map.length-1 && y < map[0].length-1 && map[x+1][y+1] != 1 && !closed[x+1][y+1] && !open[x+1][y+1]) {
+                    open[x+1][y+1] = true;
+                    camefrom[x+1][y+1] = Control.UPLEFT;
+                    g[x+1][y+1] = g[x][y] + 1;
+                    h[x+1][y+1] = Math.abs(end.x - x) + Math.abs(end.y - y);
+                    f[x+1][y+1] = g[x+1][y+1] + h[x+1][y+1];
+                    frontier.add(new Point(x+1, y+1));
+                }
+                if(x > 0 && y > 0 && map[x-1][y-1] != 1 && !closed[x-1][y-1] && !open[x-1][y-1]) {
+                    open[x-1][y-1] = true;
+                    camefrom[x-1][y-1] = Control.DOWNRIGHT;
+                    g[x-1][y-1] = g[x][y] + 1;
+                    h[x-1][y-1] = Math.abs(end.x - x) + Math.abs(end.y - y);
+                    f[x-1][y-1] = g[x-1][y-1] + h[x-1][y-1];
+                    frontier.add(new Point(x-1, y-1));
+                }
+            }
             
             if(!frontier.isEmpty()) {
                 Point temp = frontier.poll();
@@ -121,6 +155,10 @@ class AStar {
                 case DOWN: y++; path.addFirst(Control.UP); break;
                 case LEFT: x--; path.addFirst(Control.RIGHT); break;
                 case RIGHT: x++; path.addFirst(Control.LEFT); break;
+                case UPRIGHT: y--; x++; path.addFirst(Control.DOWNLEFT); break;
+                case UPLEFT: y--; x--; path.addFirst(Control.DOWNRIGHT); break;
+                case DOWNRIGHT: y++; x++; path.addFirst(Control.UPLEFT); break;
+                case DOWNLEFT: y++; x--; path.addFirst(Control.UPRIGHT); break;
             }
         }
     }

@@ -131,8 +131,8 @@ public class Character {
     }
     
     //set path
-    void pathTo(Point target, boolean[][] map) {
-        path.pathFind(map, new Point(x, y), target);
+    void pathTo(Point target, boolean[][] map, boolean diag) {
+        path.pathFind(map, new Point(x, y), target, diag);
     }
     
     //get next direction from path

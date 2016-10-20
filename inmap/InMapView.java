@@ -119,6 +119,7 @@ class InMapView {
     private Text rip; //rip text
     private Text charT, levelT, goldT; //quickinfo text
     private Text diffT, floorT, nameT, typeT; //location text
+    private Text im1, im2, im3, im4, im5;
     
     private Rectangle menuFocus;
     private Circle menuCursor;
@@ -222,8 +223,6 @@ class InMapView {
         }
         width = Math.floor(width);
         height = Math.floor(height);
-        System.out.println("w:"+width);
-        System.out.println("h:"+height);
     }
     
     //initialize display

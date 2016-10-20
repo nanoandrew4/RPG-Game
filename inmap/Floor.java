@@ -78,7 +78,7 @@ class Floor {
                 switch(n.AIMode) {
                     case "attacking":
                         //make new path
-                        n.pathTo(new Point(party[0].x, party[0].y), booleanMap());
+                        n.pathTo(new Point(party[0].x, party[0].y), booleanMap(), false);
                         //get next direction from npc path
                         switch(n.getNext()) {
                             case UP: dy = -1; break;

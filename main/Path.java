@@ -16,13 +16,13 @@ public class Path {
     }
     
     //pathfind with a overall map and boundaries
-    public void pathFind(boolean[][] map, Point areaStart, Point areaEnd, Point start, Point end) {
-        new AStar(map, areaStart, areaEnd, start, end).search(path);
+    public void pathFind(boolean[][] map, Point areaStart, Point areaEnd, Point start, Point end, boolean diag) {
+        new AStar(map, areaStart, areaEnd, start, end).search(path, diag);
     }
     
     //pathfind with a limited map
-    public void pathFind(boolean[][] map, Point start, Point end) {
-        new AStar(map, new Point(0, 0), new Point(map.length, map[0].length), start, end).search(path);
+    public void pathFind(boolean[][] map, Point start, Point end, boolean diag) {
+        new AStar(map, new Point(0, 0), new Point(map.length, map[0].length), start, end).search(path, diag);
     }
     
     //get next control
