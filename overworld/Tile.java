@@ -15,20 +15,19 @@ public class Tile {
 
     InMapTile inMapTile;
 
-    Tile(){
+    Tile() {
         tresspassable = false;
         accessible = false;
         type = "";
     }
 
     // for static tiles
-    Tile(String tileType){
+    Tile(String tileType) {
         this.type = tileType;
-        if(tileType.contains("Water") || tileType.equals("Mountain")){
+        if (tileType.contains("Water") || tileType.equals("Mountain")) {
             tresspassable = false;
             accessible = false;
-        }
-        else{
+        } else {
             tresspassable = true;
             accessible = false;
         }
@@ -36,7 +35,7 @@ public class Tile {
 
     // for dungeons
 
-    Tile(String type, String subtype){
+    Tile(String type, String subtype) {
         this.type = type;
         this.tresspassable = true;
         this.accessible = true;
@@ -44,7 +43,7 @@ public class Tile {
     }
 
     // for settlements
-    Tile(String type, String subType, String branch, String name, int relationship){
+    Tile(String type, String subType, String branch, String name, int relationship) {
         this.type = type;
         this.accessible = true;
         this.tresspassable = false;
@@ -59,7 +58,7 @@ class InMapTile extends Tile {
 
     String inmapType;
 
-    InMapTile(String inmapType){
+    InMapTile(String inmapType) {
         this.inmapType = inmapType;
     }
 }
@@ -74,7 +73,7 @@ class SettlementTile extends Tile {
     public String settlementName;
     public CityPolitics cityPolitics = new CityPolitics(); // read from SQL database
 
-    SettlementTile(String subType, String branch, String name, int relationship){
+    SettlementTile(String subType, String branch, String name, int relationship) {
         accessible = true;
         tresspassable = false;
         this.settlementName = name;
@@ -84,7 +83,7 @@ class SettlementTile extends Tile {
         this.capitalSettlement = false;
     }
 
-    public void setCapitalSettlement(){
+    public void setCapitalSettlement() {
         capitalSettlement = true;
     }
 }
@@ -103,7 +102,7 @@ class CityPolitics {
     // TODO: COURT SYSTEM (so much work...) use SQLite for saving finds by kingdom, city, and name for fast lookup
     // TODO: Implement random and non-random events (scandals(levels?), assassination)
 
-    CityPolitics(){
+    CityPolitics() {
         avgHappiness = 0;
         maxNobles = 0;
         growth = 0d;
@@ -112,27 +111,27 @@ class CityPolitics {
         resources = new int[5];
     }
 
-    CityPolitics(double avgHappiness, int maxNobles, double growth, double capital, int population, int[] resources){
+    CityPolitics(double avgHappiness, int maxNobles, double growth, double capital, int population, int[] resources) {
 
     }
 
-    public void buyLot(){
+    public void buyLot() {
 
     }
 
-    public void buildOnLot(){
+    public void buildOnLot() {
 
     }
 
-    public void demolishOnLot(){
+    public void demolishOnLot() {
 
     }
 
-    public void sellLot(){
+    public void sellLot() {
 
     }
 
-    public void assasination(/* Target char, Assassin char */){
+    public void assasination(/* Target char, Assassin char */) {
 
     }
 }

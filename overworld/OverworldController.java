@@ -1,8 +1,7 @@
 /*
     Controls all interactions between non-graphical and graphical components for the Overworld
 
-    TODO: IMPROVE MVC MODEL ESPECIALLY CONTROLLER PART
-    TODO: CLEAN UP AND ORGANIZE CODE NEATLY
+    NOTE: toArray() call on the parties ArrayList might slow things down
  */
 
 package overworld;
@@ -40,6 +39,11 @@ public class OverworldController implements Runnable {
 
         view = new OverworldView(model.getMapSize(), main.screenWidth, main.screenHeight);
 
+        if(newGame)
+            model.createPlayer((float)view.speedXVal, "none");
+        else
+            model.createPlayer((float)view.speedXVal, null, "none");
+
         System.out.println("Overworld init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
     }
 
@@ -62,8 +66,8 @@ public class OverworldController implements Runnable {
             Gets scene from the View and passes it to main to be displayed
          */
 
-        scene = view.initDisplay(model.getTiles(), model.getParties(), main.screenWidth, main.screenHeight,
-                view.getMapTileSize(), model.getStartPos(), model.getMapSize());
+        scene = view.initDisplay(model.getTiles(), model.getPlayer(), model.getParties(), main.screenWidth, main.screenHeight,
+                view.getMapTileSize(), model.getMapSize());
         setMouseEvents();
         setInput(scene);
         Platform.runLater(() -> main.setStage(scene)); // to update UI from non-javafx thread
@@ -88,13 +92,12 @@ public class OverworldController implements Runnable {
 
         /*
             Algorithm to detect whether there has been a change in tile (user moved off tile on to adjacent one)
-            TODO: WIP
          */
 
         long start = System.currentTimeMillis();
 
-        double tileXOffset = view.centerTile.screenToLocal(view.partyViews[0].localToScreen(3, 3)).getX();
-        double tileYOffset = -view.centerTile.screenToLocal(view.partyViews[0].localToScreen(3, 3)).getY();
+        double tileXOffset = view.centerTile.screenToLocal(model.getPlayer().getIv().localToScreen(3, 3)).getX();
+        double tileYOffset = -view.centerTile.screenToLocal(model.getPlayer().getIv().localToScreen(3, 3)).getY();
 
         //System.out.println(view.centerTile.screenToLocal(view.redDot.localToScreen(3, 3)));
 
@@ -108,26 +111,24 @@ public class OverworldController implements Runnable {
         System.out.println("Right side angle " + rightAngle);*/
         System.out.println();
 
-        // TODO: there is an area between tile changes where the angle is enough to keep moving the current position
-
         if (Math.abs(leftAngle) >= 22.5 || Math.abs(rightAngle) >= 22.5) { // new tile
             /*System.out.println("Moved tile");
             System.out.println();*/
             if (rightAngle >= 22.5) {
                 model.setCurrPos(1, model.getCurrPos(1) - 1);
-                view.addRow(model.getTiles(), model.getParties(), model.getMapSize(), true);
+                view.addRow(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), true);
             }
             if (rightAngle <= -22.5) {
                 model.setCurrPos(0, model.getCurrPos(0) + 1);
-                view.addColumn(model.getTiles(), model.getParties(), model.getMapSize(), true);
+                view.addColumn(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), true);
             }
             if (leftAngle >= 22.5) {
                 model.setCurrPos(0, model.getCurrPos(0) - 1);
-                view.addColumn(model.getTiles(), model.getParties(), model.getMapSize(), false);
+                view.addColumn(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), false);
             }
             if (leftAngle <= -22.5) {
                 model.setCurrPos(1, model.getCurrPos(1) + 1);
-                view.addRow(model.getTiles(), model.getParties(), model.getMapSize(), false);
+                view.addRow(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), false);
             }
             setMouseEvents();
 
@@ -252,6 +253,10 @@ public class OverworldController implements Runnable {
             for (int x = 0; x <= view.zoom * 2; x++) {
                 final int finalX = x;
                 final int finalY = y;
+                final Party p = model.getPlayer();
+                final int yPos = (p.getTileY() + y < 0 ? (p.getTileY() + y >= model.getMapSize() ? model.getMapSize() - 1 : 0) : p.getTileY() + y);
+                final int xPos = (p.getTileX() + x < 0 ? (p.getTileX() + x >= model.getMapSize()? model.getMapSize() - 1 : 0) : p.getTileX() + x);
+
                 if (model.getTiles()[x][y].settlementTile != null) {
                     model.getTiles()[x][y].banner.getChildren().get(3).addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
                         System.out.println("Attack");
@@ -280,9 +285,6 @@ public class OverworldController implements Runnable {
                     });
                 }
 
-                if (view.imageViews[x][y][0] == null)
-                    System.out.println("x, y: " + x + ", " + y);
-
                 view.imageViews[x][y][0].addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
                     int x = finalX;
                     int y = finalY;
@@ -295,14 +297,23 @@ public class OverworldController implements Runnable {
                         if (controlsLocked)
                             return;
 
+                        switch(model.getTiles()[xPos][yPos].type){
+                            case "Settlement":
+                                System.out.println("Settlement"); break;
+                            case "InMap":
+                                System.out.println("InMap"); break;
+                            default:
+                                System.out.println(model.getTiles()[x][y].type);
+                        }
+
                         //System.out.println("Tile @ pos " + x + ", " + y);
-                        if (model.getTiles()[x][y].type.equalsIgnoreCase("Settlement") || model.getTiles()[x][y].type.equalsIgnoreCase("InMap")) {
-                            if (model.getTiles()[x][y].type.equalsIgnoreCase("Settlement")) // will change
-                                view.showSettlementInfo(model.getTiles()[x][y].settlementTile);
-                            else if (model.getTiles()[x][y].type.equalsIgnoreCase("InMap")) {
-                                main.IMController.newLocation(new Point(x, y), model.getTiles()[x][y].inMapTile.inmapType.toLowerCase());
-                                view.showInMapInfo(main.IMController.getName(new Point(x, y)),
-                                        main.IMController.getDifficulty(new Point(x, y)));
+                        if (model.getTiles()[xPos][yPos].type.equalsIgnoreCase("Settlement") || model.getTiles()[xPos][yPos].type.equalsIgnoreCase("InMap")) {
+                            if (model.getTiles()[xPos][yPos].type.equalsIgnoreCase("Settlement")) // will change
+                                view.showSettlementInfo(model.getTiles()[xPos][yPos].settlementTile);
+                            else if (model.getTiles()[xPos][yPos].type.equalsIgnoreCase("InMap")) {
+                                main.IMController.newLocation(new Point(xPos, yPos), model.getTiles()[xPos][yPos].inMapTile.inmapType.toLowerCase());
+                                view.showInMapInfo(main.IMController.getName(new Point(xPos, yPos)),
+                                        main.IMController.getDifficulty(new Point(xPos, yPos)));
                             }
                             controlsLocked = true;
                         }
@@ -311,7 +322,7 @@ public class OverworldController implements Runnable {
                             // show city politics elements
 
                             view.removePane(view.paneStack.pop());
-                            view.showCityManagement(model.getTiles()[x][y].settlementTile);
+                            view.showCityManagement(model.getTiles()[xPos][yPos].settlementTile);
                         });
                         view.diplomacy.setOnAction(event1 -> {
 
@@ -320,7 +331,7 @@ public class OverworldController implements Runnable {
 
                         });
                         view.enterDungeon.setOnAction(event1 -> {
-                            main.IMController.passControl(new Point(x, y));
+                            main.IMController.passControl(new Point(xPos, yPos));
                         });
                     }
                 });

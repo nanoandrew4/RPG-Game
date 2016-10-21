@@ -3,9 +3,13 @@ package overworld;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import main.*;
 
 class OverworldModel {
@@ -15,17 +19,25 @@ class OverworldModel {
         Also handles any interaction with model related classes (such as Map) to retrieve data
         TODO: FIX OUTOFBOUNDS THAT HAPPENS AT FORCE REDIRECT
         TODO: FIX COASTLINE GEN (CHECK getPossibleDirections() and changeOnAxis northbound definitely has an issue)
+        TODO: SWSE TILE PLACES INCORRECTLY
     */
 
     private int[] startPos = new int[2];
 
     private Map map;
-    private Party[] parties;
+    private Party player;
+    private ArrayList<Party> parties;
+
+    FileAccess fileAccess;
 
     OverworldModel(int mapSize, boolean newGame, DBManager dbManager) {
-        parties = new Party[10];
-        for (int x = 0; x < parties.length; x++)
-            parties[x] = new Party();
+        parties = new ArrayList<>();
+
+        fileAccess = new FileAccess();
+        fileAccess.loadFile("src/data/player");
+
+        for (int x = 0; x < parties.size(); x++)
+            parties.add(x, new Party());
 
         if(newGame) {
             try {
@@ -34,13 +46,14 @@ class OverworldModel {
                 e.printStackTrace();
             }
         }
+    }
 
-        FileAccess fileAccess = new FileAccess();
-        fileAccess.loadFile("src/data/player");
-        startPos[0] = (int) fileAccess.getFromFile("locationX", "int");
-        startPos[1] = (int) fileAccess.getFromFile("locationY", "int");
-        parties[0].setTileX(startPos[0]);
-        parties[0].setTileY(startPos[1]);
+    void createPlayer(float speed, String faction) {
+        player = new Party(0, 0, (short) fileAccess.getFromFile("locationX", "short"), (short) fileAccess.getFromFile("locationY", "short"), (short)5, speed, new ArrayList<>(), faction);
+    }
+
+    void createPlayer(float speed, ArrayList<String> members, String faction) {
+        player = new Party(0, 0, (short) fileAccess.getFromFile("locationX", "short"), (short) fileAccess.getFromFile("locationY", "short"), (short)5, speed, members, faction);
     }
 
     Tile[][] getTiles() { // returns 2D array of type Tile
@@ -51,26 +64,24 @@ class OverworldModel {
         return map.getMapSize();
     }
 
-    int[] getStartPos() {return startPos;}
+    Party getPlayer(){return player;}
 
-    int getStartPos(int index) {return startPos[index];}
+    ArrayList<Party> getParties(){return parties;}
 
-    Party[] getParties(){return parties;}
-
-    Party getParty(int index){return parties[index];}
+    Party getParty(int index){return parties.get(index);}
 
     void setCurrPos(int index, int pos) { // sets current pos at index to current value plus sum
         if(index == 0)
-            parties[0].setTileX(pos);
+            player.setTileX((short)pos);
         else
-            parties[0].setTileY(pos);
+            player.setTileY((short)pos);
     }
 
     int getCurrPos(int index){
         if(index == 0)
-            return parties[0].getTileX();
+            return player.getTileX();
         else
-            return parties[0].getTileY();
+            return player.getTileY();
     }
 
     void newGame(int mapSize, DBManager dbManager) throws SQLException {
@@ -849,55 +860,195 @@ class Map {
 class Party {
     /*
         Class contains all data for different parties that exist on the overworld map
+        NOTE: Path will allow passage between mountain tiles that are diagonal of each other
      */
 
-    private double xOffset, yOffset; // pixel offset from center of tile (only within tile)
-    private int tileX, tileY; // position on global map in terms of tile
-    private String[] members; // members of party (will be something other than string but for now...)
+    private float xOffset, yOffset; // pixel offset from center of tile (only within tile)
+    private short tileX, tileY; // position on global map in terms of tile
+    private ImageView iv;
+    private ArrayList<String> members; // members of party
     private String faction; // what faction they owe allegiance to
     boolean onScreen;
+    private Party target;
+
+    private float speedX, speedY;
+    private short fov;
+
+    private short[] destPos = new short[2];
+    private char state;
 
     //TODO: NEED SPEED AND OTHER STATS, LIKE FOV, MERGE WITH INMAP CHARACTER STATS?
 
     Party(){
-        xOffset = 0d; yOffset = 0d;
+        xOffset = 0f; yOffset = 0f;
         tileX = 0; tileY = 0;
         members = null;
         faction = "";
         onScreen = false;
     }
 
-    Party(double xOffset, double yOffset, int tileX, int tileY, String[] members, String faction){
+    Party(float xOffset, float yOffset, short tileX, short tileY, short fov, float speed, ArrayList<String> members, String faction){
         this.xOffset = xOffset;
         this.yOffset = yOffset;
         this.tileX = tileX;
         this.tileY = tileY;
+        this.fov = fov;
+        this.speedX = speed;
+        this.speedY = speed / 2;
         this.members = members;
         this.faction = faction;
     }
 
     int getTileX(){return tileX;}
 
-    void setTileX(int tileX){this.tileX = tileX;}
+    void setTileX(short tileX){this.tileX = tileX;}
 
     int getTileY(){return tileY;}
 
-    void setTileY(int tileY){this.tileY = tileY;}
+    void setTileY(short tileY){this.tileY = tileY;}
 
     double getxOffset(){return xOffset;}
 
     double getyOffset(){return yOffset;}
 
-    private void chase(Party target){ // chase another party to provoke combat
+    void setIv(ImageView iv){this.iv = iv;}
 
+    ImageView getIv(){return iv;}
+
+    void removeIv(){this.iv = null;}
+
+    float getSpeedX(){return speedX;}
+
+    float getSpeedY(){return speedY;}
+
+    void nextMove(ArrayList<Party> parties){
+        // TODO: IF CALCULATION IS OVERWHELMING THE CPU SIMULATE WHAT HAPPENS OUTSIDE THE FOV WHILE KEEPING IT SOMEWHAT REASONABLE
+        LinkedList<Party> nearParties = parties.stream().filter(party -> Math.abs(party.getTileX() - tileX) < fov && Math.abs(party.getTileY() - tileY) < fov).collect(Collectors.toCollection(LinkedList::new));
+
+        if (state == 'c'){ // chasing
+            chase();
+        } else if (state == 'f') { // fleeing
+            flee();
+        } else if (state == 't') { // travelling
+            // determine threat indexes based on proximity, size and later quality of members - in case must flee or attack
+        } else { // doing nothing
+            for (int x = 0; x < nearParties.size(); x++) {
+                Party p = nearParties.pop();
+                if (p.members != null && p.members.size() < members.size()) { // if owns more members make it viable for attacking
+                    // determine threat indexes based on proximity, size and later quality of members
+                } else if (p.members != null && p.members.size() > members.size()) { // if owns less members flee if gets too close
+                    // determine threat indexes based on proximity, size and later quality of members
+                }
+            }
+        }
+    }
+
+    private double[] calcAngles(double xOffset, double yOffset, double mapTileSize) {
+
+        /*
+            Calculates and returns angles from current position on tile to leftmost and rightmost point
+         */
+
+        double[] angles = new double[2]; // stores langle, rangle
+
+        angles[0] = Math.toDegrees(Math.atan(yOffset / (xOffset + (mapTileSize / 2)))); // left
+        angles[1] = Math.toDegrees(Math.atan(yOffset / ((mapTileSize / 2) - xOffset))); // right
+
+        return angles;
+    }
+
+    private void detectTileChange(double mapTileSize){
+
+        double[] angles = calcAngles(xOffset, yOffset, mapTileSize);
+        double leftAngle = angles[0];
+        double rightAngle = angles[1];
+
+        if (Math.abs(leftAngle) >= 22.5 || Math.abs(rightAngle) >= 22.5) { // new tile
+            if (rightAngle >= 22.5) {
+                xOffset -= mapTileSize / 2;
+                yOffset -= mapTileSize / 4;
+                tileY--;
+            }
+            if (rightAngle <= -22.5) {
+                xOffset -= mapTileSize / 2;
+                yOffset += mapTileSize / 4;
+                tileX++;
+            }
+            if (leftAngle >= 22.5) {
+                xOffset += mapTileSize / 2;
+                yOffset -= mapTileSize / 4;
+                tileX--;
+            }
+            if (leftAngle <= -22.5) {
+                xOffset += mapTileSize / 2;
+                yOffset += mapTileSize / 4;
+                tileY++;
+            }
+        }
     }
 
     private void wander(){ // wander around with no target
+        destPos = new short[2];
+        Random rand = new Random();
 
+        destPos[0] = (short)(tileX + rand.nextInt(2) - 2);
+        destPos[1] = (short)(tileY + rand.nextInt(2) - 2);
     }
 
-    private void flee(Party[] parties){ // flee from one or more parties
+    private void chase(){ // chase another party to provoke combat
+        state = 'c';
+        if (target.getxOffset() > xOffset && target.getyOffset() > yOffset)
+            move(Control.UPRIGHT);
+        else if (target.getxOffset() > xOffset && target.getyOffset() < yOffset)
+            move(Control.DOWNRIGHT);
+        else if (target.getxOffset() < xOffset && target.getyOffset() > yOffset)
+            move(Control.UPLEFT);
+        else if (target.getxOffset() < xOffset && target.getyOffset() < yOffset)
+            move(Control.DOWNLEFT);
+        else if (target.getxOffset() < xOffset && target.getyOffset() == yOffset)
+            move(Control.LEFT);
+        else if (target.getxOffset() > xOffset && target.getyOffset() == yOffset)
+            move(Control.RIGHT);
+        else if (target.getyOffset() < yOffset && target.getxOffset() == xOffset)
+            move(Control.DOWN);
+        else if (target.getyOffset() > yOffset && target.getxOffset() == xOffset)
+            move(Control.UP);
+    }
 
+    private void flee(){ // flee from one or more parties
+        state = 'f';
+        if (target.getxOffset() > xOffset && target.getyOffset() > yOffset)
+            move(Control.DOWNLEFT);
+        else if (target.getxOffset() > xOffset && target.getyOffset() < yOffset)
+            move(Control.UPLEFT);
+        else if (target.getxOffset() < xOffset && target.getyOffset() > yOffset)
+            move(Control.DOWNRIGHT);
+        else if (target.getxOffset() < xOffset && target.getyOffset() < yOffset)
+            move(Control.UPRIGHT);
+        else if (target.getxOffset() < xOffset && target.getyOffset() == yOffset)
+            move(Control.RIGHT);
+        else if (target.getxOffset() > xOffset && target.getyOffset() == yOffset)
+            move(Control.LEFT);
+        else if (target.getyOffset() < yOffset && target.getxOffset() == xOffset)
+            move(Control.UP);
+        else if (target.getyOffset() > yOffset && target.getxOffset() == xOffset)
+            move(Control.DOWN);
+    }
+
+    private void move(Control direction) {
+        switch (direction) {
+            case UP: yOffset += speedY; break;
+            case DOWN: yOffset -= speedY; break;
+            case RIGHT: xOffset += speedX; break;
+            case LEFT: xOffset -= speedX; break;
+            case UPRIGHT: xOffset += speedX; yOffset += speedY; break;
+            case UPLEFT: xOffset -= speedX; yOffset += speedY; break;
+            case DOWNRIGHT: xOffset += speedX; yOffset -= speedY; break;
+            case DOWNLEFT: xOffset -= speedX; yOffset -= speedY; break;
+            default:
+                System.out.println("Error in AI move"); // should never happen
+        }
+        detectTileChange(OverworldView.mapTileSize);
     }
 
     private void travelTo(String settlementName){ // travel to desired settlement
