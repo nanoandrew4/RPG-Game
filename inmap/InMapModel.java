@@ -22,6 +22,7 @@ class InMapModel {
     //temporary variables
     private String focus, menuWindow;
     private Point menuP; //menu cursor pointer
+    private int selectP; //selection pointer
     private boolean qiVisible; //quick info window
     boolean hasControl;
     
@@ -31,10 +32,11 @@ class InMapModel {
         party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, "Hero", "Human", "NA", new Path(), false);
         currentMap = new Point(0, 0);
         maps = new HashMap();
-        gold = 500;
+        gold = Integer.MAX_VALUE;
         focus = "floor";
         menuWindow = "inv";
         menuP = new Point(0, -1);
+        selectP = -1;
         hasControl = false;
         inv = new Item[64];
         
@@ -42,6 +44,9 @@ class InMapModel {
             inv[i] = new Item();
         
         //testing
+        for(int i = 0; i < 21; i++) {
+            inv[(int)(Math.random()*64)] = new Item("s" + Math.pow(i, 3));
+        }
         inv[0] = new Item("thing");
         inv[1] = new Item("thing2");
         inv[3] = new Item("fish");
@@ -51,9 +56,13 @@ class InMapModel {
     
     //process input
     void process(Control input) {
+        //floor input
         if(focus.equals("floor")) {
             switch (input) {
                 case MENU:
+                    toggleMenu(true);
+                    break;
+                case BACK:
                     toggleMenu(true);
                     break;
                 case TAB:
@@ -72,6 +81,7 @@ class InMapModel {
                     break;
             }
         }
+        //menu input
         else if(focus.equals("menu")) {
             switch(input) {
                 case LEFT:
@@ -84,11 +94,16 @@ class InMapModel {
                         else if(menuWindow.equals("options")) menuWindow = "notes";
                         else menuWindow = "inv";
                     }
-                    else
+                    //if not in selection
+                    else if(selectP == -1) {
                         menuP.x--;
+                    }
+                    else
+                        break;
                     
-                    if(menuWindow.equals("inv") && menuP.x < 0)
+                    if(menuWindow.equals("inv") && menuP.x < 0) {
                         menuP.x = 3;
+                    }
                     break;
                     
                 case RIGHT:
@@ -100,28 +115,65 @@ class InMapModel {
                         else if(menuWindow.equals("notes")) menuWindow = "options";
                         else if(menuWindow.equals("options")) menuWindow = "inv";
                     }
-                    else 
+                    //if not in selection
+                    else if(selectP == -1) {
                         menuP.x++;
+                    }
+                    else 
+                        break;
                     
-                    if(menuWindow.equals("inv") && menuP.x > 3)
+                    if(menuWindow.equals("inv") && menuP.x > 3) {
                         menuP.x = 0;
+                    }
                     break;
                     
                 case UP:
-                    if(menuP.y == -1) break;
-                    
-                    menuP.y--;
-                    
-                    if(menuWindow.equals("inv") && menuP.y < 0)
-                        menuP.y = 15;                 
+                    //cannot move up in menu page select
+                    if(menuP.y == -1)
+                        break;
+                    //selection movement
+                    else if(selectP != -1) {
+                        selectP--;
+                        
+                        if(menuWindow.equals("inv") && selectP < 0) {
+                            selectP = 4;
+                        }
+                    }
+                    //menu movement
+                    else {
+                        menuP.y--;
+                        
+                        if(menuWindow.equals("inv") && menuP.y < 0) {
+                            menuP.y = 15;
+                        }
+                        else if(menuWindow.equals("char")) {
+                            menuP.y = -1;
+                        }
+                    }
                     break;
                     
                 case DOWN:
-                    if(menuP.y != -1)
+                    //cannot move up in menu page select
+                    if(menuP.y == -1)
+                        break;
+                    //selection movement
+                    else if(selectP != -1) {
+                        selectP++;
+                        
+                        if(menuWindow.equals("inv") && selectP > 4) {
+                            selectP = 0;
+                        }
+                    }
+                    else {
                         menuP.y++;
-                    
-                    if(menuWindow.equals("inv") && menuP.y > 15)
-                        menuP.y = 0;
+
+                        if(menuWindow.equals("inv") && menuP.y > 15) {
+                            menuP.y = 0;
+                        }
+                        else if(menuWindow.equals("char")) {
+                            menuP.y = -1;
+                        }
+                    }
                     break;
                     
                 case MENU:
@@ -131,17 +183,31 @@ class InMapModel {
                     break;
                     
                 case SELECT:
-                    menuP.y = 0;
-                    menuP.x = 0;
+                    if(menuWindow.equals("inv")) {
+                        if(menuP.y == -1) {
+                            menuP.x = 0;
+                            menuP.y = 0;
+                        }
+                        else if(selectP != -1) {
+                            
+                        }
+                        else {
+                            selectP = 0;
+                        }
+                    }
                     break;
                     
                 case BACK:
                     if(menuP.y == -1) {
                         toggleMenu(false);
                     }
+                    else if(selectP != -1) {
+                        selectP = -1;
+                    }
                     else {
                         menuP.y = -1;
                         menuP.x = 0;
+                        
                     }
                     break;
                     
@@ -198,6 +264,7 @@ class InMapModel {
     Item[] getInventory() { return inv; }
     int getGold() { return gold; }
     Point getMenuPoint() { return menuP; }
+    int getSelectPoint() { return selectP; }
     String getMenuWindow() { return menuWindow; }
     String getFocus() { return focus; }
     boolean getQIVisible() { return qiVisible; }

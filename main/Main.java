@@ -40,22 +40,24 @@ public class Main extends Application {
         this.stage = stage;
         
         keybindings = new HashMap<>();
-        keybindings.put(KeyCode.W,Control.UP);
-        keybindings.put(KeyCode.A,Control.LEFT);
-        keybindings.put(KeyCode.S,Control.DOWN);
-        keybindings.put(KeyCode.D,Control.RIGHT);
-        keybindings.put(KeyCode.UP,Control.UP);
-        keybindings.put(KeyCode.LEFT,Control.LEFT);
-        keybindings.put(KeyCode.DOWN,Control.DOWN);
-        keybindings.put(KeyCode.RIGHT,Control.RIGHT);
-        keybindings.put(KeyCode.TAB,Control.TAB);
-        keybindings.put(KeyCode.C,Control.MENU);
-        keybindings.put(KeyCode.Z,Control.SELECT);
-        keybindings.put(KeyCode.X,Control.BACK);
-        keybindings.put(KeyCode.ESCAPE, Control.ESC);
+        keybindings.put(KeyCode.W, Control.UP);
+        keybindings.put(KeyCode.A, Control.LEFT);
+        keybindings.put(KeyCode.S, Control.DOWN);
+        keybindings.put(KeyCode.D, Control.RIGHT);
+        keybindings.put(KeyCode.UP, Control.UP);
+        keybindings.put(KeyCode.LEFT, Control.LEFT);
+        keybindings.put(KeyCode.DOWN, Control.DOWN);
+        keybindings.put(KeyCode.RIGHT, Control.RIGHT);
+        keybindings.put(KeyCode.C, Control.MENU);
+        keybindings.put(KeyCode.Z, Control.SELECT);
+        keybindings.put(KeyCode.ENTER, Control.SELECT);
+        keybindings.put(KeyCode.SPACE, Control.SELECT);
+        keybindings.put(KeyCode.X, Control.BACK);
         //temporary keybindings
-        keybindings.put(KeyCode.R,Control.R);
-        keybindings.put(KeyCode.T,Control.T);
+        keybindings.put(KeyCode.TAB, Control.TAB);
+        keybindings.put(KeyCode.ESCAPE, Control.ESC);
+        keybindings.put(KeyCode.R, Control.R);
+        keybindings.put(KeyCode.T, Control.T);
         keybindings.put(KeyCode.ALT, Control.ALT);
         
         stage.setTitle("Rising Legend");

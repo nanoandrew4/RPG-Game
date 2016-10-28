@@ -12,17 +12,18 @@ import java.awt.Point;
 //import javafx.beans.property.SimpleDoubleProperty;
 //import javafx.beans.property.SimpleLongProperty;
 import javafx.scene.Scene;
+import javafx.scene.effect.BoxBlur;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.FontWeight;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Circle;
 
 class Images {
     //contains images
@@ -112,17 +113,24 @@ class InMapView {
     Images images;
     ImageView[][][] imageViews;
     public double screenWidth, screenHeight;
-    private Pane inmapLayout, floorPane, menuPane, UIPane;
+    private final Pane inmapLayout, floorPane, UIPane,
+            menuPane, menubgPane, invPane, charPane, partyPane, notePane, opPane;
     double width, height;
     final double zoom;
     
     private Text rip; //rip text
-    private Text charT, levelT, goldT; //quickinfo text
-    private Text diffT, floorT, nameT, typeT; //location text
-    private Text im1, im2, im3, im4, im5;
+    private final Text charT, levelT, goldT; //quickinfo text
+    private final Text diffT, floorT, nameT, typeT; //location text
+    private Text[] invText; //menu inv text
+    private Text invName, invDes; //item information
+    private Text[] invButtons; //item manipulation
+    private Rectangle[] invRButtons; //button boxes
+    private Text[] chText; //menu char text
+    private Text chName, chTitle, chHP, chMP, chLVL, chEXP;
+    private Text[][] parText; //menu party text
     
-    private Rectangle menuFocus;
-    private Circle menuCursor;
+    private final Rectangle menuFocus;
+    private final Rectangle menuCursor;
     
     //animation
 //    private final LongProperty lastUpdateTime = new SimpleLongProperty();
@@ -145,10 +153,17 @@ class InMapView {
         zoom = 12;
         setTileSize();
         images = new Images(width, height);
+        
         inmapLayout = new Pane();
         floorPane = new Pane();
         UIPane = new Pane();
         menuPane = new Pane();
+        menubgPane = new Pane();
+        invPane = new Pane();
+        charPane = new Pane();
+        partyPane = new Pane();
+        notePane = new Pane();
+        opPane = new Pane();
 //        speedXVal = 64;
 //        speedYVal = 64;
         
@@ -188,28 +203,36 @@ class InMapView {
         UIPane.getChildren().addAll(box, box2, box3, nameT, typeT, diffT, floorT, charT, levelT, goldT);
         
         //initialize menu
-        Rectangle box4 = new Rectangle(screenWidth*4/5, screenHeight*2/3, Paint.valueOf("WHITE"));
-        box4.relocate(screenWidth/10, screenHeight/6);
+        Rectangle box4 = new Rectangle(screenWidth, screenHeight, Paint.valueOf("GREY"));
+        box4.relocate(0, 0);
+        box4.setOpacity(.5);
         
-        menuFocus = new Rectangle(screenWidth*4/25, screenHeight/10, Paint.valueOf("PINK"));
-        menuFocus.relocate(screenWidth/10, screenHeight/6);
+        menuFocus = new Rectangle(screenWidth/7, screenHeight/24, Paint.valueOf("WHITE"));
+        menuFocus.relocate(0, screenHeight*3/16);
+        menuFocus.setEffect(new BoxBlur(5, 5, 3));
         
-        menuCursor = new Circle(screenWidth/8, screenHeight/6+40, 3, Paint.valueOf("RED"));
+        menuCursor = new Rectangle(screenWidth/8, screenHeight/40, Paint.valueOf("WHITE"));
+        menuCursor.setEffect(new BoxBlur(3, 3, 3));
         menuCursor.setOpacity(0);
         
         Text[] menuText = new Text[5];
         for(int i = 0; i < 5; i++) {
-            menuText[i] = new Text(screenWidth/8+screenWidth*4*i/25, screenHeight/6+40, "");
+            menuText[i] = new Text(screenWidth*2/19+screenWidth*4*i/25, screenHeight*2/9, "");
             menuText[i].setFont(Font.font("Arial", FontWeight.BOLD, 28));
+            menuText[i].setFill(Paint.valueOf("WHITE"));
+            menuText[i].setWrappingWidth(screenWidth/6);
+            menuText[i].setTextAlignment(TextAlignment.CENTER);
         }
-        menuText[0].setText("  INV");
-        menuText[1].setText(" CHAR");
-        menuText[2].setText(" PARTY");
-        menuText[3].setText(" NOTES");
+        menuText[0].setText("INV");
+        menuText[1].setText("CHAR");
+        menuText[2].setText("PARTY");
+        menuText[3].setText("NOTES");
         menuText[4].setText("OPTIONS");
         
-        menuPane.getChildren().addAll(box4, menuFocus, menuCursor);
-        menuPane.getChildren().addAll(menuText);
+        menubgPane.getChildren().addAll(box4, menuFocus, menuCursor);
+        menubgPane.getChildren().addAll(menuText);
+        
+        menuPane.getChildren().add(menubgPane);
     }
 
     //set tile size
@@ -227,7 +250,7 @@ class InMapView {
     
     //initialize display
     public Scene initDisplay() {
-        
+        //floorPane
         for(int x = 0; x < 24; x++) {
             for(int y = 0; y < 16; y++) {
                 //tiles
@@ -274,24 +297,114 @@ class InMapView {
 //            }
 //        }
         
+        //invPane
+        Text temp = new Text(screenWidth/10+60, screenHeight/6+100, "H");
+        temp.setFont(Font.font("Monaco", FontWeight.BOLD, 20));
+        temp.setFill(Paint.valueOf("RED"));
+        invText = new Text[64];
+        for(int i = 0; i < 64; i++) {
+            invText[i] = new Text(screenWidth/7+screenWidth/7*(int)(i/16), screenHeight*2/7+screenHeight/28*(i%16), "-");
+            invText[i].setFill(Paint.valueOf("WHITE"));
+            invText[i].setFont(Font.font("Monaco", FontWeight.NORMAL, 14));
+        }
+        invName = new Text(screenWidth*5/7, screenHeight*2/7, "");
+        invName.setWrappingWidth(300);
+        invName.setTextAlignment(TextAlignment.CENTER);
+        invName.setFill(Paint.valueOf("WHITE"));
+        invName.setFont(Font.font(null, FontWeight.BOLD, 30));
+        invDes = new Text(screenWidth*5/7, screenHeight/3, "There's nothing here.");
+        invDes.setWrappingWidth(300);
+        invDes.setFill(Paint.valueOf("WHITE"));
+        invDes.setFont(Font.font(null, FontWeight.NORMAL, 18));
+        
+        invButtons = new Text[5];
+        invRButtons = new Rectangle[5];
+        for(int i = 0; i < 5; i++) {
+            invButtons[i] = new Text(screenWidth*5/7, screenHeight*3/5+screenHeight/18*i, "");
+            invButtons[i].setWrappingWidth(300);
+            invButtons[i].setTextAlignment(TextAlignment.CENTER);
+            invButtons[i].setFill(Paint.valueOf("WHITE"));
+            invButtons[i].setFont(Font.font("Monaco", FontWeight.NORMAL, 24));
+            
+            invRButtons[i] = new Rectangle(screenWidth/6, screenHeight/20, Paint.valueOf("WHITE"));
+            invRButtons[i].relocate(screenWidth*3/4, screenHeight*40/71+screenHeight/18*i);
+            invRButtons[i].setOpacity(.2);
+        }
+        invButtons[0].setText("EQUIP");
+        invButtons[1].setText("USE");
+        invButtons[2].setText("MOVE");
+        invButtons[3].setText("DISCARD");
+        invButtons[4].setText("CANCEL");
+        
+        invPane.getChildren().addAll(invText);
+        invPane.getChildren().addAll(invButtons);
+        invPane.getChildren().addAll(invRButtons);
+        invPane.getChildren().addAll(invName, invDes);
+        
+        //charPane
+        ImageView portrait = new ImageView(new Image("/media/graphics/inmap/portrait.jpg", 
+                screenHeight/5, screenHeight/5, false, false));
+        portrait.relocate(screenWidth/5, screenHeight/3);
+        chName = new Text(screenWidth/5, screenHeight*12/20, "");
+        chName.setFont(Font.font(null, FontWeight.NORMAL, 24));
+        chName.setFill(Paint.valueOf("WHITE"));
+        chTitle = new Text(screenWidth/5, screenHeight*13/20, "");
+        chTitle.setFont(Font.font(null, FontWeight.NORMAL, 24));
+        chTitle.setFill(Paint.valueOf("WHITE"));
+        chHP = new Text(screenWidth/5, screenHeight*14/20, "");
+        chHP.setFont(Font.font(null, FontWeight.NORMAL, 24));
+        chHP.setFill(Paint.valueOf("WHITE"));
+        chMP = new Text(screenWidth/5, screenHeight*15/20, "");
+        chMP.setFont(Font.font(null, FontWeight.NORMAL, 24));
+        chMP.setFill(Paint.valueOf("WHITE"));
+        chLVL = new Text(screenWidth/5, screenHeight*16/20, "");
+        chLVL.setFont(Font.font(null, FontWeight.NORMAL, 24));
+        chLVL.setFill(Paint.valueOf("WHITE"));
+        chEXP = new Text(screenWidth/5, screenHeight*17/20, "");
+        chEXP.setFont(Font.font(null, FontWeight.NORMAL, 24));
+        chEXP.setFill(Paint.valueOf("WHITE"));
+        chText = new Text[14];
+        charPane.getChildren().addAll(portrait, chName, chTitle, chHP, chMP, chLVL, chEXP);
+//        charPane.getChildren().addAll(chText);
+        
+        //partyPane
+        Text t2 = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you have no friends");
+        t2.setFont(Font.font(null, FontWeight.NORMAL, 24));
+        t2.setFill(Paint.valueOf("WHITE"));
+        partyPane.getChildren().addAll(t2);
+        
+        //notePane
+        Text t3 = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you are illiterate");
+        t3.setFont(Font.font(null, FontWeight.NORMAL, 24));
+        t3.setFill(Paint.valueOf("WHITE"));
+        notePane.getChildren().addAll(t3);
+        
+        //opPane
+        Text t4 = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you have no options in life");
+        t4.setFont(Font.font(null, FontWeight.NORMAL, 24));
+        t4.setFill(Paint.valueOf("WHITE"));
+        opPane.getChildren().addAll(t4);
+
+        //rip text
         rip = new Text(360, 340, ("  GAME OVER\nR TO RESTART"));
         rip.setFont(Font.font(null, FontWeight.BOLD, 80));
         rip.setFill(Paint.valueOf("WHITE"));
         rip.setVisible(false);
         inmapLayout.getChildren().add(rip);
         
+        inmapLayout.setBackground(new Background(new BackgroundFill(Paint.valueOf("BLACK"), null, null)));
+        
         return new Scene(inmapLayout, screenWidth, screenHeight);
     }
     
     //update
-    public void update(String focus, Floor floor, Point menuP, String menuWindow, 
+    public void update(String focus, Floor floor, Point menuP, int selectP, String menuWindow, 
             Character[] party, Item[] inv, int gold, boolean qiVisible) {
         if(focus.equals("floor")) {
             //remove menu window
             inmapLayout.getChildren().remove(menuPane);
-            inmapLayout.setBackground(new Background(new BackgroundFill(Paint.valueOf("BLACK"), null, null)));
             
-            //show quick info ui
+            //quick info
             if(qiVisible && !inmapLayout.getChildren().contains(UIPane)) {
                 nameT.setText(floor.location.name);
                 typeT.setText(floor.location.type);
@@ -349,22 +462,37 @@ class InMapView {
             //remove quick info box
             inmapLayout.getChildren().remove(UIPane);
             
-            if(menuP.x == -1) {
-                toggleMenu("", party, inv, gold);
-            }
             if(menuP.y == -1) {
-                menuFocus.setOpacity(1);
+                menuFocus.setOpacity(.5);
                 menuCursor.setOpacity(0);
                 changeMenu(menuWindow, party, inv, gold);
             }
             else {
-                menuFocus.setOpacity(0);
-                menuCursor.setOpacity(1);
+                menuFocus.setOpacity(0.25);
                 switch(menuWindow) {
                     case "inv":
-                        menuCursor.relocate(screenWidth/10+50+180*menuP.x, screenHeight/6+90+26*menuP.y);
+                        for(int i = 0; i < 5; i++)
+                            invRButtons[i].setOpacity(.2);
+                        if(selectP == -1) {
+                            menuCursor.setOpacity(.3);
+                            menuCursor.relocate(screenWidth*2/15+screenWidth/7*menuP.x, screenHeight*4/15+screenHeight/28*menuP.y);
+                            if(inv[menuP.x*16+menuP.y].exists) {
+                                invName.setText(inv[menuP.x*16+menuP.y].name);
+                                invDes.setText("It's a " + inv[menuP.x*16+menuP.y].name + ", but it seems a little dusty.");
+                            }
+                            else {
+                                invName.setText("");
+                                invDes.setText("There's nothing here.");
+                            }
+                        }
+                        else {
+                            menuCursor.setOpacity(.2);
+                            invRButtons[selectP].setOpacity(.5);
+                        }
                         break;
                     case "char":
+                        chName.setText("Ronald Rump");
+                        chTitle.setText("Weapon of Mass Destruction");
                         break;
                     case "party":
                         break;
@@ -388,56 +516,68 @@ class InMapView {
         }
     }
     
-    //change pages in menu and move rectangle thing
+    //change pages in menu and move menuFocus
     public void changeMenu(String menuWindow, Character[] party, Item[] inv, int gold) {
-        if(menuWindow.equals("inv")) menuFocus.setLayoutX(screenWidth/10);
-        else if(menuWindow.equals("char")) menuFocus.setLayoutX(screenWidth/10+screenWidth*4/25);
-        else if(menuWindow.equals("party")) menuFocus.setLayoutX(screenWidth/10+screenWidth*8/25);
-        else if(menuWindow.equals("notes")) menuFocus.setLayoutX(screenWidth/10+screenWidth*12/25);
-        else if(menuWindow.equals("options")) menuFocus.setLayoutX(screenWidth/10+screenWidth*16/25);
+        //set menu focus
+        if(menuWindow.equals("inv")) 
+            menuFocus.setX(screenWidth*3/25);
+        else if(menuWindow.equals("char")) 
+            menuFocus.setX(screenWidth*3/25+screenWidth*4/25);
+        else if(menuWindow.equals("party")) 
+            menuFocus.setX(screenWidth*3/25+screenWidth*8/25);
+        else if(menuWindow.equals("notes")) 
+            menuFocus.setX(screenWidth*3/25+screenWidth*12/25);
+        else if(menuWindow.equals("options")) 
+            menuFocus.setX(screenWidth*3/25+screenWidth*16/25);
         
-        //remove all nodes except for background
-        menuPane.getChildren().remove(8, menuPane.getChildren().toArray().length);
+        //remove all nodes except for menu background pane
+        if(menuPane.getChildren().size() > 1)
+            menuPane.getChildren().remove(1, menuPane.getChildren().size());
         
-        //add objects depending on window
+        //refresh menu items
+        refreshMenu(menuWindow, party, inv, gold);
+        
+        //add pane to menu
+        if(menuWindow.equals("inv"))
+            menuPane.getChildren().add(invPane);
+        else if(menuWindow.equals("char"))
+            menuPane.getChildren().add(charPane);
+        else if(menuWindow.equals("party"))
+            menuPane.getChildren().add(partyPane);
+        else if(menuWindow.equals("notes"))
+            menuPane.getChildren().add(notePane);
+        else if(menuWindow.equals("options"))
+            menuPane.getChildren().add(opPane);
+    }
+    
+    //general menu pane refresh
+    public void refreshMenu(String menuWindow, Character[] party, Item[] inv, int gold) {
         if(menuWindow.equals("inv")) {
-            Text[] invText = new Text[64];
-            
             for(int i = 0; i < 64; i++) {
-                invText[i] = new Text(screenWidth/10+60+180*(int)(i/16), screenHeight/6+100+26*(i%16), inv[i].name);
                 if(!inv[i].exists)
                     invText[i].setText("-");
-                if(inv[i].name.length() > 15)
+                else if(inv[i].name.length() > 15)
                     invText[i].setText(inv[i].name.substring(0, 12) + "...");
-                
-                invText[i].setFill(Paint.valueOf("BLUE"));
-                invText[i].setFont(Font.font("Monaco", FontWeight.NORMAL, 14));
-                menuPane.getChildren().addAll(invText[i]);
+                else
+                    invText[i].setText(inv[i].name);
             }
         }
         else if(menuWindow.equals("char")) {
-            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "your skills: none");
-            t.setFont(Font.font(null, FontWeight.NORMAL, 24));
-            
-            menuPane.getChildren().addAll(t);
+            chName.setText("Ronald Rump");
+            chTitle.setText("Weapon of Mass Destruction");
+            chHP.setText("HP " + party[0].currentHP + "/" + party[0].maxHP);
+            chMP.setText("MP " + party[0].currentMP + "/" + party[0].maxMP);
+            chLVL.setText("Level " + party[0].LVL);
+            chEXP.setText("To next: "+((int)(150*Math.sqrt(party[0].LVL+10)-430)-party[0].EXP)+" EXP");
         }
         else if(menuWindow.equals("party")) {
-            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you have no friends");
-            t.setFont(Font.font(null, FontWeight.NORMAL, 24));
             
-            menuPane.getChildren().addAll(t);
         }
         else if(menuWindow.equals("notes")) {
-            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you are illiterate");
-            t.setFont(Font.font(null, FontWeight.NORMAL, 24));
             
-            menuPane.getChildren().addAll(t);
         }
         else if(menuWindow.equals("options")) {
-            Text t = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you have no options in life");
-            t.setFont(Font.font(null, FontWeight.NORMAL, 24));
             
-            menuPane.getChildren().addAll(t);
         }
     }
     
@@ -549,4 +689,3 @@ class InMapView {
 //        }.start();
 //    }
 }
-

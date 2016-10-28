@@ -39,8 +39,8 @@ public class InMapController implements Runnable {
         model.hasControl = true;
         model.setCurrentMap(p);
         view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
-                model.getMenuPoint(), model.getMenuWindow(), model.getParty(), 
-                model.getInventory(), model.getGold(), model.getQIVisible());
+                model.getMenuPoint(), model.getSelectPoint(), model.getMenuWindow(), 
+                model.getParty(), model.getInventory(), model.getGold(), model.getQIVisible());
         main.setStage(scene);
     }
 
@@ -66,8 +66,8 @@ public class InMapController implements Runnable {
             model.process(main.getControl(event.getCode()));
             if(model.hasControl)
                 view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
-                        model.getMenuPoint(), model.getMenuWindow(), model.getParty(), 
-                        model.getInventory(), model.getGold(), model.getQIVisible());
+                        model.getMenuPoint(), model.getSelectPoint(), model.getMenuWindow(), 
+                        model.getParty(), model.getInventory(), model.getGold(), model.getQIVisible());
             
 //            switch(main.getControl(event.getCode())) {
 //                case UP: view.speedY.set(view.speedYVal); break;
@@ -90,8 +90,8 @@ public class InMapController implements Runnable {
             model.processRelease(main.getControl(event.getCode()));
             if(model.hasControl)
                 view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
-                        model.getMenuPoint(), model.getMenuWindow(), model.getParty(), 
-                        model.getInventory(), model.getGold(), model.getQIVisible());
+                        model.getMenuPoint(), model.getSelectPoint(), model.getMenuWindow(), 
+                        model.getParty(), model.getInventory(), model.getGold(), model.getQIVisible());
             
 //            switch(main.getControl(event.getCode())) {
 //                case UP: view.speedY.set(0); break;
