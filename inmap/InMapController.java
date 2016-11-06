@@ -9,7 +9,7 @@ import java.awt.Point;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 
-import main.Main;
+import main.*;
 
 public class InMapController implements Runnable {
     
@@ -17,13 +17,15 @@ public class InMapController implements Runnable {
     private Scene scene;
     private final InMapModel model;
     private final InMapView view;
+    private final InMapViewData viewdata;
     boolean hasControl;
     
     //constructor
     public InMapController(Main main) {
         this.main = main;
-        model = new InMapModel();
+        model = new InMapModel(new DBManager("IMDATA"));
         view = new InMapView(main.screenWidth, main.screenHeight);
+        viewdata = new InMapViewData();
         hasControl = false;
     }
     
@@ -38,10 +40,24 @@ public class InMapController implements Runnable {
         hasControl = true;
         model.hasControl = true;
         model.setCurrentMap(p);
-        view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
-                model.getMenuPoint(), model.getSelectPoint(), model.getMenuWindow(), 
-                model.getParty(), model.getInventory(), model.getGold(), model.getQIVisible());
+        updateViewData();
+        view.update(viewdata);
         main.setStage(scene);
+    }
+    
+    private void updateViewData() {
+        viewdata.floor = model.getCurrentLocation().getCurrentFloor();
+        viewdata.menuWindow = model.getMenuWindow();
+        viewdata.focus = model.getFocus();
+        viewdata.gold = model.getGold();
+        viewdata.inv = model.getInventory();
+        viewdata.menuP.setLocation(model.getMenuPoint());
+        viewdata.tempP.setLocation(model.getTempPoint());
+        viewdata.selectP = model.getSelectPoint();
+        viewdata.party = model.getParty();
+        viewdata.qiVisible = model.getQIVisible();
+        viewdata.menuToggle = model.getMenuToggle();
+        viewdata.invDes = model.getInvDes();
     }
 
     //create new location
@@ -64,10 +80,10 @@ public class InMapController implements Runnable {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             
             model.process(main.getControl(event.getCode()));
-            if(model.hasControl)
-                view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
-                        model.getMenuPoint(), model.getSelectPoint(), model.getMenuWindow(), 
-                        model.getParty(), model.getInventory(), model.getGold(), model.getQIVisible());
+            if(model.hasControl) {
+                updateViewData();
+                view.update(viewdata);
+            }
             
 //            switch(main.getControl(event.getCode())) {
 //                case UP: view.speedY.set(view.speedYVal); break;
@@ -88,10 +104,10 @@ public class InMapController implements Runnable {
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
             
             model.processRelease(main.getControl(event.getCode()));
-            if(model.hasControl)
-                view.update(model.getFocus(), model.getCurrentLocation().getCurrentFloor(), 
-                        model.getMenuPoint(), model.getSelectPoint(), model.getMenuWindow(), 
-                        model.getParty(), model.getInventory(), model.getGold(), model.getQIVisible());
+            if(model.hasControl) {
+                updateViewData();
+                view.update(viewdata);
+            }
             
 //            switch(main.getControl(event.getCode())) {
 //                case UP: view.speedY.set(0); break;

@@ -20,7 +20,7 @@ public class DBManager {
     private int batchNum = 0, mapSize;
     private PreparedStatement ps;
 
-    DBManager(String name) {
+    public DBManager(String name) {
 
         String URL = "jdbc:sqlite:src/data/" + name + ".db";
 

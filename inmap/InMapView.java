@@ -4,8 +4,6 @@
 
 package inmap;
 
-import java.awt.Point;
-
 //import javafx.animation.AnimationTimer;
 //import javafx.beans.property.DoubleProperty;
 //import javafx.beans.property.LongProperty;
@@ -114,7 +112,8 @@ class InMapView {
     ImageView[][][] imageViews;
     public double screenWidth, screenHeight;
     private final Pane inmapLayout, floorPane, UIPane,
-            menuPane, menubgPane, invPane, charPane, partyPane, notePane, opPane;
+            menuPane, menubgPane, invPane, invTextPane, invStatPane, 
+            charPane, partyPane, notePane, opPane;
     double width, height;
     final double zoom;
     
@@ -122,15 +121,16 @@ class InMapView {
     private final Text charT, levelT, goldT; //quickinfo text
     private final Text diffT, floorT, nameT, typeT; //location text
     private Text[] invText; //menu inv text
-    private Text invName, invDes; //item information
+    private Text invName, invDes, invType; //item information
+    private Text[] invStats; //item stat information
     private Text[] invButtons; //item manipulation
-    private Rectangle[] invRButtons; //button boxes
+    private Rectangle[] invRButtons; //item button boxes
     private Text[] chText; //menu char text
     private Text chName, chTitle, chHP, chMP, chLVL, chEXP;
     private Text[][] parText; //menu party text
     
     private final Rectangle menuFocus;
-    private final Rectangle menuCursor;
+    private final Rectangle menuCursor, tempCursor;
     
     //animation
 //    private final LongProperty lastUpdateTime = new SimpleLongProperty();
@@ -160,6 +160,8 @@ class InMapView {
         menuPane = new Pane();
         menubgPane = new Pane();
         invPane = new Pane();
+        invTextPane = new Pane();
+        invStatPane = new Pane();
         charPane = new Pane();
         partyPane = new Pane();
         notePane = new Pane();
@@ -215,6 +217,10 @@ class InMapView {
         menuCursor.setEffect(new BoxBlur(3, 3, 3));
         menuCursor.setOpacity(0);
         
+        tempCursor = new Rectangle(screenWidth/8, screenHeight/40, Paint.valueOf("WHITE"));
+        tempCursor.setEffect(new BoxBlur(3, 3, 3));
+        tempCursor.setOpacity(0);
+        
         Text[] menuText = new Text[5];
         for(int i = 0; i < 5; i++) {
             menuText[i] = new Text(screenWidth*2/19+screenWidth*4*i/25, screenHeight*2/9, "");
@@ -229,7 +235,7 @@ class InMapView {
         menuText[3].setText("NOTES");
         menuText[4].setText("OPTIONS");
         
-        menubgPane.getChildren().addAll(box4, menuFocus, menuCursor);
+        menubgPane.getChildren().addAll(box4, menuFocus, menuCursor, tempCursor);
         menubgPane.getChildren().addAll(menuText);
         
         menuPane.getChildren().add(menubgPane);
@@ -305,21 +311,11 @@ class InMapView {
         for(int i = 0; i < 64; i++) {
             invText[i] = new Text(screenWidth/7+screenWidth/7*(int)(i/16), screenHeight*2/7+screenHeight/28*(i%16), "-");
             invText[i].setFill(Paint.valueOf("WHITE"));
-            invText[i].setFont(Font.font("Monaco", FontWeight.NORMAL, 14));
+            invText[i].setFont(Font.font("Arial", FontWeight.NORMAL, 14));
         }
-        invName = new Text(screenWidth*5/7, screenHeight*2/7, "");
-        invName.setWrappingWidth(300);
-        invName.setTextAlignment(TextAlignment.CENTER);
-        invName.setFill(Paint.valueOf("WHITE"));
-        invName.setFont(Font.font(null, FontWeight.BOLD, 30));
-        invDes = new Text(screenWidth*5/7, screenHeight/3, "There's nothing here.");
-        invDes.setWrappingWidth(300);
-        invDes.setFill(Paint.valueOf("WHITE"));
-        invDes.setFont(Font.font(null, FontWeight.NORMAL, 18));
-        
-        invButtons = new Text[5];
-        invRButtons = new Rectangle[5];
-        for(int i = 0; i < 5; i++) {
+        invButtons = new Text[4];
+        invRButtons = new Rectangle[4];
+        for(int i = 0; i < 4; i++) {
             invButtons[i] = new Text(screenWidth*5/7, screenHeight*3/5+screenHeight/18*i, "");
             invButtons[i].setWrappingWidth(300);
             invButtons[i].setTextAlignment(TextAlignment.CENTER);
@@ -330,16 +326,45 @@ class InMapView {
             invRButtons[i].relocate(screenWidth*3/4, screenHeight*40/71+screenHeight/18*i);
             invRButtons[i].setOpacity(.2);
         }
-        invButtons[0].setText("EQUIP");
-        invButtons[1].setText("USE");
-        invButtons[2].setText("MOVE");
-        invButtons[3].setText("DISCARD");
-        invButtons[4].setText("CANCEL");
+        invButtons[0].setText("USE / EQUIP");
+        invButtons[1].setText("MOVE");
+        invButtons[2].setText("DISCARD");
+        invButtons[3].setText("CANCEL");
+        
+        //invTextPane
+        invName = new Text(screenWidth*5/7, screenHeight*2/7, "");
+        invName.setWrappingWidth(300);
+        invName.setTextAlignment(TextAlignment.CENTER);
+        invName.setFill(Paint.valueOf("WHITE"));
+        invName.setFont(Font.font(null, FontWeight.BOLD, 30));
+        invDes = new Text(screenWidth*5/7, screenHeight*3/8, "There's nothing here.");
+        invDes.setWrappingWidth(300);
+        invDes.setFill(Paint.valueOf("WHITE"));
+        invDes.setFont(Font.font(null, FontWeight.NORMAL, 18));
+        
+        invTextPane.getChildren().addAll(invName, invDes);
+        
+        //invStatPane
+        invType = new Text(screenWidth*5/7, screenHeight*2/7, "");
+        invType.setWrappingWidth(300);
+        invType.setTextAlignment(TextAlignment.CENTER);
+        invType.setFill(Paint.valueOf("WHITE"));
+        invType.setFont(Font.font(null, FontWeight.NORMAL, 30));
+        invStats = new Text[18];
+        for(int i = 0; i < 18; i++) {
+            invStats[i] = new Text(screenWidth*5/7+screenWidth/8*(i%2), 
+                    screenHeight*2/7+screenHeight/40*Math.floor(i/2), "");
+            invStats[i].setFill(Paint.valueOf("WHITE"));
+            invStats[i].setFont(Font.font(null, FontWeight.NORMAL, 16));
+        }
+        
+        invStatPane.getChildren().add(invType);
+        invStatPane.getChildren().addAll(invStats);
         
         invPane.getChildren().addAll(invText);
         invPane.getChildren().addAll(invButtons);
         invPane.getChildren().addAll(invRButtons);
-        invPane.getChildren().addAll(invName, invDes);
+        invPane.getChildren().add(invTextPane);
         
         //charPane
         ImageView portrait = new ImageView(new Image("/media/graphics/inmap/portrait.jpg", 
@@ -398,63 +423,62 @@ class InMapView {
     }
     
     //update
-    public void update(String focus, Floor floor, Point menuP, int selectP, String menuWindow, 
-            Character[] party, Item[] inv, int gold, boolean qiVisible) {
-        if(focus.equals("floor")) {
+    public void update(InMapViewData vd) {
+        if(vd.focus.equals("floor")) {
             //remove menu window
             inmapLayout.getChildren().remove(menuPane);
             
             //quick info
-            if(qiVisible && !inmapLayout.getChildren().contains(UIPane)) {
-                nameT.setText(floor.location.name);
-                typeT.setText(floor.location.type);
-                diffT.setText("Difficulty: " + floor.location.difficulty);
-                floorT.setText("Floor " + floor.location.currentFloor);
-                charT.setText(party[0].name);
-                levelT.setText("Level " + party[0].LVL);
-                goldT.setText("Gold: " + String.valueOf(gold));
+            if(vd.qiVisible && !inmapLayout.getChildren().contains(UIPane)) {
+                nameT.setText(vd.floor.location.name);
+                typeT.setText(vd.floor.location.type);
+                diffT.setText("Difficulty: " + vd.floor.location.difficulty);
+                floorT.setText("Floor " + vd.floor.location.currentFloor);
+                charT.setText(vd.party[0].name);
+                levelT.setText("Level " + vd.party[0].LVL);
+                goldT.setText("Gold: " + String.valueOf(vd.gold));
                 inmapLayout.getChildren().add(UIPane);
             }
-            else if(!qiVisible)
+            else if(!vd.qiVisible)
                 inmapLayout.getChildren().remove(UIPane);
             
             //tiles
-            for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
-                for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
-                    imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][0].setImage(genTile(x, y, floor));
+            for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
+                for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0].setImage(genTile(x, y, vd.floor));
                 }
             }
 
             //characters
-            for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
-                for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
-                    imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][2].setImage(genChar(x, y, floor));
+            for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
+                for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][2].setImage(genChar(x, y, vd.floor));
                 }
             }
 
             //health
-            for(int x = floor.party[0].x - 11; x < floor.party[0].x + 13; x++) {
-                for(int y = floor.party[0].y - 7; y < floor.party[0].y + 9; y++) {
-                    if(x >= 0 && x < floor.sizeX && y >= 0 && y < floor.sizeY && floor.chars[x][y].exists) {
-                        imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3].setVisible(true);
-                        imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3].setFitWidth(64 * 
-                                (double)floor.chars[x][y].currentHP / floor.chars[x][y].maxHP);
+            for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
+                for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+                    if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.chars[x][y].exists) {
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][3].setVisible(true);
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][3].setFitWidth(64 * 
+                                (double)vd.floor.chars[x][y].currentHP / vd.floor.chars[x][y].maxHP);
                     }
                     else
-                        imageViews[x-floor.party[0].x+11][y-floor.party[0].y+7][3].setVisible(false);
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][3].setVisible(false);
                 }
             }
 
             //floor text
-            floorT.setText("Floor " + floor.location.currentFloor);
+            floorT.setText("Floor " + vd.floor.location.currentFloor);
 
             //rip
-            if(!floor.party[0].exists)
+            if(!vd.floor.party[0].exists)
                 rip.setVisible(true);
             else
                 rip.setVisible(false);
         }
-        else if(focus.equals("menu")) {
+        else if(vd.focus.equals("menu")) {
             //add menu window
             if(!inmapLayout.getChildren().contains(menuPane))
                 inmapLayout.getChildren().add(menuPane);
@@ -462,37 +486,72 @@ class InMapView {
             //remove quick info box
             inmapLayout.getChildren().remove(UIPane);
             
-            if(menuP.y == -1) {
+            //toggle menu
+            if(vd.menuToggle && invPane.getChildren().contains(invTextPane)) {
+                invPane.getChildren().remove(invTextPane);
+                invPane.getChildren().add(invStatPane);
+            }
+            else if(!vd.menuToggle && invPane.getChildren().contains(invStatPane)) {
+                invPane.getChildren().remove(invStatPane);
+                invPane.getChildren().add(invTextPane);
+            }
+            
+            //change menus
+            if(vd.menuP.y == -1) {
                 menuFocus.setOpacity(.5);
+                tempCursor.setOpacity(0);
                 menuCursor.setOpacity(0);
-                changeMenu(menuWindow, party, inv, gold);
+                invName.setText("");
+                invDes.setText("");
+                changeMenu(vd);
             }
             else {
                 menuFocus.setOpacity(0.25);
-                switch(menuWindow) {
+                switch(vd.menuWindow) {
                     case "inv":
-                        for(int i = 0; i < 5; i++)
+                        for(int i = 0; i < 4; i++)
                             invRButtons[i].setOpacity(.2);
-                        if(selectP == -1) {
-                            menuCursor.setOpacity(.3);
-                            menuCursor.relocate(screenWidth*2/15+screenWidth/7*menuP.x, screenHeight*4/15+screenHeight/28*menuP.y);
-                            if(inv[menuP.x*16+menuP.y].exists) {
-                                invName.setText(inv[menuP.x*16+menuP.y].name);
-                                invDes.setText("It's a " + inv[menuP.x*16+menuP.y].name + ", but it seems a little dusty.");
+                        //temporary pointer
+                        if(vd.tempP.x != -1) {
+                            tempCursor.setOpacity(.3);
+                            tempCursor.relocate(screenWidth*2/15+screenWidth/7*vd.tempP.x, 
+                                    screenHeight*4/15+screenHeight/28*vd.tempP.y);
+                            if(vd.inv[vd.tempP.x*16+vd.tempP.y].exists) {
+                                invName.setText(vd.inv[vd.tempP.x*16+vd.tempP.y].displayName);
+                                invDes.setText(vd.invDes);
+                                updateInvStats(vd.inv[vd.tempP.x*16+vd.tempP.y]);
                             }
                             else {
                                 invName.setText("");
                                 invDes.setText("There's nothing here.");
+                                updateInvStats(new Item());
                             }
                         }
-                        else {
+                        //selection
+                        else if(vd.selectP != -1) {
                             menuCursor.setOpacity(.2);
-                            invRButtons[selectP].setOpacity(.5);
+                            invRButtons[vd.selectP].setOpacity(.5);
+                        }
+                        //moving around menu
+                        else {
+                            refreshMenu(vd);
+                            tempCursor.setOpacity(0);
+                            menuCursor.setOpacity(.3);
+                            menuCursor.relocate(screenWidth*2/15+screenWidth/7*vd.menuP.x, 
+                                    screenHeight*4/15+screenHeight/28*vd.menuP.y);
+                            if(vd.inv[vd.menuP.x*16+vd.menuP.y].exists) {
+                                invName.setText(vd.inv[vd.menuP.x*16+vd.menuP.y].displayName);
+                                invDes.setText(vd.invDes);
+                                updateInvStats(vd.inv[vd.menuP.x*16+vd.menuP.y]);
+                            }
+                            else {
+                                invName.setText("");
+                                invDes.setText(vd.invDes);
+                                updateInvStats(new Item());
+                            }
                         }
                         break;
                     case "char":
-                        chName.setText("Ronald Rump");
-                        chTitle.setText("Weapon of Mass Destruction");
                         break;
                     case "party":
                         break;
@@ -500,34 +559,36 @@ class InMapView {
                         break;
                     case "options":
                         break;
+                    default:
+                        break;
                 }
             }
         }
     }
     
     //toggle menu
-    public void toggleMenu(String menuWindow, Character[] party, Item[] inv, int gold) {
+    public void toggleMenu(InMapViewData vd) {
         if(inmapLayout.getChildren().contains(menuPane)) {
             inmapLayout.getChildren().remove(menuPane);
         }
         else {
-            changeMenu(menuWindow, party, inv, gold);
+            changeMenu(vd);
             inmapLayout.getChildren().add(menuPane);
         }
     }
     
     //change pages in menu and move menuFocus
-    public void changeMenu(String menuWindow, Character[] party, Item[] inv, int gold) {
+    public void changeMenu(InMapViewData vd) {
         //set menu focus
-        if(menuWindow.equals("inv")) 
+        if(vd.menuWindow.equals("inv")) 
             menuFocus.setX(screenWidth*3/25);
-        else if(menuWindow.equals("char")) 
+        else if(vd.menuWindow.equals("char")) 
             menuFocus.setX(screenWidth*3/25+screenWidth*4/25);
-        else if(menuWindow.equals("party")) 
+        else if(vd.menuWindow.equals("party")) 
             menuFocus.setX(screenWidth*3/25+screenWidth*8/25);
-        else if(menuWindow.equals("notes")) 
+        else if(vd.menuWindow.equals("notes")) 
             menuFocus.setX(screenWidth*3/25+screenWidth*12/25);
-        else if(menuWindow.equals("options")) 
+        else if(vd.menuWindow.equals("options")) 
             menuFocus.setX(screenWidth*3/25+screenWidth*16/25);
         
         //remove all nodes except for menu background pane
@@ -535,50 +596,74 @@ class InMapView {
             menuPane.getChildren().remove(1, menuPane.getChildren().size());
         
         //refresh menu items
-        refreshMenu(menuWindow, party, inv, gold);
+        refreshMenu(vd);
         
         //add pane to menu
-        if(menuWindow.equals("inv"))
+        if(vd.menuWindow.equals("inv"))
             menuPane.getChildren().add(invPane);
-        else if(menuWindow.equals("char"))
+        else if(vd.menuWindow.equals("char"))
             menuPane.getChildren().add(charPane);
-        else if(menuWindow.equals("party"))
+        else if(vd.menuWindow.equals("party"))
             menuPane.getChildren().add(partyPane);
-        else if(menuWindow.equals("notes"))
+        else if(vd.menuWindow.equals("notes"))
             menuPane.getChildren().add(notePane);
-        else if(menuWindow.equals("options"))
+        else if(vd.menuWindow.equals("options"))
             menuPane.getChildren().add(opPane);
     }
     
-    //general menu pane refresh
-    public void refreshMenu(String menuWindow, Character[] party, Item[] inv, int gold) {
-        if(menuWindow.equals("inv")) {
+    //menu data refresh
+    public void refreshMenu(InMapViewData vd) {
+        if(vd.menuWindow.equals("inv")) {
             for(int i = 0; i < 64; i++) {
-                if(!inv[i].exists)
+                if(!vd.inv[i].exists)
                     invText[i].setText("-");
-                else if(inv[i].name.length() > 15)
-                    invText[i].setText(inv[i].name.substring(0, 12) + "...");
+                else if(vd.inv[i].displayName.length() > 15)
+                    invText[i].setText(vd.inv[i].displayName.substring(0, 12) + "...");
                 else
-                    invText[i].setText(inv[i].name);
+                    invText[i].setText(vd.inv[i].displayName);
             }
+            for(int i = 0; i < 4; i++)
+                invRButtons[i].setOpacity(.2);
         }
-        else if(menuWindow.equals("char")) {
+        else if(vd.menuWindow.equals("char")) {
             chName.setText("Ronald Rump");
             chTitle.setText("Weapon of Mass Destruction");
-            chHP.setText("HP " + party[0].currentHP + "/" + party[0].maxHP);
-            chMP.setText("MP " + party[0].currentMP + "/" + party[0].maxMP);
-            chLVL.setText("Level " + party[0].LVL);
-            chEXP.setText("To next: "+((int)(150*Math.sqrt(party[0].LVL+10)-430)-party[0].EXP)+" EXP");
+            chHP.setText("HP " + vd.party[0].currentHP + "/" + vd.party[0].maxHP);
+            chMP.setText("MP " + vd.party[0].currentMP + "/" + vd.party[0].maxMP);
+            chLVL.setText("Level " + vd.party[0].LVL);
+            chEXP.setText("To next: "+((int)(150*Math.sqrt(vd.party[0].LVL+10)-430)-vd.party[0].EXP)+" EXP");
         }
-        else if(menuWindow.equals("party")) {
+        else if(vd.menuWindow.equals("party")) {
             
         }
-        else if(menuWindow.equals("notes")) {
+        else if(vd.menuWindow.equals("notes")) {
             
         }
-        else if(menuWindow.equals("options")) {
+        else if(vd.menuWindow.equals("options")) {
             
         }
+    }
+    
+    //update inventory stat text
+    private void updateInvStats(Item i) {
+        invStats[0].setText("DMG: " + i.DMG);
+        invStats[1].setText("HIT: " + i.HIT);
+        invStats[2].setText("CRT: " + i.CRT);
+        invStats[3].setText("PRC: " + i.PRC);
+        invStats[4].setText("VIT: " + i.VIT);
+        invStats[5].setText("INT: " + i.INT);
+        invStats[6].setText("ACC: " + i.ACC);
+        invStats[7].setText("STR: " + i.STR);
+        invStats[8].setText("DEX: " + i.DEX);
+        invStats[9].setText("WIS: " + i.WIS);
+        invStats[10].setText("LUK: " + i.LUK);
+        invStats[11].setText("DEF: " + i.DEF);
+        invStats[12].setText("RES: " + i.RES);
+        invStats[13].setText("EVA: " + i.EVA);
+        invStats[14].setText("MAXHP: " + i.MHP);
+        invStats[15].setText("HEALHP: " + i.CHP);
+        invStats[16].setText("MAXMP: " + i.MMP);
+        invStats[17].setText("HEALMP: " + i.CMP);
     }
     
     //choose image based on data

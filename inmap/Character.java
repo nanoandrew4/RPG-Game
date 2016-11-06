@@ -21,8 +21,8 @@ public class Character {
     boolean hostile;
     Race race;
     Item weapon;
-    Item headArmor, torsoArmor, legArmor, footArmor;
-    Item accessory1, accessory2, accessory3;
+    Item armor;
+    Item acc1, acc2, acc3;
     
     //empty character
     Character() {
@@ -52,12 +52,10 @@ public class Character {
         this.hostile = hostile;
         
         weapon = new Item();
-        headArmor = new Item();
-        torsoArmor = new Item();
-        legArmor = new Item();
-        accessory1 = new Item();
-        accessory2 = new Item();
-        accessory3 = new Item();
+        armor = new Item();
+        acc1 = new Item();
+        acc2 = new Item();
+        acc3 = new Item();
         
         this.race = new Race(race);
         
@@ -137,18 +135,24 @@ public class Character {
     
     //get next direction from path
     Control getNext() {
-        return path.next();
+        if(!path.isEmpty())
+            return path.next();
+        else
+            return Control.NULL;
     }
     
     //use base stats to calculate combat stats
     final void calculateStats() {
-        maxHP = (int)(200 * Math.sqrt(VIT + 50) - 1300);
-        maxMP = (int)(40 * Math.sqrt(INT + 10) - 100);
-        CRT = -20000 / (LUK + 250) + 80;
-        HIT = weapon.HIT * 200 / (ACC + 400) + 1.3;
+        maxHP = (int)(200 * Math.sqrt(VIT+weapon.VIT+armor.VIT+acc1.VIT+acc2.VIT+acc3.VIT+50) - 1300);
+        maxHP += weapon.MHP + armor.MHP + acc1.MHP + acc2.MHP + acc3.MHP;
+        maxMP = (int)(40 * Math.sqrt(INT+weapon.INT+armor.INT+acc1.INT+acc2.INT+acc3.INT + 10) - 100);
+        maxMP += weapon.MMP + armor.MMP + acc1.MMP + acc2.MMP + acc3.MMP;
+        CRT = -20000 / (LUK+weapon.LUK+armor.LUK+acc1.LUK+acc2.LUK+acc3.LUK+250) + 80;
+        CRT += weapon.CRT + armor.CRT + acc1.CRT + acc2.CRT + acc3.CRT;
+        HIT = weapon.HIT * (-200 / (ACC+weapon.ACC+armor.ACC+acc1.ACC+acc2.ACC+acc3.ACC+400) + 1.3);
+        HIT += armor.HIT + acc1.HIT + acc2.HIT + acc3.HIT;
         switch(weapon.type) {
             case "w": DMG = weapon.DMG * (Math.sqrt(STR + 40) / 5 - 0.45); break;
-            case "a": DMG = weapon.DMG * (Math.sqrt(DEX + 40) / 5 - 0.45); break;
             case "m": DMG = weapon.DMG * (Math.sqrt(WIS + 40) / 5 - 0.45); break;
             default: DMG = 10;
         }

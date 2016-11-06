@@ -48,13 +48,19 @@ public class Main extends Application {
         keybindings.put(KeyCode.LEFT, Control.LEFT);
         keybindings.put(KeyCode.DOWN, Control.DOWN);
         keybindings.put(KeyCode.RIGHT, Control.RIGHT);
-        keybindings.put(KeyCode.C, Control.MENU);
+        keybindings.put(KeyCode.M, Control.MENU);
+        keybindings.put(KeyCode.I, Control.OPENINV);
+        keybindings.put(KeyCode.C, Control.OPENCHAR);
+        keybindings.put(KeyCode.P, Control.OPENPARTY);
+        keybindings.put(KeyCode.N, Control.OPENNOTES);
+        keybindings.put(KeyCode.O, Control.OPENOPTIONS);
         keybindings.put(KeyCode.Z, Control.SELECT);
         keybindings.put(KeyCode.ENTER, Control.SELECT);
         keybindings.put(KeyCode.SPACE, Control.SELECT);
         keybindings.put(KeyCode.X, Control.BACK);
+        keybindings.put(KeyCode.TAB, Control.TOGGLE);
+        keybindings.put(KeyCode.F, Control.SWITCH);
         //temporary keybindings
-        keybindings.put(KeyCode.TAB, Control.TAB);
         keybindings.put(KeyCode.ESCAPE, Control.ESC);
         keybindings.put(KeyCode.R, Control.R);
         keybindings.put(KeyCode.T, Control.T);

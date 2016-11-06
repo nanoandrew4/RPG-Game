@@ -86,8 +86,6 @@ class Floor {
                             case RIGHT: dx = 1; break;
                             case LEFT: dx = -1; break;
                         }
-
-                        process(n.x, n.y, n.x+dx, n.y+dy);
                         break;
                     case "fleeing": 
                         //x movement
@@ -107,8 +105,6 @@ class Floor {
                             dx = (dy == 0 ? dx : 0);
                         else 
                             dy = (dx == 0 ? dy : 0);
-
-                        process(n.x, n.y, n.x+dx, n.y+dy);
                         break;
                     case "wandering":
                         //wander randomly
@@ -123,7 +119,6 @@ class Floor {
                                 case 3: dy = -1; break;
                                 default: break;
                             }
-                            process(n.x, n.y, n.x+dx, n.y+dy);
                         }
                         //start attacking if within range
                         if(n.hostile && Math.sqrt(Math.pow((party[0].x-n.x),2)+
@@ -135,16 +130,23 @@ class Floor {
                         break;
                     case "NA":
                         break;
-                    default: break;
+                    default: 
+                        break;
                 }
+                
+                process(n.x, n.y, n.x+dx, n.y+dy);
             }
         }
     }
     
     //process movement
     private void process(int sx, int sy, int ex, int ey) {
+        //standing still: do nothing
+        if(sx == sy && ex == ey) {
+            
+        }
         //interaction with npc
-        if(chars[sx][sy].exists && chars[ex][ey].exists) {
+        else if(chars[sx][sy].exists && chars[ex][ey].exists) {
             //attacking
             if(!chars[sx][sy].race.name.equals(chars[ex][ey].race.name) 
                     || chars[ex][ey].AIMode.equals("attacking")) {
