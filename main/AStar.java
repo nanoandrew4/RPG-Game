@@ -9,7 +9,7 @@ import java.util.ArrayDeque;
 import java.awt.Point;
 import java.util.Comparator;
 
-class AStar {
+class AStar implements java.io.Serializable{
     //map representation
     byte[][] map;
     /* 

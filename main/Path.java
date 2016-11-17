@@ -7,7 +7,7 @@ package main;
 import java.util.ArrayDeque;
 import java.awt.Point;
 
-public class Path {
+public class Path implements java.io.Serializable{
     private ArrayDeque<Control> path;
     
     //constructor
@@ -27,6 +27,8 @@ public class Path {
     
     //get next control
     public Control next() {
+        if (path.isEmpty())
+            return Control.NULL;
         return path.poll();
     }
     

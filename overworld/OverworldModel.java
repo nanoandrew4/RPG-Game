@@ -1,14 +1,16 @@
 package overworld;
 
 import java.awt.*;
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import main.*;
 
-class OverworldModel {
+class OverworldModel implements Serializable {
 
     /*
         Data holder and handler for all non-graphical code
@@ -21,92 +23,121 @@ class OverworldModel {
     private Map map;
     private Party player;
     private ArrayList<Party> parties;
-    private PartyAI partyAI;
+    private transient PartyAI partyAI;
+    private String modelName;
 
     private FileAccess fileAccess;
 
-    OverworldModel(DBManager dbManager, int mapSize, boolean newGame) {
+    OverworldModel(int mapSize, boolean newGame) {
         parties = new ArrayList<>();
 
         fileAccess = new FileAccess();
         fileAccess.loadFile("src/data/player");
 
-        if(newGame) {
+        if (newGame) {
             try {
-                newGame(mapSize, dbManager);
+                newGame(mapSize);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
 
-        partyAI = new PartyAI();
-        // must set all objects
-        //partyAI.start();
+        startPartyAI();
+    }
+
+    void setModelName(String name) {
+        this.modelName = name;
+    }
+
+    String getModelName() {
+        return modelName;
     }
 
     void createPlayer(float baseSpeed, String faction) {
-        player = new Party(0, 0, (short) fileAccess.getFromFile("locationX", "short"), (short) fileAccess.getFromFile("locationY", "short"), baseSpeed, (float)Math.random(), new ArrayList<>(), faction);
+        player = new Party(0, 0, (short) fileAccess.getFromFile("locationX", "short"), (short) fileAccess.getFromFile("locationY", "short"), baseSpeed, (float) Math.random(), new ArrayList<>(), faction);
     }
 
     void createPlayer(float baseSpeed, ArrayList<String> members, String faction) {
-        player = new Party(0, 0, (short) fileAccess.getFromFile("locationX", "short"), (short) fileAccess.getFromFile("locationY", "short"), baseSpeed, (float)Math.random(), members, faction);
+        player = new Party(0, 0, (short) fileAccess.getFromFile("locationX", "short"), (short) fileAccess.getFromFile("locationY", "short"), baseSpeed, (float) Math.random(), members, faction);
+    }
+
+    void startPartyAI() {
+        partyAI = new PartyAI();
+        // must set all objects
+        partyAI.setMap(map);
+        partyAI.setParties(parties);
+        partyAI.setPlayer(player);
+        partyAI.start();
     }
 
     void genParties(float baseSpeed) {
-        parties.add(new Party(0, 0, (short)99, (short)74, baseSpeed, 0.5f, new ArrayList<>(), "none"));
+        Random rand = new Random();
+        for (int x = 0; x < 10; x++)
+            parties.add(new Party(0, 0,
+                    (short) (rand.nextInt(OverworldView.zoom * 2 + 1) + player.getTileX() - OverworldView.zoom),
+                    (short) (rand.nextInt(OverworldView.zoom * 2 + 1) + player.getTileY() - OverworldView.zoom),
+                    baseSpeed, 0.5f, new ArrayList<>(), "none"));
     }
 
     Tile[][] getTiles() { // returns 2D array of type Tile
         return map.getTiles();
     }
 
-    boolean[][] getBooleanMap() {return map.getBooleanMap();}
+    boolean[][] getBooleanMap() {
+        return map.getBooleanMap();
+    }
 
     int getMapSize() { // returns map size
         return map.getMapSize();
     }
 
-    Party getPlayer(){return player;}
-
-    ArrayList<Party> getParties(){return parties;}
-
-    Party getParty(int index){return parties.get(index);}
-
-    void setCurrPos(int index, int pos) { // sets current pos at index to current value plus sum
-        if(index == 0)
-            player.setTileX((short)pos);
-        else
-            player.setTileY((short)pos);
+    Party getPlayer() {
+        return player;
     }
 
-    int getCurrPos(int index){
-        if(index == 0)
+    ArrayList<Party> getParties() {
+        return parties;
+    }
+
+    Party getParty(int index) {
+        return parties.get(index);
+    }
+
+    void setCurrPos(int index, int pos) { // sets current pos at index to current value plus sum
+        if (index == 0)
+            player.setTileX((short) pos);
+        else
+            player.setTileY((short) pos);
+    }
+
+    int getCurrPos(int index) {
+        if (index == 0)
             return player.getTileX();
         else
             return player.getTileY();
     }
 
-    private void newGame(int mapSize, DBManager dbManager) throws SQLException {
-        map = new Map(mapSize, true, dbManager);
+    private void newGame(int mapSize) throws SQLException {
+        map = new Map(mapSize, true);
     }
 
     void saveGame() { // saves game
-        try {
+        /*try {
             map.save();
         } catch (SQLException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 }
 
-class Map {
+class Map implements java.io.Serializable {
 
     /*
         Map class holds all information related to the overworld map, such as the world gen algorithm and 2D array of type Tile
      */
 
     private Random rand; // random value seeded with current time to use in world gen
-    private DBManager dbManager;
+    //private DBManager dbManager;
 
     private Tile[][] tiles; // array containing all the information for each tile in the game
     private HashMap<String, Point> settlementHashMap;
@@ -126,33 +157,34 @@ class Map {
     private final int MIN_DUNGEON;
     private final int MAX_DUNGEON;
 
-    Map(int mapSize, boolean newGame, DBManager dbManager) throws SQLException {
-        this.dbManager = dbManager;
+    Map(int mapSize, boolean newGame) throws SQLException {
+        //this.dbManager = dbManager;
         settlementHashMap = new HashMap<>();
         rand = new Random(System.currentTimeMillis());
 
-        if (!newGame) {
+        /*if (!newGame) {
             ResultSet rs = dbManager.selectFromDatabase("WORLD_DATA");
 
             while (rs.next()) {
                 this.mapSize = rs.getRow();
             }
             this.mapSize = (int) Math.sqrt(this.mapSize) + 1;
-        } else
-            this.mapSize = mapSize;
+
+        } else*/
+        this.mapSize = mapSize;
 
         booleanMap = new boolean[this.mapSize][this.mapSize];
 
-        dbManager.setMapSize(this.mapSize);
+        //dbManager.setMapSize(this.mapSize);
 
         MIN_MOUNTAIN = (int) (1.0 * mapSize);
         MAX_MOUNTAIN = (int) (1.75 * mapSize);
         MIN_FOREST = 5 * mapSize;
-        MAX_FOREST = (int)(12.5 * mapSize);
-        MIN_SETTLEMENT = (int)(1.1 * mapSize);
+        MAX_FOREST = (int) (12.5 * mapSize);
+        MIN_SETTLEMENT = (int) (1.1 * mapSize);
         MAX_SETTLEMENT = 2 * mapSize;
-        MIN_DUNGEON = (int)(0.7 * mapSize);
-        MAX_DUNGEON = (int)(1.5 * mapSize);
+        MIN_DUNGEON = (int) (0.7 * mapSize);
+        MAX_DUNGEON = (int) (1.5 * mapSize);
 
         if (newGame) {
             try {
@@ -161,16 +193,16 @@ class Map {
                 e.printStackTrace();
             }
         } else {
-            load();
+            //load();
         }
 
         updateBooleanMap();
     }
 
     private void newMap() throws SQLException {
-        dbManager.setMapSize(mapSize);
+        //dbManager.setMapSize(mapSize);
         tiles = genMap(mapSize);
-        dbManager.createTables();
+        //dbManager.createTables();
     }
 
     int getMapSize() { // returns map size
@@ -182,7 +214,9 @@ class Map {
     }
 
     // TODO: NEEDS IMPLEMENTING
-    HashMap<String, Point> getSettlementHashMap() {return settlementHashMap;}
+    HashMap<String, Point> getSettlementHashMap() {
+        return settlementHashMap;
+    }
 
     void updateBooleanMap() {
         booleanMap = new boolean[mapSize][mapSize];
@@ -198,7 +232,7 @@ class Map {
         return booleanMap;
     }
 
-    private void load() throws SQLException {
+    /*private void load() throws SQLException {
 
         System.out.println("Starting world load");
 
@@ -258,7 +292,7 @@ class Map {
         dbManager.setAutoCommit(true);
 
         System.out.println("Game save took: " + ((float) (System.currentTimeMillis() - start) / 1000) + "s");
-    }
+    }*/
 
     private int returnDiffTileBonus(int sameTileCount) {
         return (int) (5 * (Math.pow(2, -0.5 * sameTileCount)));
@@ -823,8 +857,8 @@ class Map {
 
         numOfType = rand.nextInt(MAX_DUNGEON) + MIN_DUNGEON;
 
-        for (int a = 0; a < numOfType; a++){
-            while (true){
+        for (int a = 0; a < numOfType; a++) {
+            while (true) {
                 int randX = rand.nextInt(mapSize) + 2;
                 int randY = rand.nextInt(mapSize) + 2;
                 if (isAreaEmpty(tiles, randX, randY, 2, mapSize)) {
@@ -890,7 +924,7 @@ class Map {
     }
 }
 
-class Party {
+class Party implements java.io.Serializable {
     /*
         Class contains all data for different parties that exist on the overworld map
         NOTE: Path will allow passage between mountain tiles that are diagonal of each other
@@ -920,7 +954,7 @@ class Party {
 
     boolean temp;
 
-    Party(float xOffset, float yOffset, short tileX, short tileY, float speed, float hostility, ArrayList<String> members, String faction){
+    Party(float xOffset, float yOffset, short tileX, short tileY, float speed, float hostility, ArrayList<String> members, String faction) {
         this.xOffset = xOffset;
         this.yOffset = yOffset;
         this.tileX = tileX;
@@ -936,17 +970,29 @@ class Party {
         //System.out.println();
     }
 
-    int getTileX(){return tileX;}
+    int getTileX() {
+        return tileX;
+    }
 
-    int getTileY(){return tileY;}
+    int getTileY() {
+        return tileY;
+    }
 
-    float getxOffset(){return xOffset;}
+    float getxOffset() {
+        return xOffset;
+    }
 
-    float getyOffset(){return yOffset;}
+    float getyOffset() {
+        return yOffset;
+    }
 
-    Control getDir() {return dir;}
+    Control getDir() {
+        return dir;
+    }
 
-    Path getPath() {return path;}
+    Path getPath() {
+        return path;
+    }
 
     Point getStart() {
         if (start == null)
@@ -954,23 +1000,39 @@ class Party {
         return start;
     }
 
-    Point getPixelStartPos() {return pixelStartPos;}
+    Point getPixelStartPos() {
+        return pixelStartPos;
+    }
 
-    float getMaxSpeed() {return maxSpeed;}
+    float getMaxSpeed() {
+        return maxSpeed;
+    }
 
-    void setTileX(short tileX){this.tileX = tileX;}
+    void setTileX(short tileX) {
+        this.tileX = tileX;
+    }
 
-    void setTileY(short tileY){this.tileY = tileY;}
+    void setTileY(short tileY) {
+        this.tileY = tileY;
+    }
 
-    void setDir(Control dir) {this.dir = dir;}
+    void setDir(Control dir) {
+        this.dir = dir;
+    }
 
-    void setPath(Path path) {this.path = path;}
+    void setPath(Path path) {
+        this.path = path;
+    }
 
-    void setStart(int x, int y) {start = new Point(x, y);}
+    void setStart(int x, int y) {
+        start = new Point(x, y);
+    }
 
-    void setPixelStartPos(int x, int y) {pixelStartPos = new Point(x, y);}
+    void setPixelStartPos(int x, int y) {
+        pixelStartPos = new Point(x, y);
+    }
 
-    void nextMove(boolean[][] booleanMap, ArrayList<Party> parties){
+    void nextMove(boolean[][] booleanMap, ArrayList<Party> parties) {
         // TODO: IF IN GROUPS FROM SAME FACTION (MULTIPLE PARTIES) LOWER TI FOR ALL MEMBERS
 
         if (!temp) {
@@ -981,18 +1043,19 @@ class Party {
 
         LinkedList<Party> nearParties = parties.stream().filter(party -> Math.abs(party.getTileX() - tileX) < fov && Math.abs(party.getTileY() - tileY) < fov).collect(Collectors.toCollection(LinkedList::new));
 
-        targets = new LinkedList<>(); chasers = new LinkedList<>();
+        targets = new LinkedList<>();
+        chasers = new LinkedList<>();
 
-        if (state == 'c'){ // chasing
+        if (state == 'c') { // chasing
             chase();
         } else if (state == 'f') { // fleeing
             flee();
-        } else if(nearParties.size() > 0){ // doing nothing
+        } else if (nearParties.size() > 0) { // doing nothing
             for (Party p = nearParties.pop(); nearParties.peek() != null; p = nearParties.pop()) {
                 if (p.members != null) { // if owns more members make it viable for attacking
-                    if (getTileDistanceToEntity(p) <= 1 && (float)members.size() / (float)p.members.size() > 1.2)
+                    if (getTileDistanceToEntity(p) <= 1 && (float) members.size() / (float) p.members.size() > 1.2)
                         chasers.add(p);
-                    else if (getTileDistanceToEntity(p) <= 1 && (float)members.size() / (float)p.members.size() < 0.8)
+                    else if (getTileDistanceToEntity(p) <= 1 && (float) members.size() / (float) p.members.size() < 0.8)
                         targets.add(p);
                 }
             }
@@ -1003,18 +1066,18 @@ class Party {
                 flee();
             } else if (state == 't') {
                 if ((Math.abs(start.getX() - getTileX()) == 1 || Math.abs(start.getY() - getTileY()) == 1)
-                        && (int)pixelStartPos.getX() == (int)getxOffset() && (int)pixelStartPos.getY() == (int)getyOffset()) {
-                    System.out.println("Change in direction");
+                        && (int) pixelStartPos.getX() == (int) getxOffset() && (int) pixelStartPos.getY() == (int) getyOffset()) {
+                    //System.out.println("Change in direction");
                     start = new Point(getTileX(), getTileY());
-                    pixelStartPos = new Point((int)getxOffset(), (int)getyOffset());
+                    pixelStartPos = new Point((int) getxOffset(), (int) getyOffset());
                     move(convertFromPath(dir = path.next()));
                 } else {
                     move(convertFromPath(dir));
-                    System.out.println(pixelStartPos.getX());
+                    /*System.out.println(pixelStartPos.getX());
                     System.out.println(getxOffset());
                     System.out.println(pixelStartPos.getY());
                     System.out.println(getyOffset());
-                    System.out.println();
+                    System.out.println();*/
                 }
             } else {
                 wander();
@@ -1027,16 +1090,16 @@ class Party {
     }
 
     private float getPixelDistanceToEntity(Party p) {
-        return (float)Math.abs(Math.sqrt(Math.pow(Math.abs((getTileX() * OverworldView.mapTileSize + xOffset) - (p.getTileX()) * OverworldView.mapTileSize + p.getxOffset()), 2) +
+        return (float) Math.abs(Math.sqrt(Math.pow(Math.abs((getTileX() * OverworldView.mapTileSize + xOffset) - (p.getTileX()) * OverworldView.mapTileSize + p.getxOffset()), 2) +
                 Math.pow(Math.abs((getTileY() * OverworldView.mapTileSize + yOffset) - (p.getTileY() * OverworldView.mapTileSize + p.getyOffset())), 2)));
     }
 
     private float getXPixelDistanceToEntity(Party p) {
-        return (float)((p.getTileX() - getTileX()) * OverworldView.mapTileSize + getxOffset() + p.getxOffset());
+        return (float) ((p.getTileX() - getTileX()) * OverworldView.mapTileSize + getxOffset() + p.getxOffset());
     }
 
     private float getYPixelDistanceToEntity(Party p) {
-        return (float)((p.getTileY() - getTileY()) * OverworldView.mapTileSize + getyOffset() + p.getyOffset());
+        return (float) ((p.getTileY() - getTileY()) * OverworldView.mapTileSize + getyOffset() + p.getyOffset());
     }
 
     private double[] calcAngles(double xOffset, double yOffset, double mapTileSize) {
@@ -1053,14 +1116,14 @@ class Party {
         return angles;
     }
 
-    private void detectTileChange(double mapTileSize){
+    private void detectTileChange(double mapTileSize) {
 
         double[] angles = calcAngles(xOffset, yOffset, mapTileSize);
         double leftAngle = angles[0];
         double rightAngle = angles[1];
 
-        System.out.println("xPos: " + getTileX());
-        System.out.println("yPos: " + getTileY());/*
+        /*System.out.println("xPos: " + getTileX());
+        System.out.println("yPos: " + getTileY());
         System.out.println("Langle: " + leftAngle);
         System.out.println("Rangle: " + rightAngle);
         System.out.println("xOffset: " + xOffset);
@@ -1090,12 +1153,11 @@ class Party {
         }
     }
 
-    private void wander(){ // wander around with no target
+    private void wander() { // wander around with no target
         if (Math.random() > 0.7d) { // 70% chance they'll move
             move(getRandDir());
             System.out.println("wandering");
-        }
-        else
+        } else
             move(Control.NULL); // 30% chance they will stay stationary
     }
 
@@ -1104,19 +1166,28 @@ class Party {
         int num = rand.nextInt(8) + 1;
 
         switch (num) {
-            case 1: return Control.UP;
-            case 2: return Control.UPRIGHT;
-            case 3: return Control.RIGHT;
-            case 4: return Control.DOWNRIGHT;
-            case 5: return Control.DOWN;
-            case 6: return Control.DOWNLEFT;
-            case 7: return Control.LEFT;
-            case 8: return Control.UPLEFT;
-            default: return Control.NULL;
+            case 1:
+                return Control.UP;
+            case 2:
+                return Control.UPRIGHT;
+            case 3:
+                return Control.RIGHT;
+            case 4:
+                return Control.DOWNRIGHT;
+            case 5:
+                return Control.DOWN;
+            case 6:
+                return Control.DOWNLEFT;
+            case 7:
+                return Control.LEFT;
+            case 8:
+                return Control.UPLEFT;
+            default:
+                return Control.NULL;
         }
     }
 
-    private void chase(){ // chase another party to provoke combat
+    private void chase() { // chase another party to provoke combat
         state = 'c';
 
         float maxTargetValue = 0;
@@ -1136,10 +1207,11 @@ class Party {
         move(maxSpeed * Math.abs(x / (x + y)) * (x > 0 ? 1 : -1), (maxSpeed / 2) * Math.abs(y / (x + y)) * (y > 0 ? 1 : -1));
     }
 
-    private void flee(){ // flee from one or more parties
+    private void flee() { // flee from one or more parties
         state = 'f';
 
-        int x = 0; int y = 0;
+        int x = 0;
+        int y = 0;
 
         for (Party p : chasers) {
             x += getXPixelDistanceToEntity(p);
@@ -1150,29 +1222,39 @@ class Party {
     }
 
     private void move(Control direction) {
-        System.out.println(direction);
+        //System.out.println(direction);
         xOffset += getSpeedX(direction);
         yOffset += getSpeedY(direction);
         detectTileChange(OverworldView.mapTileSize);
     }
 
     void move(float xOffset, float yOffset) {
-        this.xOffset += xOffset; this.yOffset += yOffset;
+        this.xOffset += xOffset;
+        this.yOffset += yOffset;
         detectTileChange(OverworldView.mapTileSize);
     }
 
 
     Control convertFromPath(Control dir) {
         switch (dir) {
-            case UP: return Control.UPRIGHT;
-            case UPRIGHT: return Control.RIGHT;
-            case RIGHT: return Control.DOWNRIGHT;
-            case DOWNRIGHT: return Control.DOWN;
-            case DOWN: return Control.DOWNLEFT;
-            case DOWNLEFT: return Control.LEFT;
-            case LEFT: return Control.UPLEFT;
-            case UPLEFT: return Control.UP;
-            default: return Control.NULL;
+            case UP:
+                return Control.UPRIGHT;
+            case UPRIGHT:
+                return Control.RIGHT;
+            case RIGHT:
+                return Control.DOWNRIGHT;
+            case DOWNRIGHT:
+                return Control.DOWN;
+            case DOWN:
+                return Control.DOWNLEFT;
+            case DOWNLEFT:
+                return Control.LEFT;
+            case LEFT:
+                return Control.UPLEFT;
+            case UPLEFT:
+                return Control.UP;
+            default:
+                return Control.NULL;
         }
     }
 
@@ -1182,9 +1264,9 @@ class Party {
         else if (dir == Control.UPLEFT || dir == Control.DOWNLEFT)
             return 0.7f * -maxSpeed;
         else if (dir == Control.RIGHT)
-            return -maxSpeed;
-        else if (dir == Control.LEFT)
             return maxSpeed;
+        else if (dir == Control.LEFT)
+            return -maxSpeed;
         else
             return 0f;
     }
@@ -1193,7 +1275,7 @@ class Party {
         if (dir == Control.UPRIGHT || dir == Control.UPLEFT)
             return (0.7f * maxSpeed / 2);
         else if (dir == Control.DOWNRIGHT || dir == Control.DOWNLEFT)
-            return  0.7f * (-maxSpeed / 2);
+            return 0.7f * (-maxSpeed / 2);
         else if (dir == Control.UP)
             return maxSpeed / 2;
         else if (dir == Control.DOWN)
@@ -1202,18 +1284,18 @@ class Party {
             return 0f;
     }
 
-    void travelTo(boolean[][] booleanMap, int destinationTileX, int destinationTileY){ // travel to coords
+    void travelTo(boolean[][] booleanMap, int destinationTileX, int destinationTileY) { // travel to coords
         state = 't';
         start = new Point(getTileX(), getTileY());
-        pixelStartPos = new Point((int)getxOffset(), (int)getyOffset()); // might need to use to only use until second decimal point if rounding errors occur
+        pixelStartPos = new Point((int) getxOffset(), (int) getyOffset()); // might need to use to only use until second decimal point if rounding errors occur
         path = new Path();
-        path.pathFind(booleanMap, new Point(getTileX(), getTileY()), dest = new Point(destinationTileX, destinationTileY), false);
+        path.pathFind(booleanMap, new Point(getTileX(), getTileY()), dest = new Point(destinationTileX, destinationTileY), true);
         dir = path.next();
         move(convertFromPath(dir));
     }
 }
 
-class PartyAI extends Thread{
+class PartyAI extends Thread implements java.io.Serializable {
 
     private Map map;
     private Party player;
@@ -1221,13 +1303,21 @@ class PartyAI extends Thread{
 
     private boolean running = true;
 
-    PartyAI(){this.setDaemon(true);}
+    PartyAI() {
+        this.setDaemon(true);
+    }
 
-    void setMap(Map map) {this.map = map;}
+    void setMap(Map map) {
+        this.map = map;
+    }
 
-    void setPlayer(Party player) {this.player = player;}
+    void setPlayer(Party player) {
+        this.player = player;
+    }
 
-    void setParties(ArrayList<Party> parties) {this.parties = parties;}
+    void setParties(ArrayList<Party> parties) {
+        this.parties = parties;
+    }
 
 
     @Override
@@ -1236,11 +1326,11 @@ class PartyAI extends Thread{
             long start = System.currentTimeMillis();
             for (Party p : parties)
                 p.nextMove(map.getBooleanMap(), parties);
-            System.out.println("AI took " + (System.currentTimeMillis() - start) + "ms");
-            if ((System.currentTimeMillis() - start) / 1000 < 100)
+            //System.out.println("AI took " + (System.currentTimeMillis() - start) + "ms");
+            if (System.currentTimeMillis() - start < 33) // hard cap at 33 moves per frame
                 try {
                     synchronized (this) {
-                        this.wait(100 - (System.currentTimeMillis() - start));
+                        this.wait(33 - (System.currentTimeMillis() - start));
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -1253,7 +1343,7 @@ class PartyAI extends Thread{
     }
 }
 
-class Faction {
+class Faction implements Serializable {
 
     /*
         Class contains all data related to factions

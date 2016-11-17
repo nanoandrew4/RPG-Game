@@ -5,13 +5,13 @@ import javafx.scene.layout.Pane;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Tile {
+public class Tile implements java.io.Serializable {
 
     boolean tresspassable;
     boolean accessible; // for entering cities
     String type;
     SettlementTile settlementTile;
-    Pane banner;
+    transient Pane banner;
 
     InMapTile inMapTile;
 
@@ -54,7 +54,7 @@ public class Tile {
 
 }
 
-class InMapTile extends Tile {
+class InMapTile extends Tile implements java.io.Serializable {
 
     String inmapType;
 
@@ -63,7 +63,7 @@ class InMapTile extends Tile {
     }
 }
 
-class SettlementTile extends Tile {
+class SettlementTile extends Tile implements java.io.Serializable {
 
     public String subType; // village, city...
     public String branch; // m for military or c for commercial
@@ -88,7 +88,7 @@ class SettlementTile extends Tile {
     }
 }
 
-class CityPolitics {
+class CityPolitics implements java.io.Serializable {
     float avgHappiness = 0;
     int maxNobles; // max amount of nobles that can be on the council at once
     double growth; // rate of growth of a city

@@ -1,7 +1,21 @@
 /*
     Controls all interactions between non-graphical and graphical components for the Overworld
 
-    NOTE: toArray() call on the parties ArrayList might slow things down
+    TODO LIST - IN ORDER OF BLOCK PRIORITY
+    Fix View scrolling in SW direction
+    Player movement independent of AI's movement
+    Fix Settlement banners
+
+    Design and implement Economy
+
+    Design, implement and improve UI
+
+    Improve design and implement improvements for Party AI's
+    Fix coastline gen - (more info in Map class)
+
+    Implement lake drawing
+    Design and implement factions
+
  */
 
 package overworld;
@@ -10,15 +24,18 @@ import javafx.scene.input.MouseButton;
 import main.Control;
 import main.Main;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import main.Path;
+import org.nustaq.serialization.FSTObjectInput;
+import org.nustaq.serialization.FSTObjectOutput;
 
+import javax.swing.*;
 import java.awt.Point;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -34,21 +51,29 @@ public class OverworldController implements Runnable {
     private OverworldView view;
     private OverworldModel model;
 
-    public OverworldController(Main main, int mapSize, boolean newGame) {
+    public OverworldController(Main main, int mapSize, boolean newGame, String saveName) {
+
         this.main = main;
         start = System.currentTimeMillis();
-        model = new OverworldModel(main.dbManager, mapSize, newGame);
+
+        if (newGame) {
+            model = new OverworldModel(mapSize, true);
+        } else {
+            try {
+                loadModel(saveName);
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
 
         System.out.println("Model init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
 
         view = new OverworldView(model.getMapSize(), main.screenWidth, main.screenHeight);
 
-        if (newGame) {
-            model.createPlayer(getBaseSpeed(), "none");
-        } else
-            model.createPlayer(getBaseSpeed(), new ArrayList<>(), "none");
+        model.createPlayer(getBaseSpeed(), "none");
 
-        model.genParties(getBaseSpeed());
+        if (newGame)
+            model.genParties(getBaseSpeed());
 
         System.out.println("Overworld init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
     }
@@ -64,6 +89,27 @@ public class OverworldController implements Runnable {
     public void passControl() {
         main.setStage(scene);
         controlsLocked = false;
+    }
+
+    private void saveModel() throws IOException {
+
+        if (model.getModelName() == null)
+            model.setModelName(JOptionPane.showInputDialog(this, "Enter name to save game as: "));
+
+        System.out.println("Saving game...");
+        long start = System.currentTimeMillis();
+        FSTObjectOutput out = new FSTObjectOutput(new FileOutputStream("src/saves/" + model.getModelName() + ".ser"));
+        out.writeObject(model);
+        out.close();
+        System.out.println("Wrote successfully! Process took " + (System.currentTimeMillis() / 1000d - start / 1000d));
+    }
+
+    private void loadModel(String saveName) throws IOException, ClassNotFoundException {
+        FSTObjectInput in = new FSTObjectInput(new FileInputStream("src/saves/" + saveName + ".ser"));
+        model = (OverworldModel) in.readObject();
+        in.close();
+        model.startPartyAI();
+        // start other threads if necessary
     }
 
     private void setScene() {
@@ -199,7 +245,12 @@ public class OverworldController implements Runnable {
             }
 
             if (key == Control.ESC) { // for now save when hit escape
-                model.saveGame();
+                //model.saveGame();
+                try {
+                    saveModel();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             if (key == Control.LEFT || key == Control.RIGHT || key == Control.UP || key == Control.DOWN) {
@@ -212,7 +263,7 @@ public class OverworldController implements Runnable {
                 if (key == Control.UP || key == Control.DOWN)
                     view.speedY.set(model.getPlayer().getSpeedY(key));
                 if (key == Control.RIGHT || key == Control.LEFT)
-                    view.speedX.set(model.getPlayer().getSpeedX(key));
+                    view.speedX.set(-model.getPlayer().getSpeedX(key));
 
                 detectTileChange();
             }
@@ -270,15 +321,6 @@ public class OverworldController implements Runnable {
                 final int xPos = (p.getTileX() + x < 0 ? (p.getTileX() + x >= model.getMapSize() ? model.getMapSize() - 1 : 0) : p.getTileX() + x);
 
                 if (model.getTiles()[xPos][yPos].settlementTile != null) {
-                    model.getTiles()[xPos][yPos].banner.getChildren().get(3).addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-                        System.out.println("Attack");
-                    });
-                    model.getTiles()[xPos][yPos].banner.getChildren().get(4).addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-                        System.out.println("Enter");
-                    });
-                    model.getTiles()[xPos][yPos].banner.getChildren().get(5).addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-                        System.out.println("Diplomacy");
-                    });
                     view.imageViews[x + OverworldView.zoom][y + OverworldView.zoom][0].addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
                         // if mouse is on a settlement tile, show banner for settlement
                         model.getTiles()[xPos][yPos].banner.setVisible(true);
@@ -323,12 +365,7 @@ public class OverworldController implements Runnable {
                             view.removePane(view.paneStack.pop());
                             view.showCityManagement(model.getTiles()[xPos][yPos].settlementTile);
                         });
-                        view.diplomacy.setOnAction(event1 -> {
 
-                        });
-                        view.trade.setOnAction(event1 -> {
-
-                        });
                         view.enterDungeon.setOnAction(event1 -> {
                             main.IMController.passControl(new Point(xPos, yPos));
                         });

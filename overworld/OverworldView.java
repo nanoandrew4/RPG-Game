@@ -478,13 +478,11 @@ class OverworldView {
 
             @Override
             public void handle(long timestamp) {
-
                 if (lastUpdateTime.get() > 0) {
                     if (pIVHashMap.get(p) == null) {
                         stop();
                         return;
                     }
-
                     pIVHashMap.get(p).relocate((float) (playerIV.getLayoutX() + ((p.getTileX() - player.getTileX()) * (mapTileSize / 2) + (p.getTileY() - player.getTileY()) * (-mapTileSize / 2) + p.getxOffset())) - speedX.get(),
                             (float) (playerIV.getLayoutY() - ((p.getTileY() - player.getTileY()) * (-mapTileSize / 4) + (p.getTileX() - player.getTileX()) * (-mapTileSize / 4) + p.getyOffset())) - speedY.get());
                 }

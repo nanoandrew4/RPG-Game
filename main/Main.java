@@ -12,6 +12,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.util.HashMap;
 import java.awt.Point;
 
@@ -85,9 +86,7 @@ public class Main extends Application {
 
             dbManager = new DBManager("test");
             
-            layout.getChildren().remove(newGame);
-            layout.getChildren().remove(loadGame);
-            layout.getChildren().remove(inMap);
+            layout.getChildren().removeAll(newGame, loadGame, inMap);
 
             Button verySmall = new Button("Very Small");
             Button small = new Button("Small");
@@ -108,28 +107,45 @@ public class Main extends Application {
             layout.getChildren().add(veryLarge);
 
             verySmall.setOnAction(event1 -> {
-                startOverworldController(150, true);
+                startOverworldController(150, true, null);
             });
             small.setOnAction(event1 -> {
-                startOverworldController(300, true);
+                startOverworldController(300, true, null);
             });
             medium.setOnAction(event1 -> {
-                startOverworldController(500, true);
+                startOverworldController(500, true, null);
             });
             large.setOnAction(event1 -> {
-                startOverworldController(750, true);
+                startOverworldController(750, true, null);
             });
             veryLarge.setOnAction(event1 -> {
-                startOverworldController(1000, true);
+                startOverworldController(1000, true, null);
             });
             
             System.out.println("New game being created...");
         });
         
         loadGame.setOnAction(event -> {
-            System.out.println("Loading game...");
+
+            layout.getChildren().removeAll(newGame, loadGame, inMap);
+
+            File folder = new File("src/saves");
+            File[] listOfFiles = folder.listFiles();
+
+            for (int i = 0; i < listOfFiles.length; i++) {
+                if (listOfFiles[i].isFile()) {
+                    Button b = new Button(listOfFiles[i].getName().split("\\.")[0]);
+                    b.relocate(screenWidth / 2 - 50, screenHeight / 16 + i * 50);
+                    layout.getChildren().add(b);
+                    b.setOnAction(event1 -> {
+                        startOverworldController(0, false, b.getText());
+                    });
+                }
+            }
+
+            /*System.out.println("Loading game...");
             startOverworldController(0, false); // mapSize has to be set to 1 for load to work
-            startInMapController();
+            startInMapController();*/
         });
         
         inMap.setOnAction(event -> {
@@ -143,10 +159,10 @@ public class Main extends Application {
     }
 
     //start overworld controller
-    private void startOverworldController(int mapSize, boolean newGame) {
+    private void startOverworldController(int mapSize, boolean newGame, String saveName) {
         this.mapSize = mapSize;
         // if controllers need to talk, initialize objects and run instead of instance of new class
-        overworldController = new OverworldController(this, mapSize, newGame);
+        overworldController = new OverworldController(this, mapSize, newGame, saveName);
         Thread overworldThread = new Thread(overworldController);
         overworldThread.setDaemon(true);
         overworldThread.run();
