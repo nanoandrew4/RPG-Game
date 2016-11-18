@@ -25,18 +25,16 @@ class InMapModel {
     private int gold;
     
     //temporary variables
-    private String focus, menuWindow, invText;
-    private final Point tempP, menuP; //menu cursor pointers
-    private int selectP; //selection pointer
-    private boolean qiVisible; //quick info window
-    private boolean menuToggle; //menu toggle
-    boolean hasControl;
+    private transient String focus, menuWindow, invText;
+    private transient final Point tempP, menuP; //menu cursor pointers
+    private transient int useP, usePmax, selectP; //selection pointer
+    private transient boolean qiVisible; //quick info window
+    private transient boolean menuToggle; //menu toggle
+    transient boolean hasControl;
     
-    private DBManager dbManager;
-    
-    //default constructor
-    InMapModel(DBManager dbManager) {
-        this.dbManager = dbManager;
+    //new game stuff
+    InMapModel() {
+        DBManager dbManager = new DBManager("IMDATA");
         
         //should be loaded in
         party = new Character[5];
@@ -45,27 +43,18 @@ class InMapModel {
         Arrays.fill(party, new Character());
         Arrays.fill(inv, new Item());
         
-        try {
-            load();
-        } 
-        catch (SQLException ex) {
-            Logger.getLogger(InMapModel.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        //should be loaded
         party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, "Hero", "Human", "NA", new Path(), false);
         currentMap = new Point(0, 0);
         gold = 500;
         
+        try {
+            load(dbManager);
+        }
+        catch(SQLException s) {
+            
+        }
+        
         //testing
-//        inv[0] = new Item(items.get("Apple"), 0);
-//        inv[1] = new Item(items.get("Fish"), 0);
-//        inv[3] = new Item(items.get("Longsword"), 3);
-//        inv[8] = new Item(items.get("Leather Vest"), 0);
-//        inv[9] = new Item(items.get("Metal Bracelet"), 2);
-//        inv[10] = new Item(items.get("Top Hat"), 5);
-//        inv[30] = new Item(items.get("Halberd"), 1);
-//        inv[40] = new Item(items.get("Kitchen Knife"), 1);
         for(int i = 0; i < (int)(Math.random()*60)+10; i++) {
             inv[(int)(Math.random()*64)] = Item.randomItem(0, null);
         }
@@ -76,55 +65,65 @@ class InMapModel {
         invText = "";
         menuP = new Point(0, -1);
         tempP = new Point(-1, -1);
+        useP = -1;
         selectP = -1;
         hasControl = false;
     }
     
     //load game data
-    private void load() throws SQLException {
-        //item data
-        assert dbManager != null;
+    private void load(DBManager dbManager) throws SQLException {
+        //item template data
         ResultSet rs = dbManager.selectFromDatabase("ITEM_DATA");
-        
-        String name, type, des;
-        int DMG, HIT, CRT, PRC, VIT, INT, ACC, STR, DEX, WIS, LUK, 
-                MHP, CHP, MMP, CMP, DEF, RES, EVA, VAL, RAR;
-        
+        short id = 0;
         while(rs.next()) {
-            name = rs.getString("NAME");
-            type = rs.getString("TYPE");
-            des = rs.getString("DESCRIPTION");
-            DMG = rs.getInt("DMG");
-            HIT = rs.getInt("HIT");
-            CRT = rs.getInt("CRT");
-            PRC = rs.getInt("PRC");
-            VIT = rs.getInt("VIT");
-            INT = rs.getInt("INT");
-            ACC = rs.getInt("ACC");
-            STR = rs.getInt("STR");
-            DEX = rs.getInt("DEX");
-            WIS = rs.getInt("WIS");
-            LUK = rs.getInt("LUK");
-            MHP = rs.getInt("MHP");
-            CHP = rs.getInt("CHP");
-            MMP = rs.getInt("MMP");
-            CMP = rs.getInt("CMP");
-            DEF = rs.getInt("DEF");
-            RES = rs.getInt("RES");
-            EVA = rs.getInt("EVA");
-            VAL = rs.getInt("VAL");
-            RAR = rs.getInt("RAR");
+            Item.load(new Item(
+                rs.getString("NAME"), rs.getString("TYPE"),
+                rs.getString("DESCRIPTION"),
+                rs.getInt("DMG"), rs.getInt("HIT"),
+                rs.getInt("CRT"), rs.getInt("PRC"),
+                rs.getInt("VIT"), rs.getInt("INT"),
+                rs.getInt("ACC"), rs.getInt("STR"),
+                rs.getInt("DEX"), rs.getInt("WIS"),
+                rs.getInt("LUK"), rs.getInt("MHP"),
+                rs.getInt("CHP"), rs.getInt("MMP"),
+                rs.getInt("CMP"), rs.getInt("DEF"),
+                rs.getInt("RES"), rs.getInt("EVA"),
+                rs.getInt("VAL"), rs.getByte("RAR")), id);
             
-            Item.load(new Item(name, type, des, DMG, HIT, 
-                    CRT, PRC, VIT, INT, ACC, STR, DEX, WIS, LUK, 
-                    MHP, CHP, MMP, CMP, DEF, RES, EVA, VAL, RAR));
+            id++;
         }
+//        
+//        //inventory data
+//        rs = dbManager.selectFromDatabase("INV_DATA");
+//        byte index = 0;
+//        while(rs.next()) {
+//            if(rs.getShort("ID") == -1)
+//                inv[index] = new Item();
+//            else {
+//                inv[index] = new Item(Item.get(rs.getShort("ID")), rs.getByte("RARITY"), rs.getByte("LVL"));
+//            }
+//            index++;
+//        }
     }
     
     //save game data
-    private void save() throws SQLException {
-        
-    }
+//    private void save() throws SQLException {
+//        dbManager.setAutoCommit(false);
+//        
+//        //item data
+//        dbManager.deleteTable("INV_DATA");
+//        dbManager.createTables("INV_DATA");
+//        
+//        for(int i = 0; i < 64; i++) {
+//            if(inv[i].exists)
+//                dbManager.insertIntoTable_INV_DATA(Item.getID(inv[i].name), inv[i].rarity, inv[i].LVL);
+//            else
+//                dbManager.insertIntoTable_INV_DATA((short)-1, (byte)-1, (byte)-1);
+//        }
+//        
+//        dbManager.commit();
+//        dbManager.setAutoCommit(true);
+//    }
     
     //process input
     void process(Control input) {
@@ -147,25 +146,19 @@ class InMapModel {
                     party[0].gainEXP(10000);
                     break;
                 case OPENINV:
-                    toggleMenu(true);
-                    menuWindow = "inv";
-                    invText = "";
+                    toggleMenu("inv");
                     break;
                 case OPENCHAR:
-                    toggleMenu(true);
-                    menuWindow = "char";
+                    toggleMenu("char");
                     break;
                 case OPENPARTY:
-                    toggleMenu(true);
-                    menuWindow = "party";
+                    toggleMenu("party");
                     break;
                 case OPENNOTES:
-                    toggleMenu(true);
-                    menuWindow = "notes";
+                    toggleMenu("notes");
                     break;
                 case OPENOPTIONS:
-                    toggleMenu(true);
-                    menuWindow = "options";
+                    toggleMenu("options");
                     break;
                 default:
                     maps.get(currentMap).process(input);
@@ -193,6 +186,10 @@ class InMapModel {
                             tempP.x = 3;
 
                         invText = inv[tempP.x*16+tempP.y].des;
+                    }
+                    //use pointer
+                    else if(useP != -1) {
+                        break;
                     }
                     //selection: useless
                     else if(selectP != -1) {
@@ -229,6 +226,10 @@ class InMapModel {
                         
                         invText = inv[tempP.x*16+tempP.y].des;
                     }
+                    //use pointer
+                    else if(useP != -1) {
+                        break;
+                    }
                     //selection
                     else if(selectP != -1) {
                         break;
@@ -259,6 +260,14 @@ class InMapModel {
                             tempP.y = 15;
                         
                         invText = inv[tempP.x*16+tempP.y].des;
+                    }
+                    //use pointer
+                    else if(useP != -1) {
+                        useP--;
+                        
+                        if(useP < 0) {
+                            useP = usePmax;
+                        }
                     }
                     //selection movement
                     else if(selectP != -1) {
@@ -297,6 +306,14 @@ class InMapModel {
                             tempP.y = 0;
                         
                         invText = inv[tempP.x*16+tempP.y].des;
+                    }
+                    //use pointer
+                    else if(useP != -1) {
+                        useP++;
+                        
+                        if(useP > usePmax) {
+                            useP = 0;
+                        }
                     }
                     //selection movement
                     else if(selectP != -1) {
@@ -337,18 +354,27 @@ class InMapModel {
                         else if(selectP != -1) {
                             //use or equip
                             if(selectP == 0) {
-                                if(inv[menuP.x*16+menuP.y].type.equals("consumable")) {
-                                    //use on self: default
-                                    party[0].currentHP += inv[menuP.x*16+menuP.y].CHP;
-                                    if(party[0].currentHP > party[0].maxHP)
-                                        party[0].currentHP = party[0].maxHP;
+                                if(useP != -1) {
                                     
-                                    party[0].currentMP += inv[menuP.x*16+menuP.y].CMP;
-                                    if(party[0].currentMP > party[0].maxMP)
-                                        party[0].currentMP = party[0].maxMP;
-                                    
-                                    invText = inv[menuP.x*16+menuP.y].name + " used.";
-                                    inv[menuP.x*16+menuP.y].reset();
+                                }
+                                else if(inv[menuP.x*16+menuP.y].type.equals("consumable")) {
+                                    //open use menu
+//                                    if(useP == -1) {
+//                                        useP = 0;
+//                                    }
+//                                    else {
+                                        //use on self: default
+                                        party[0].currentHP += inv[menuP.x*16+menuP.y].CHP;
+                                        if(party[0].currentHP > party[0].maxHP)
+                                            party[0].currentHP = party[0].maxHP;
+
+                                        party[0].currentMP += inv[menuP.x*16+menuP.y].CMP;
+                                        if(party[0].currentMP > party[0].maxMP)
+                                            party[0].currentMP = party[0].maxMP;
+
+                                        invText = inv[menuP.x*16+menuP.y].name + " used.";
+                                        inv[menuP.x*16+menuP.y].reset();
+//                                    }
                                 }
                                 else if(inv[menuP.x*16+menuP.y].type.equals("weapon")) {
                                     //swap items
@@ -390,6 +416,9 @@ class InMapModel {
                                         party[0].acc1 = temp;
                                         invText = party[0].acc1.name + " equipped.";
                                     }
+                                }
+                                else if(inv[menuP.x*16+menuP.y].type.equals("material")) {
+                                    invText = "You can't use " + inv[menuP.x*16+menuP.y].name + ".";
                                 }
                                 
                                 selectP = -1;
@@ -450,7 +479,8 @@ class InMapModel {
                 case SWITCH:
                     if(menuWindow.equals("inv") && selectP == -1) {
                         sortInventory();
-                        invText = inv[menuP.x*16+menuP.y].des;
+                        if(menuP.y != -1)
+                            invText = inv[menuP.x*16+menuP.y].des;
                     }
                     break;
                     
@@ -462,40 +492,35 @@ class InMapModel {
                 case OPENINV:
                     toggleMenu(false);
                     if(!menuWindow.equals("inv")) {
-                        toggleMenu(true);
-                        menuWindow = "inv";
+                        toggleMenu("inv");
                     }
                     break;
                     
                 case OPENCHAR:
                     toggleMenu(false);
                     if(!menuWindow.equals("char")) {
-                        toggleMenu(true);
-                        menuWindow = "char";
+                        toggleMenu("char");
                     }
                     break;
                     
                 case OPENPARTY:
                     toggleMenu(false);
                     if(!menuWindow.equals("party")) {
-                        toggleMenu(true);
-                        menuWindow = "party";
+                        toggleMenu("party");
                     }
                     break;
                     
                 case OPENNOTES:
                     toggleMenu(false);
                     if(!menuWindow.equals("notes")) {
-                        toggleMenu(true);
-                        menuWindow = "notes";
+                        toggleMenu("notes");
                     }
                     break;
                     
                 case OPENOPTIONS:
                     toggleMenu(false);
                     if(!menuWindow.equals("options")) {
-                        toggleMenu(true);
-                        menuWindow = "options";
+                        toggleMenu("options");
                     }
                     break;
                     
@@ -513,7 +538,7 @@ class InMapModel {
         }
     }
     
-    //switch menu focus
+    //switch menu focus, reset vars on close
     void toggleMenu(boolean on) {
         if(on)
             focus = "menu";
@@ -524,6 +549,11 @@ class InMapModel {
             selectP = -1;
             menuToggle = false;
         }
+    }
+    
+    void toggleMenu(String window) {
+        focus = "menu";
+        menuWindow = window;
     }
     
     //debug: reset location
@@ -601,6 +631,7 @@ class InMapModel {
     int getGold() { return gold; }
     Point getMenuPoint() { return menuP; }
     Point getTempPoint() { return tempP; }
+    int getUsePoint() { return useP; }
     int getSelectPoint() { return selectP; }
     String getMenuWindow() { return menuWindow; }
     String getFocus() { return focus; }

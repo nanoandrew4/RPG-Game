@@ -350,8 +350,8 @@ class InMapView {
         invType.setTextAlignment(TextAlignment.CENTER);
         invType.setFill(Paint.valueOf("WHITE"));
         invType.setFont(Font.font(null, FontWeight.NORMAL, 30));
-        invStats = new Text[18];
-        for(int i = 0; i < 18; i++) {
+        invStats = new Text[19];
+        for(int i = 0; i < 19; i++) {
             invStats[i] = new Text(screenWidth*5/7+screenWidth/8*(i%2), 
                     screenHeight*2/7+screenHeight/40*Math.floor(i/2), "");
             invStats[i].setFill(Paint.valueOf("WHITE"));
@@ -664,6 +664,7 @@ class InMapView {
         invStats[15].setText("HEALHP: " + i.CHP);
         invStats[16].setText("MAXMP: " + i.MMP);
         invStats[17].setText("HEALMP: " + i.CMP);
+        invStats[18].setText("VAL: " + i.VAL);
     }
     
     //choose image based on data

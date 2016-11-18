@@ -2,7 +2,7 @@ package main;
 
 import java.sql.*;
 
-public class DBManager{
+public class DBManager {
 
     /*
         Manages all operations related to SQLite databases

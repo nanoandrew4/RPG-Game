@@ -135,10 +135,7 @@ public class Character {
     
     //get next direction from path
     Control getNext() {
-        if(!path.isEmpty())
-            return path.next();
-        else
-            return Control.NULL;
+        return path.next();
     }
     
     //use base stats to calculate combat stats

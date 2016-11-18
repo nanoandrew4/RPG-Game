@@ -10,7 +10,7 @@ public class InMapViewData {
     String focus, menuWindow, invDes;
     Floor floor;
     Point tempP, menuP;
-    int selectP, gold;
+    int useP, selectP, gold;
     Character[] party;
     Item[] inv;
     boolean qiVisible, menuToggle;

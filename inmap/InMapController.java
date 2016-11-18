@@ -23,7 +23,7 @@ public class InMapController implements Runnable {
     //constructor
     public InMapController(Main main) {
         this.main = main;
-        model = new InMapModel(new DBManager("IMDATA"));
+        model = new InMapModel();
         view = new InMapView(main.screenWidth, main.screenHeight);
         viewdata = new InMapViewData();
         hasControl = false;
@@ -53,6 +53,7 @@ public class InMapController implements Runnable {
         viewdata.inv = model.getInventory();
         viewdata.menuP.setLocation(model.getMenuPoint());
         viewdata.tempP.setLocation(model.getTempPoint());
+        viewdata.useP = model.getUsePoint();
         viewdata.selectP = model.getSelectPoint();
         viewdata.party = model.getParty();
         viewdata.qiVisible = model.getQIVisible();
@@ -71,6 +72,20 @@ public class InMapController implements Runnable {
 
     public String getDifficulty(Point p){
         return "Easy peasy"; // temp
+    }
+    
+    public void menuInput(Control input) {
+        model.process(input);
+        updateViewData();
+        view.update(viewdata);
+    }
+    
+    public void toggleMenu(boolean on) {
+        model.toggleMenu(on);
+    }
+    
+    public void toggleMenu(String window) {
+        model.toggleMenu(window);
     }
     
     //keyboard input
