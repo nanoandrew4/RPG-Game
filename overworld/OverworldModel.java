@@ -2,7 +2,6 @@ package overworld;
 
 import java.awt.*;
 import java.io.Serializable;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
@@ -10,7 +9,7 @@ import java.util.stream.Collectors;
 
 import main.*;
 
-class OverworldModel implements Serializable {
+public class OverworldModel implements java.io.Serializable {
 
     /*
         Data holder and handler for all non-graphical code

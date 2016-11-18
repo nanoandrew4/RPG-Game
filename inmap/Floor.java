@@ -9,7 +9,7 @@ import java.awt.Point;
 
 import main.Control;
 
-class Floor {
+class Floor implements java.io.Serializable{
     InMapModel model;
     Location location;
     int size, sizeX, sizeY; //size is arbitrary, affects sizeX/Y

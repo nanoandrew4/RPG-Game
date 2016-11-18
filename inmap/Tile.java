@@ -4,7 +4,7 @@
 
 package inmap;
 
-class Tile {
+class Tile implements java.io.Serializable{
     boolean isWall, openable;
     String name;
     int floorMovement;

@@ -9,7 +9,7 @@ import java.awt.Point;
 import main.Path;
 import main.Control;
 
-public class Character {
+public class Character implements java.io.Serializable{
     //vars
     boolean exists;
     int x, y;

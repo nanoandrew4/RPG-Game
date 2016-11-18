@@ -2,7 +2,7 @@
     Controls all interactions between non-graphical and graphical components for the Overworld
 
     TODO LIST - IN ORDER OF BLOCK PRIORITY
-    Fix View scrolling in SW direction
+    Fix View scrolling in SW direction - Seems to have been self-fixed... Nov 17 2016
     Player movement independent of AI's movement
     Fix Settlement banners
 
@@ -29,10 +29,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import main.Path;
-import org.nustaq.serialization.FSTObjectInput;
-import org.nustaq.serialization.FSTObjectOutput;
 
-import javax.swing.*;
 import java.awt.Point;
 
 import java.io.*;
@@ -51,31 +48,32 @@ public class OverworldController implements Runnable {
     private OverworldView view;
     private OverworldModel model;
 
-    public OverworldController(Main main, int mapSize, boolean newGame, String saveName) {
-
+    public OverworldController(Main main, int mapSize) { // new game
         this.main = main;
         start = System.currentTimeMillis();
 
-        if (newGame) {
-            model = new OverworldModel(mapSize, true);
-        } else {
-            try {
-                loadModel(saveName);
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-
+        model = new OverworldModel(mapSize, true);
         System.out.println("Model init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
 
         view = new OverworldView(model.getMapSize(), main.screenWidth, main.screenHeight);
 
         model.createPlayer(getBaseSpeed(), "none");
-
-        if (newGame)
-            model.genParties(getBaseSpeed());
+        //model.genParties(getBaseSpeed());
 
         System.out.println("Overworld init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
+    }
+
+    public OverworldController(Main main, OverworldModel model) { // load game
+        this.main = main;
+        start = System.currentTimeMillis();
+
+        this.model = model;
+        view = new OverworldView(model.getMapSize(), main.screenWidth, main.screenHeight);
+        model.createPlayer(getBaseSpeed(), "none");
+
+        System.out.println("Overworld init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
+
+        model.startPartyAI();
     }
 
     @Override
@@ -91,25 +89,16 @@ public class OverworldController implements Runnable {
         controlsLocked = false;
     }
 
-    private void saveModel() throws IOException {
-
-        if (model.getModelName() == null)
-            model.setModelName(JOptionPane.showInputDialog(this, "Enter name to save game as: "));
-
-        System.out.println("Saving game...");
-        long start = System.currentTimeMillis();
-        FSTObjectOutput out = new FSTObjectOutput(new FileOutputStream("src/saves/" + model.getModelName() + ".ser"));
-        out.writeObject(model);
-        out.close();
-        System.out.println("Wrote successfully! Process took " + (System.currentTimeMillis() / 1000d - start / 1000d));
+    public String getModelName() {
+        return model.getModelName();
     }
 
-    private void loadModel(String saveName) throws IOException, ClassNotFoundException {
-        FSTObjectInput in = new FSTObjectInput(new FileInputStream("src/saves/" + saveName + ".ser"));
-        model = (OverworldModel) in.readObject();
-        in.close();
-        model.startPartyAI();
-        // start other threads if necessary
+    public OverworldModel getModel() {
+        return model;
+    }
+
+    public void setModelName(String name) {
+        model.setModelName(name);
     }
 
     private void setScene() {
@@ -127,7 +116,7 @@ public class OverworldController implements Runnable {
     }
 
     private float getBaseSpeed() {
-        return (float) (50 / view.getMapTileSize());
+        return (float) (100 / view.getMapTileSize());
     }
 
     private double[] calcAngles(double xOffset, double yOffset) {
@@ -247,7 +236,7 @@ public class OverworldController implements Runnable {
             if (key == Control.ESC) { // for now save when hit escape
                 //model.saveGame();
                 try {
-                    saveModel();
+                    main.saveModel();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

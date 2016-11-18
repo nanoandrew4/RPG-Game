@@ -135,4 +135,3 @@ class CityPolitics implements java.io.Serializable {
 
     }
 }
-

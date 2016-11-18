@@ -7,7 +7,7 @@ package inmap;
 
 import main.Control;
 
-class Location {
+class Location implements java.io.Serializable{
     private InMapModel model;
     int currentFloor, difficulty, numFloors;
     String name, type;

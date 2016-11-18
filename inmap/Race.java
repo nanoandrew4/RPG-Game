@@ -4,7 +4,7 @@
 
 package inmap;
 
-class Race {
+class Race implements java.io.Serializable{
     String name;
     
     Race() {

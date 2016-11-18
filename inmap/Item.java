@@ -8,7 +8,7 @@ package inmap;
 import java.util.HashMap;
 import java.util.ArrayList;
 
-public class Item {
+public class Item implements java.io.Serializable{
     //static vars
     static HashMap<String, Item> items = new HashMap();
     static HashMap<Short, String> iditem = new HashMap();

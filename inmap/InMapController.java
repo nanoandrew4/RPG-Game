@@ -28,11 +28,23 @@ public class InMapController implements Runnable {
         viewdata = new InMapViewData();
         hasControl = false;
     }
+
+    public InMapController(Main main, InMapModel model) {
+        this.main = main;
+        this.model = model;
+        view = new InMapView(main.screenWidth, main.screenHeight);
+        viewdata = new InMapViewData();
+        hasControl = false;
+    }
     
     @Override
     public void run() {
         scene = view.initDisplay();
         setInput(scene);
+    }
+
+    public InMapModel getModel() {
+        return model;
     }
     
     //take control of stage

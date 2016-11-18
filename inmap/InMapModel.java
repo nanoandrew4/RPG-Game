@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import main.*;
 
-class InMapModel {
+public class InMapModel implements java.io.Serializable{
     //saved variables
     private final HashMap<Point, Location> maps;
     private Point currentMap;
