@@ -44,15 +44,20 @@ public class Main extends Application {
     public DBManager dbManager;
     //converts keycodes into control enums
     private HashMap<KeyCode, Control> keybindings;
-
-    Stage stage;
-    Scene scene;
-    Pane pane;
-
+    //important vars
     public int mapSize;
-    private int select = 0;
-    private File[] listOfFiles;
     public double screenWidth, screenHeight;
+    //view vars
+    private Stage stage;
+    private Scene scene;
+    private Pane pane, mainPane, loadPane;
+    private Rectangle selectR;
+    private int select = 0;
+    private String menuState = "main";
+    private Rectangle[] saveR;
+    private Text[][] saveInfo;
+    private ImageView[] saveImages;
+    private File[] listOfFiles;
 
     public static void main(String[] args) {
         launch(args);
@@ -93,15 +98,24 @@ public class Main extends Application {
 
         getScreenSize();
 
+        //creating panes
         pane = new Pane();
+        mainPane = new Pane();
+        loadPane = new Pane();
 
         scene = new Scene(pane, screenWidth, screenHeight);
-
+        
         ImageView bg = new ImageView(new Image("/media/graphics/backgrounds/mainmenu.jpg",
                 screenWidth, screenHeight, false, false));
 
+        selectR = new Rectangle(screenWidth / 2, screenHeight / 15, Paint.valueOf("WHITE"));
+        selectR.setEffect(new BoxBlur(10, 10, 3));
+        selectR.setOpacity(.3);
+        selectR.relocate(screenWidth/4, screenHeight*2/3-screenHeight/20);
+
+        //mainPane
         Text title = new Text(0, screenHeight * 2 / 5, "Rising Legend");
-        title.setFont(Font.font("ARIAL", FontWeight.BOLD, 72));
+        title.setFont(Font.font("Times New Roman", FontWeight.BOLD, 72));
         title.setFill(Paint.valueOf("SADDLEBROWN"));
         title.setWrappingWidth(screenWidth);
         title.setTextAlignment(TextAlignment.CENTER);
@@ -118,175 +132,175 @@ public class Main extends Application {
         loadGame.setWrappingWidth(screenWidth);
         loadGame.setTextAlignment(TextAlignment.CENTER);
 
-        Rectangle r = new Rectangle(screenWidth / 2, screenHeight / 15, Paint.valueOf("WHITE"));
-        r.setEffect(new BoxBlur(3, 3, 3));
-        r.setOpacity(.3);
-        r.relocate(screenWidth / 4, screenHeight * 2 / 3 - screenHeight / 20);
+        mainPane.getChildren().addAll(title, newGame, loadGame);
 
-        pane.getChildren().addAll(bg, title, newGame, loadGame, r);
-
+        //loadPane
+        saveInfo = new Text[6][2];
+        for (int x = 0; x < 6; x++) {
+            for (int y = 0; y < 2; y++) {
+                saveInfo[x][y] = new Text(screenWidth/8 + (x%2) * screenWidth * 2/5 + screenWidth/10,
+                        screenHeight/10 + Math.floor(x/2) * screenHeight/4 + y * screenHeight/18 + screenHeight/14, 
+                        "Save File Nonexistent");
+                saveInfo[x][y].setFont(Font.font("Times New Roman", FontWeight.NORMAL, 24));
+                saveInfo[x][y].setFill(Paint.valueOf("BLACK"));
+            }
+            loadPane.getChildren().addAll(saveInfo[x]);
+        }
+        
+        saveImages = new ImageView[6];
+        for (int i = 0; i < 6; i++) {
+            saveImages[i] = new ImageView(new Image("/media/graphics/inmap/trump.png",
+                    64, 64, false, false));
+            saveImages[i].relocate(screenWidth/8 + i%2 * screenWidth * 2/5 + screenWidth/30, 
+                        screenHeight/10 + Math.floor(i/2) * screenHeight/4 + screenHeight/20);
+        }
+        
+        /* load saves here using loadSave(SaveFile s) */
+//        File folder = new File("src/saves");
+//        listOfFiles = folder.listFiles();
+//
+//        for (int i = 0; i < listOfFiles.length; i++) {
+//            if (listOfFiles[i].isFile()) {
+//                Text b = new Text(0, screenHeight*(1+i)/16, listOfFiles[i].getName().split("\\.")[0]);
+//                b.setFont(Font.font("Times New Roman", FontWeight.NORMAL, 32));
+//                b.setWrappingWidth(screenWidth);
+//                b.setTextAlignment(TextAlignment.CENTER);
+//                loadPane.getChildren().add(b);
+//            }
+//        }
+        
+        saveR = new Rectangle[6];
+        for (int i = 0; i < 6; i++) {
+            saveR[i] = new Rectangle(screenWidth/3, screenHeight/5, Paint.valueOf("WHITE"));
+            saveR[i].relocate(screenWidth/8 + i%2 * screenWidth * 2/5, 
+                        screenHeight/10 + Math.floor(i/2) * screenHeight/4);
+            saveR[i].setOpacity(.2);
+        }
+        
+        loadPane.getChildren().addAll(saveR);
+        loadPane.getChildren().addAll(saveImages);
+        
+        //start
+        pane.getChildren().addAll(bg, mainPane, selectR);
+        
         stage.setScene(scene);
         stage.show();
 
-        select = 0;
-
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            Control c = getControl(event.getCode());
-
-            if (listOfFiles == null) {
-                switch (c) {
-                    case UP:
-                        select += (select >= 1 ? -1 : 1);
-                        break;
-                    case DOWN:
-                        select -= (select <= 0 ? -1 : 1);
-                        break;
-                    case SELECT:
+            switch (getControl(event.getCode())) {
+                case DOWN:
+                    if (menuState.equals("main")) {
+                        select++;
+                        if (select > 1) {
+                            select = 0;
+                        }
+                    }
+                    else if (menuState.equals("load")) {
+                        select += 2;
+                        if (select > 5)
+                            select -= 6;
+                    }
+                    break;
+                    
+                case UP:
+                    if (menuState.equals("main")) {
+                        select--;
+                        if (select < 0)
+                            select = 1;
+                    }
+                    else if (menuState.equals("load")) {
+                        select -= 2;
+                        if (select < 0)
+                            select += 6;
+                    }
+                    break;
+                    
+                case RIGHT:
+                    if (menuState.equals("load")) {
+                        select += select % 2 == 0 ? 1 : -1;
+                    }
+                    break;
+                    
+                case LEFT:
+                    if (menuState.equals("load")) {
+                        select += select % 2 == 0 ? 1 : -1;
+                    }
+                    break;
+                    
+                case SELECT:
+                    if(menuState.equals("main")) {
                         //new game: default very large
                         if (select == 0) {
                             startOverworldController(1000, null, null);
                         }
                         //load game
                         else if (select == 1) {
-                            pane.getChildren().removeAll(title, newGame, loadGame);
-
-                            File folder = new File("src/saves");
-                            listOfFiles = folder.listFiles();
-
-                            for (int i = 0; i < listOfFiles.length; i++) {
-                                if (listOfFiles[i].isFile()) {
-                                    Text b = new Text(0, screenHeight / 16 * (i + 1), listOfFiles[i].getName().split("\\.")[0]);
-                                    b.setFont(Font.font("Times New Roman", FontWeight.NORMAL, 32));
-                                    b.setWrappingWidth(screenWidth);
-                                    b.setTextAlignment(TextAlignment.CENTER);
-                                    pane.getChildren().add(b);
-                                }
-                            }
-
                             select = 0;
-                            r.relocate(screenWidth / 4, screenHeight / 16 * (select + 1) - screenHeight / 20);
+                            menuState = "load";
                         }
-                        return;
-                    case TOGGLE:
-                        startInMapController(null);
-                        IMController.newLocation(new Point(0, 0), "cave");
-                        IMController.passControl(new Point(0, 0));
-                        break;
-                    default:
-                        break;
-                }
-                if (select == 0)
-                    r.relocate(screenWidth / 4, screenHeight * 2 / 3 - screenHeight / 20);
-                else if (select == 1)
-                    r.relocate(screenWidth / 4, screenHeight * 3 / 4 - screenHeight / 20);
-            } else {
-                switch (c) {
-                    case UP:
-                        select -= (select <= 0 ? -(listOfFiles.length - 1) : 1);
-                        break;
-                    case DOWN:
-                        select += (select >= (listOfFiles.length - 1) ? -(listOfFiles.length - 1) : 1);
-                        break;
-                    case SELECT:
+                    }
+                    else if(menuState.equals("load")) {
                         try {
                             Object[] models = loadModel(listOfFiles[select].getName().split("\\.")[0]);
                             startOverworldController(-1, (OverworldModel) models[0], (InMapModel) models[1]);
                         } catch (IOException | ClassNotFoundException e) {
                             e.printStackTrace();
                         }
-                        break;
-                }
-                r.relocate(screenWidth / 4, screenHeight / 16 * (select + 1) - screenHeight / 20);
+                    }
+                    break;
+                    
+                case BACK:
+                    if(menuState.equals("load"))
+                        menuState = "main";
+                    select = 0;
+                    break;
+                    
+                case TOGGLE:
+                    if (menuState.equals("main")) {
+                        startInMapController(null);
+                        IMController.newLocation(new Point(-1, -1), "cave");
+                        IMController.passControl(new Point(-1, -1));
+                    }
+                    break;
+                    
+                default:
+                    break;
             }
+            
+            updateView();
 
             event.consume();
         });
-
-//        Pane layout = new Pane();
-//        Button newGame = new Button("New Game");
-//        Button loadGame = new Button("Load Game");
-//        Button inMap = new Button("InMap Test");
-//
-//        newGame.relocate(screenWidth / 2 - 25, screenHeight / 2 - 25);
-//        loadGame.relocate(screenWidth / 2 - 25, screenHeight / 2 + 25);
-//        inMap.relocate(screenWidth / 2 - 25, screenHeight / 2 + 75);
-//        layout.getChildren().add(newGame);
-//        layout.getChildren().add(loadGame);
-//        layout.getChildren().add(inMap);
-//        newGame.setOnAction(event -> {
-//
-//            dbManager = new DBManager("test");
-//            
-//            layout.getChildren().removeAll(newGame, loadGame, inMap);
-//
-//            Button verySmall = new Button("Very Small");
-//            Button small = new Button("Small");
-//            Button medium = new Button("Medium");
-//            Button large = new Button("Large");
-//            Button veryLarge = new Button("Very Large");
-//
-//            verySmall.relocate(screenWidth / 2 - 25, screenHeight / 2 - 70);
-//            small.relocate(screenWidth / 2 - 25, screenHeight / 2 - 35);
-//            medium.relocate(screenWidth / 2 - 25, screenHeight / 2);
-//            large.relocate(screenWidth / 2 - 25, screenHeight / 2 + 35);
-//            veryLarge.relocate(screenWidth / 2 - 25, screenHeight / 2 + 70);
-//
-//            layout.getChildren().add(verySmall);
-//            layout.getChildren().add(small);
-//            layout.getChildren().add(medium);
-//            layout.getChildren().add(large);
-//            layout.getChildren().add(veryLarge);
-//
-//            verySmall.setOnAction(event1 -> {
-//                startOverworldController(150, true, null);
-//            });
-//            small.setOnAction(event1 -> {
-//                startOverworldController(300, true, null);
-//            });
-//            medium.setOnAction(event1 -> {
-//                startOverworldController(500, true, null);
-//            });
-//            large.setOnAction(event1 -> {
-//                startOverworldController(750, true, null);
-//            });
-//            veryLarge.setOnAction(event1 -> {
-//                startOverworldController(1000, true, null);
-//            });
-//            
-//            System.out.println("New game being created...");
-//        });
-//        
-//        loadGame.setOnAction(event -> {
-//
-//            layout.getChildren().removeAll(newGame, loadGame, inMap);
-//
-//            File folder = new File("src/saves");
-//            File[] listOfFiles = folder.listFiles();
-//
-//            for (int i = 0; i < listOfFiles.length; i++) {
-//                if (listOfFiles[i].isFile()) {
-//                    Button b = new Button(listOfFiles[i].getName().split("\\.")[0]);
-//                    b.relocate(screenWidth / 2 - 50, screenHeight / 16 + i * 50);
-//                    layout.getChildren().add(b);
-//                    b.setOnAction(event1 -> {
-//                        startOverworldController(0, false, b.getText());
-//                    });
-//                }
-//            }
-//
-//            /*System.out.println("Loading game...");
-//            startOverworldController(0, false); // mapSize has to be set to 1 for load to work
-//            startInMapController();*/
-//        });
-//        
-//        inMap.setOnAction(event -> {
-//            startInMapController();
-//            IMController.newLocation(new Point(0, 0), "cave");
-//            IMController.passControl(new Point(0, 0));
-//        });
-//        
-//        stage.setScene(new Scene(layout, screenWidth, screenHeight));
-//        stage.show();
+    }
+    
+    //update menu view
+    private void updateView() {
+        switch (menuState) {
+            case "main":
+                if(pane.getChildren().remove(loadPane)) {
+                    selectR.setWidth(screenWidth / 2);
+                    selectR.setHeight(screenHeight / 15);
+                    pane.getChildren().add(mainPane);
+                }
+                selectR.relocate(screenWidth/4, screenHeight*(8+select)/12-screenHeight/20);
+                break;
+                
+            case "load":
+                if(pane.getChildren().remove(mainPane)) {
+                    selectR.setWidth(screenWidth / 3);
+                    selectR.setHeight(screenHeight / 5);
+                    pane.getChildren().add(loadPane);
+                }
+                selectR.relocate(screenWidth/8+select%2*screenWidth*2/5, 
+                        screenHeight/10+Math.floor(select/2)*screenHeight/4);
+                break;
+        }
+    }
+    
+    //load a save file
+    private void loadSave(SaveFile s) {
+        saveInfo[s.slot][0].setText(s.name + " " + s.level);
+        saveInfo[s.slot][1].setText("Playtime: " + s.playtime + " units of time");
     }
 
     //start overworld controller
@@ -319,18 +333,19 @@ public class Main extends Application {
     }
 
     public void saveModel() throws IOException {
-
-        if (overworldController.getModelName() == null)
-            overworldController.setModelName(JOptionPane.showInputDialog(this, "Enter name to save game as: "));
+//        if (overworldController.getModelName() == null)
+//            overworldController.setModelName(JOptionPane.showInputDialog(this, "Enter name to save game as: "));
+        overworldController.setModelName("asdf" + (int)(Math.random()*26));
 
         System.out.println("Saving game...");
         long start = System.currentTimeMillis();
-        FSTObjectOutput out = new FSTObjectOutput(new FileOutputStream("src/saves/" + overworldController.getModelName() + ".sav"));
+        FSTObjectOutput out = new FSTObjectOutput(new FileOutputStream("src/saves/" 
+                + overworldController.getModelName() + ".sav"));
         out.writeObject(keybindings);
         out.writeObject(overworldController.getModel());
         out.writeObject(IMController.getModel());
         out.close();
-        System.out.println("Wrote successfully! Process took " + (System.currentTimeMillis() / 1000d - start / 1000d));
+        System.out.println("Wrote successfully! Process took "+(System.currentTimeMillis()/1000d-start/1000d));
     }
 
     private Object[] loadModel(String saveName) throws IOException, ClassNotFoundException {

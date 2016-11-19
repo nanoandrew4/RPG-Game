@@ -625,7 +625,7 @@ public class InMapModel implements java.io.Serializable{
     //getters
     Location getCurrentLocation() { return maps.get(currentMap); }
     Location getLocation(Point id) { return maps.get(id); }
-    Character[] getParty() { return party; }
+    public Character[] getParty() { return party; }
     Item[] getInventory() { return inv; }
     String getInvDes() { return invText; }
     int getGold() { return gold; }

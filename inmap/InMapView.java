@@ -411,7 +411,9 @@ class InMapView {
         opPane.getChildren().addAll(t4);
 
         //rip text
-        rip = new Text(360, 340, ("  GAME OVER\nR TO RESTART"));
+        rip = new Text(0, screenHeight/2, ("GAME OVER\nR TO RESTART"));
+        rip.setWrappingWidth(screenWidth);
+        rip.setTextAlignment(TextAlignment.CENTER);
         rip.setFont(Font.font(null, FontWeight.BOLD, 80));
         rip.setFill(Paint.valueOf("WHITE"));
         rip.setVisible(false);

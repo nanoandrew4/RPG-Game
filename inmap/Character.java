@@ -34,6 +34,10 @@ public class Character implements java.io.Serializable{
         setStats(true, LVL, VIT, INT, ACC, STR, DEX, WIS, LUK, name, race, AIMode, path, hostile);
     }
     
+    public String getName() {
+        return name;
+    }
+    
     //set stats
     final void setStats(boolean exists, int LVL, int VIT, int INT, int ACC, int STR, int DEX, int WIS, int LUK, String name, String race, String AIMode, Path path, boolean hostile) {
         this.exists = exists;
