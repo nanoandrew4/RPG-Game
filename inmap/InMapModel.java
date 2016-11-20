@@ -1,6 +1,6 @@
 /*
     InMap Model.
-    Contains important character data.
+    Contains map and character data.
  */
 
 package inmap;
@@ -11,8 +11,6 @@ import java.sql.SQLException;
 import java.text.Collator;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import main.*;
 
@@ -23,6 +21,7 @@ public class InMapModel implements java.io.Serializable{
     private Character[] party;
     private Item[] inv;
     private int gold;
+    private String name, sprite, portrait;
     
     //temporary variables
     private transient String focus, menuWindow, invText;
@@ -32,7 +31,51 @@ public class InMapModel implements java.io.Serializable{
     private transient boolean menuToggle; //menu toggle
     transient boolean hasControl;
     
-    //new game stuff
+    //new game constructor
+    InMapModel(int VIT, int INT, int STR, int WIS, int LUK, int CHA, 
+            String race, String name, String sprite, String portrait) {
+        DBManager dbManager = new DBManager("IMDATA");
+        
+        party = new Character[5];
+        maps = new HashMap();
+        inv = new Item[64];
+        Arrays.fill(party, new Character());
+        Arrays.fill(inv, new Item());
+        
+        party[0] = new Character(1, VIT, INT, 90, STR, WIS, LUK, CHA, 
+                name, race, "NA", new Path(), false);
+        this.name = name;
+        this.sprite = sprite;
+        this.portrait = portrait;
+        currentMap = new Point(-1, -1);
+        gold = 50;
+        
+        try {
+            load(dbManager);
+        }
+        catch(SQLException s) {
+            
+        }
+        
+        //initial items
+        party[0].weapon = new Item("Sharp Stick");
+        party[0].armor = new Item("Rags");
+        inv[0] = new Item("Apple");
+        inv[1] = new Item("Bread");
+        inv[2] = new Item("Lucky Coin");
+        
+        //temporary variables
+        focus = "floor";
+        menuWindow = "inv";
+        invText = "";
+        menuP = new Point(0, -1);
+        tempP = new Point(-1, -1);
+        useP = -1;
+        selectP = -1;
+        hasControl = false;
+    }
+    
+    //quick start game
     InMapModel() {
         DBManager dbManager = new DBManager("IMDATA");
         
@@ -44,7 +87,10 @@ public class InMapModel implements java.io.Serializable{
         Arrays.fill(inv, new Item());
         
         party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, "Hero", "Human", "NA", new Path(), false);
-        currentMap = new Point(0, 0);
+        name = "Hero";
+        sprite = "/media/graphics/inmap/trump.png";
+        portrait = "/media/graphics/inmap/portrait.jpg";
+        currentMap = new Point(-1, -1);
         gold = 500;
         
         try {
@@ -83,8 +129,8 @@ public class InMapModel implements java.io.Serializable{
                 rs.getInt("CRT"), rs.getInt("PRC"),
                 rs.getInt("VIT"), rs.getInt("INT"),
                 rs.getInt("ACC"), rs.getInt("STR"),
-                rs.getInt("DEX"), rs.getInt("WIS"),
-                rs.getInt("LUK"), rs.getInt("MHP"),
+                rs.getInt("WIS"), rs.getInt("LUK"),
+                rs.getInt("CHA"), rs.getInt("MHP"),
                 rs.getInt("CHP"), rs.getInt("MMP"),
                 rs.getInt("CMP"), rs.getInt("DEF"),
                 rs.getInt("RES"), rs.getInt("EVA"),
@@ -92,38 +138,7 @@ public class InMapModel implements java.io.Serializable{
             
             id++;
         }
-//        
-//        //inventory data
-//        rs = dbManager.selectFromDatabase("INV_DATA");
-//        byte index = 0;
-//        while(rs.next()) {
-//            if(rs.getShort("ID") == -1)
-//                inv[index] = new Item();
-//            else {
-//                inv[index] = new Item(Item.get(rs.getShort("ID")), rs.getByte("RARITY"), rs.getByte("LVL"));
-//            }
-//            index++;
-//        }
     }
-    
-    //save game data
-//    private void save() throws SQLException {
-//        dbManager.setAutoCommit(false);
-//        
-//        //item data
-//        dbManager.deleteTable("INV_DATA");
-//        dbManager.createTables("INV_DATA");
-//        
-//        for(int i = 0; i < 64; i++) {
-//            if(inv[i].exists)
-//                dbManager.insertIntoTable_INV_DATA(Item.getID(inv[i].name), inv[i].rarity, inv[i].LVL);
-//            else
-//                dbManager.insertIntoTable_INV_DATA((short)-1, (byte)-1, (byte)-1);
-//        }
-//        
-//        dbManager.commit();
-//        dbManager.setAutoCommit(true);
-//    }
     
     //process input
     void process(Control input) {
@@ -567,7 +582,7 @@ public class InMapModel implements java.io.Serializable{
             case 2: temp = new Location(this, "cave", (int)(Math.random()*3+1), party); break;
             default: temp = new Location(this, "city", 2, party); break;
         }
-        maps.replace(new Point(0, 0), temp);
+        maps.put(new Point(-1, -1), temp);
         maps.get(currentMap).getCurrentFloor().passControl(Control.UP);
     }
     
@@ -626,6 +641,9 @@ public class InMapModel implements java.io.Serializable{
     Location getCurrentLocation() { return maps.get(currentMap); }
     Location getLocation(Point id) { return maps.get(id); }
     public Character[] getParty() { return party; }
+    String getName() { return name; }
+    String getSprite() { return sprite; }
+    String getPortrait() { return portrait; }
     Item[] getInventory() { return inv; }
     String getInvDes() { return invText; }
     int getGold() { return gold; }

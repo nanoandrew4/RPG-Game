@@ -34,6 +34,8 @@ class Images {
     Image stairsdown;
     
     Image hero;
+    Image portrait;
+    
     Image adelf;
     Image bat;
     Image bell;
@@ -64,7 +66,7 @@ class Images {
     
     Image black;
     
-    Images(double width, double height) {
+    Images(double width, double height, String heroSprite, String heroPortrait) {
         stoneFloor = new Image("/media/graphics/inmap/StoneFloor.png", width, height, false, false);
         stoneWall = new Image("/media/graphics/inmap/StoneWall.png", width, height, false, false);
         stoneTop = new Image("/media/graphics/inmap/StoneTop.png", width, height, false, false);
@@ -81,7 +83,8 @@ class Images {
 //        goblin = new Image("/media/graphics/inmap/harambe.png", width, width, true, false);
 //        boss = new Image("/media/graphics/inmap/clinton.jpg", width, width, true, false);
 //        hero = new Image("/media/graphics/inmap/knight.png", width, width, true, false);
-        hero = new Image("/media/graphics/inmap/trump.png", width, width, true, false);
+        hero = new Image(heroSprite, width, width, true, false);
+        portrait = new Image(heroPortrait, width*2, width*2, false, false);
         adelf = new Image("/media/graphics/inmap/adelf.png", width, width, true, false);
         bat = new Image("/media/graphics/inmap/bat.png", width, width, true, false);
         bell = new Image("/media/graphics/inmap/bell.png", width, width, true, false);
@@ -116,6 +119,7 @@ class InMapView {
             charPane, partyPane, notePane, opPane;
     double width, height;
     final double zoom;
+    String name;
     
     private Text rip; //rip text
     private final Text charT, levelT, goldT; //quickinfo text
@@ -132,15 +136,8 @@ class InMapView {
     private final Rectangle menuFocus;
     private final Rectangle menuCursor, tempCursor;
     
-    //animation
-//    private final LongProperty lastUpdateTime = new SimpleLongProperty();
-//    public final DoubleProperty speedX = new SimpleDoubleProperty();
-//    public final DoubleProperty speedY = new SimpleDoubleProperty();
-//    public double speedXVal;
-//    public double speedYVal;
-    
     //constructor
-    InMapView(double screenWidth, double screenHeight) {
+    InMapView(double screenWidth, double screenHeight, String name, String sprite, String portrait) {
         //0: tiles
         //1: items
         //2: characters
@@ -150,9 +147,10 @@ class InMapView {
         imageViews = new ImageView[24][16][6];
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
+        this.name = name;
         zoom = 12;
         setTileSize();
-        images = new Images(width, height);
+        images = new Images(width, height, sprite, portrait);
         
         inmapLayout = new Pane();
         floorPane = new Pane();
@@ -304,9 +302,6 @@ class InMapView {
 //        }
         
         //invPane
-        Text temp = new Text(screenWidth/10+60, screenHeight/6+100, "H");
-        temp.setFont(Font.font("Monaco", FontWeight.BOLD, 20));
-        temp.setFill(Paint.valueOf("RED"));
         invText = new Text[64];
         for(int i = 0; i < 64; i++) {
             invText[i] = new Text(screenWidth/7+screenWidth/7*(int)(i/16), screenHeight*2/7+screenHeight/28*(i%16), "-");
@@ -367,8 +362,7 @@ class InMapView {
         invPane.getChildren().add(invTextPane);
         
         //charPane
-        ImageView portrait = new ImageView(new Image("/media/graphics/inmap/portrait.jpg", 
-                screenHeight/5, screenHeight/5, false, false));
+        ImageView portrait = new ImageView(images.portrait);
         portrait.relocate(screenWidth/5, screenHeight/3);
         chName = new Text(screenWidth/5, screenHeight*12/20, "");
         chName.setFont(Font.font(null, FontWeight.NORMAL, 24));
@@ -656,9 +650,9 @@ class InMapView {
         invStats[5].setText("INT: " + i.INT);
         invStats[6].setText("ACC: " + i.ACC);
         invStats[7].setText("STR: " + i.STR);
-        invStats[8].setText("DEX: " + i.DEX);
-        invStats[9].setText("WIS: " + i.WIS);
-        invStats[10].setText("LUK: " + i.LUK);
+        invStats[8].setText("WIS: " + i.WIS);
+        invStats[9].setText("LUK: " + i.LUK);
+        invStats[10].setText("CHA: " + i.CHA);
         invStats[11].setText("DEF: " + i.DEF);
         invStats[12].setText("RES: " + i.RES);
         invStats[13].setText("EVA: " + i.EVA);
@@ -701,7 +695,7 @@ class InMapView {
 
             if(!floor.chars[x][y].exists)
                 return null;
-            if(type.equalsIgnoreCase("hero"))
+            if(type.equalsIgnoreCase(name))
                 return images.hero;
             else if(type.equalsIgnoreCase("bat"))
                 return images.bat;

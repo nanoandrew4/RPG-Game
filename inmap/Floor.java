@@ -23,7 +23,8 @@ class Floor implements java.io.Serializable{
     Item[][] items;
     
     //constructor
-    Floor(InMapModel model, Location location, int floorNum, String type, int diff, int size, Character[] party) {
+    Floor(InMapModel model, Location location, int floorNum, 
+            String type, int diff, int size, Character[] party) {
         //init
         this.location = location;
         this.model = model;
@@ -162,7 +163,7 @@ class Floor implements java.io.Serializable{
             }
         }
         //moving floors
-        else if(tiles[ex][ey].floorMovement != 0 && chars[sx][sy].name.equals("Hero")) {
+        else if(tiles[ex][ey].floorMovement != 0 && chars[sx][sy].name.equals(party[0].name)) {
             location.changeFloor(tiles[ex][ey].floorMovement);
             chars[sx][sy] = new Character();
         }
@@ -365,10 +366,14 @@ class Floor implements java.io.Serializable{
                 for(int y = 1; y < sizeY; y++)
                     tiles[sizeX/2][y] = new Tile("wall");
                 int rand = (int)(Math.random()*4);
-                if(rand != 0) tiles[(int)(Math.random()*(sizeX/2-1)+1)][sizeY/2] = new Tile("door");
-                if(rand != 1) tiles[(int)(Math.random()*(sizeX/2-2)+sizeX/2+1)][sizeY/2] = new Tile("door");
-                if(rand != 2) tiles[sizeX/2][(int)(Math.random()*(sizeY/2-1)+1)] = new Tile("door");
-                if(rand != 3) tiles[sizeX/2][(int)(Math.random()*(sizeY/2-2)+sizeY/2+1)] = new Tile("door");
+                if(rand != 0) 
+                    tiles[(int)(Math.random()*(sizeX/2-1)+1)][sizeY/2] = new Tile("door");
+                if(rand != 1) 
+                    tiles[(int)(Math.random()*(sizeX/2-2)+sizeX/2+1)][sizeY/2] = new Tile("door");
+                if(rand != 2) 
+                    tiles[sizeX/2][(int)(Math.random()*(sizeY/2-1)+1)] = new Tile("door");
+                if(rand != 3) 
+                    tiles[sizeX/2][(int)(Math.random()*(sizeY/2-2)+sizeY/2+1)] = new Tile("door");
                 
                 //generate stairsup if not at top
                 if(floorNum != location.numFloors - 1) {

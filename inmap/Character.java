@@ -9,11 +9,21 @@ import java.awt.Point;
 import main.Path;
 import main.Control;
 
-public class Character implements java.io.Serializable{
+public class Character implements java.io.Serializable {
+    //static vars
+    static transient String[] names = {
+        "Andres", "Adrian", "Chow", "Cthulhu", "Top Kek",
+        "John", "James", "Robert", "William", "Richard",
+        "Maria", "Evelyn", "Anne", "Karen", "Sara",
+        "Hercules", "Zeus", "Apollo", "Ares", "Poseidon",
+        "Aphrodite", "Hera", "Hestia", "Athena", "Artemis",
+        //"", "", "", "", "",
+    };
+    
     //vars
     boolean exists;
     int x, y;
-    int LVL, EXP, VIT, ACC, INT, STR, DEX, WIS, LUK; //base stats
+    int LVL, EXP, VIT, ACC, INT, STR, WIS, LUK, CHA; //base stats
     int maxHP, currentHP, maxMP, currentMP; //calculated stats
     double CRT, HIT, EVA, DMG, DEF, RES, PRC; //combat stats
     String name, AIMode;
@@ -24,14 +34,21 @@ public class Character implements java.io.Serializable{
     Item armor;
     Item acc1, acc2, acc3;
     
+        //static methods
+    //random name
+    public static String randomName() {
+        return names[(int)(Math.random()*names.length)];
+    }
+    
     //empty character
     Character() {
         exists = false;
     }
     
     //generate character given parameters
-    Character(int LVL, int VIT, int INT, int ACC, int STR, int DEX, int WIS, int LUK, String name, String race, String AIMode, Path path, boolean hostile) {
-        setStats(true, LVL, VIT, INT, ACC, STR, DEX, WIS, LUK, name, race, AIMode, path, hostile);
+    Character(int LVL, int VIT, int INT, int ACC, int STR, int WIS, int LUK, int CHA, 
+            String name, String race, String AIMode, Path path, boolean hostile) {
+        setStats(true, LVL, VIT, INT, ACC, STR, WIS, LUK, CHA, name, race, AIMode, path, hostile);
     }
     
     public String getName() {
@@ -39,7 +56,8 @@ public class Character implements java.io.Serializable{
     }
     
     //set stats
-    final void setStats(boolean exists, int LVL, int VIT, int INT, int ACC, int STR, int DEX, int WIS, int LUK, String name, String race, String AIMode, Path path, boolean hostile) {
+    final void setStats(boolean exists, int LVL, int VIT, int INT, int ACC, int STR, int DEX, 
+            int WIS, int LUK, String name, String race, String AIMode, Path path, boolean hostile) {
         this.exists = exists;
         this.LVL = LVL;
         EXP = 0;
@@ -47,9 +65,9 @@ public class Character implements java.io.Serializable{
         this.INT = INT;
         this.ACC = ACC;
         this.STR = STR;
-        this.DEX = DEX;
         this.WIS = WIS;
         this.LUK = LUK;
+        this.CHA = CHA;
         this.name = name;
         this.AIMode = AIMode;
         this.path = path;
@@ -77,28 +95,28 @@ public class Character implements java.io.Serializable{
     //random enemy generation
     void generateEnemy() {
         switch((int)(Math.random() * 17)) {
-            //case: setStats(exist, lvl, vit, int, acc, str, dex, wis, luk, name,     race,      ai,          path, hostile);
+            //case: setStats(exist, lvl, vit, int, acc, str, wis, luk, cha, name,     race,      ai,          path, hostile);
 //            case 0: setStats(true,   2,   3,   1,  80,   2,   4,   1,   0, "Spider", "Monster", "wandering", true); break;
 //            case 1: setStats(true,   1,   5,   1,  90,   1,   1,   1,   0, "Slug",   "Monster", "wandering", true); break;
 //            case 2: setStats(true,   5,   8,   3,  75,   6,   3,   2,   3, "Goblin", "Monster", "wandering", true); break;
 //            case 3: setStats(true,   3,   6,   3,  85,   3,   3,   1,   2, "Bat",    "Monster", "wandering", true); break;
-            case 0:  setStats(true,   5,   9,   3,  90,   9,   5,   5,   5, "adelf", "Monster", "wandering", new Path(), true); break;
-            case 1:  setStats(true,   2,   6,   3,  75,   3,   3,   3,   3, "bat", "Monster", "wandering", new Path(), true); break;
-            case 2:  setStats(true,   2,   5,   3,  80,   2,   2,   2,   2, "bell", "Monster", "fleeing", new Path(), false); break;
-            case 3:  setStats(true,  15,  10,   3,   0,   1,   1,   1,   1, "chest", "Monster", "stationary", new Path(), false); break;
-            case 4:  setStats(true,   1,   3,   3,  60,   2,   1,   1,   1, "chick", "Monster", "wandering", new Path(), false); break;
-            case 5:  setStats(true,   2,   5,   3,  85,   4,   1,   1,   1, "chicken", "Monster", "wandering", new Path(), true); break;
-            case 6:  setStats(true,   4,  11,   3,  85,   8,   3,   3,   3, "fishman", "Monster", "wandering", new Path(), true); break;
-            case 7:  setStats(true,   5,   8,   3,  80,   6,   5,   5,   5, "flan", "Monster", "wandering", new Path(), true); break;
-            case 8:  setStats(true,   4,   7,   3,  50,   5,   3,   3,   3, "ghost", "Monster", "wandering", new Path(), true); break;
-            case 9:  setStats(true,   8,   9,   3,  90,  10,   3,   3,   3, "kingslime", "Monster", "wandering", new Path(), true); break;
-            case 10: setStats(true,   5,   8,   3,  90,   9,   3,   3,   3, "longcat", "Monster", "wandering", new Path(), true); break;
-            case 11: setStats(true,  10,  15,   3,  85,  15,   3,   3,   3, "manta", "Monster", "wandering", new Path(), true); break;
-            case 12: setStats(true,   2,   3,   3,  60,   2,   3,   3,   3, "mote", "Monster", "wandering", new Path(), false); break;
-            case 13: setStats(true,  13,  17,   3,  90,  22,   3,   3,   3, "skelebro", "Monster", "wandering", new Path(), true); break;
-            case 14: setStats(true,   4,   6,   3,  70,   4,   3,   3,   3, "snail", "Monster", "wandering", new Path(), true); break;
-            case 15: setStats(true,   7,  15,   3,  60,  13,   3,   3,   3, "spookyslime", "Monster", "wandering", new Path(), true); break;
-            case 16: setStats(true,   6,   9,   3,  85,  16,   3,   3,   3, "spookyslug", "Monster", "wandering", new Path(), true); break;
+            case 0:  setStats(true,   5,   9,   3,  90,   9,   5,   5,   0, "adelf", "Monster", "wandering", new Path(), true); break;
+            case 1:  setStats(true,   2,   6,   3,  75,   3,   3,   3,   0, "bat", "Monster", "wandering", new Path(), true); break;
+            case 2:  setStats(true,   2,   5,   3,  80,   2,   2,   2,   0, "bell", "Monster", "fleeing", new Path(), false); break;
+            case 3:  setStats(true,  15,  10,   3,   0,   1,   1,   1,   0, "chest", "Monster", "stationary", new Path(), false); break;
+            case 4:  setStats(true,   1,   3,   3,  60,   2,   1,   1,   0, "chick", "Monster", "wandering", new Path(), false); break;
+            case 5:  setStats(true,   2,   5,   3,  85,   4,   1,   1,   0, "chicken", "Monster", "wandering", new Path(), true); break;
+            case 6:  setStats(true,   4,  11,   3,  85,   8,   3,   3,   0, "fishman", "Monster", "wandering", new Path(), true); break;
+            case 7:  setStats(true,   5,   8,   3,  80,   6,   5,   5,   0, "flan", "Monster", "wandering", new Path(), true); break;
+            case 8:  setStats(true,   4,   7,   3,  50,   5,   3,   3,   0, "ghost", "Monster", "wandering", new Path(), true); break;
+            case 9:  setStats(true,   8,   9,   3,  90,  10,   3,   3,   0, "kingslime", "Monster", "wandering", new Path(), true); break;
+            case 10: setStats(true,   5,   8,   3,  90,   9,   3,   3,   0, "longcat", "Monster", "wandering", new Path(), true); break;
+            case 11: setStats(true,  10,  15,   3,  85,  15,   3,   3,   0, "manta", "Monster", "wandering", new Path(), true); break;
+            case 12: setStats(true,   2,   3,   3,  60,   2,   3,   3,   0, "mote", "Monster", "wandering", new Path(), false); break;
+            case 13: setStats(true,  13,  17,   3,  90,  22,   3,   3,   0, "skelebro", "Monster", "wandering", new Path(), true); break;
+            case 14: setStats(true,   4,   6,   3,  70,   4,   3,   3,   0, "snail", "Monster", "wandering", new Path(), true); break;
+            case 15: setStats(true,   7,  15,   3,  60,  13,   3,   3,   0, "spookyslime", "Monster", "wandering", new Path(), true); break;
+            case 16: setStats(true,   6,   9,   3,  85,  16,   3,   3,   0, "spookyslug", "Monster", "wandering", new Path(), true); break;
             
         }
     }
@@ -120,8 +138,8 @@ public class Character implements java.io.Serializable{
             //stat increases
             VIT += 1;
             STR += 1;
-            DEX += 1;
             WIS += 1;
+            CHA += 1;
             calculateStats();
             currentHP = maxHP;
         }

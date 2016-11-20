@@ -20,19 +20,33 @@ public class InMapController implements Runnable {
     private final InMapViewData viewdata;
     boolean hasControl;
     
-    //constructor
+    //new game constructor
+    public InMapController(Main main, int VIT, int INT, int STR, int WIS, int LUK, 
+            int CHA, String race, String name, String sprite, String portrait) {
+        this.main = main;
+        model = new InMapModel(VIT, INT, STR, WIS, 
+                LUK, CHA, race, name, sprite, portrait);
+        view = new InMapView(main.screenWidth, main.screenHeight, name, sprite, portrait);
+        viewdata = new InMapViewData();
+        hasControl = false;
+    }
+    
+    //quick constructor
     public InMapController(Main main) {
         this.main = main;
         model = new InMapModel();
-        view = new InMapView(main.screenWidth, main.screenHeight);
+        view = new InMapView(main.screenWidth, main.screenHeight, 
+                model.getName(), model.getSprite(), model.getPortrait());
         viewdata = new InMapViewData();
         hasControl = false;
     }
 
+    //constructor with loaded model
     public InMapController(Main main, InMapModel model) {
         this.main = main;
         this.model = model;
-        view = new InMapView(main.screenWidth, main.screenHeight);
+        view = new InMapView(main.screenWidth, main.screenHeight, 
+                model.getName(), model.getSprite(), model.getPortrait());
         viewdata = new InMapViewData();
         hasControl = false;
     }

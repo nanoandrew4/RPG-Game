@@ -8,12 +8,12 @@ package inmap;
 import java.util.HashMap;
 import java.util.ArrayList;
 
-public class Item implements java.io.Serializable{
+public class Item implements java.io.Serializable {
     //static vars
-    static HashMap<String, Item> items = new HashMap();
-    static HashMap<Short, String> iditem = new HashMap();
-    static HashMap<String, Short> itemid = new HashMap();
-    static ArrayList<String> 
+    static transient HashMap<String, Item> items = new HashMap();
+    static transient HashMap<Short, String> iditem = new HashMap();
+    static transient HashMap<String, Short> itemid = new HashMap();
+    static transient ArrayList<String> 
             wpns = new ArrayList(), //weapons
             arms = new ArrayList(), //armor
             accs = new ArrayList(), //accessories
@@ -24,7 +24,7 @@ public class Item implements java.io.Serializable{
     boolean exists;
     String type, displayName, name, des;
     int DMG, HIT, CRT, PRC; //weapon stats
-    int VIT, INT, ACC, STR, DEX, WIS, LUK, MHP, CHP, MMP, CMP; //bonuses
+    int VIT, INT, ACC, STR, WIS, LUK, CHA, MHP, CHP, MMP, CMP; //bonuses
     int DEF, RES, EVA; //armor stats
     int VAL; //value
     byte RAR; //base item rarity
@@ -136,33 +136,52 @@ public class Item implements java.io.Serializable{
     }
     
         //regular methods
-    //constructor given an item and rarity
+    //default constructor with name
+    Item(String name) {
+        exists = true;
+        this.name = name;
+        Item i = get(name);
+        des = i.des;
+        setStats(i.type, i.DMG, i.HIT, i.CRT, i.PRC, i.VIT, i.INT, i.ACC, i.STR,
+                i.WIS, i.LUK, i.CHA, i.MHP, i.CHP, i.MMP, i.CMP, i.DEF, i.RES,
+                i.EVA, i.VAL, i.RAR, (byte)0);
+        rarity = randRarity(0);
+        
+        calculateRarity();
+    }
+    
+    //constructor given an item template, rarity, and level
     Item(Item i, byte rarity, byte LVL) {
         //copy stats
         exists = true;
-        type = i.type;
         name = i.name;
         des = i.des;
-        DMG = i.DMG;
-        HIT = i.HIT;
-        CRT = i.CRT;
-        PRC = i.PRC;
-        VIT = i.VIT;
-        INT = i.INT;
-        ACC = i.ACC;
-        STR = i.STR;
-        DEX = i.DEX;
-        WIS = i.WIS;
-        LUK = i.LUK;
-        MHP = i.MHP;
-        CHP = i.CHP;
-        MMP = i.MMP;
-        CMP = i.CMP;
-        DEF = i.DEF;
-        RES = i.RES;
-        EVA = i.EVA;
-        VAL = i.VAL;
-        RAR = i.RAR;
+        setStats(i.type, i.DMG, i.HIT, i.CRT, i.PRC, i.VIT, i.INT, i.ACC, i.STR,
+                i.WIS, i.LUK, i.CHA, i.MHP, i.CHP, i.MMP, i.CMP, i.DEF, i.RES,
+                i.EVA, i.VAL, i.RAR, LVL);
+        this.rarity = rarity;
+        
+        calculateRarity();
+    }
+    
+    //constructor with all stats: mostly for loading
+    Item(String name, String type, String des, int DMG, int HIT, int CRT, int PRC, 
+            int VIT, int INT, int ACC, int STR, int WIS, int LUK, int CHA, int MHP, 
+            int CHP, int MMP, int CMP, int DEF, int RES, int EVA, int VAL, byte RAR) {
+        exists = false;
+        this.name = name;
+        this.des = des;
+        setStats(type, DMG, HIT, CRT, PRC, VIT, INT, ACC, STR, 
+                WIS, LUK, CHA, MHP, CHP, MMP, CMP, DEF, RES, EVA, VAL, RAR, (byte)0);
+    }
+    
+    //construct an empty item
+    Item() {
+        reset();
+    }
+    
+    //rarity adjustments
+    final void calculateRarity() {
         
         //rarity
         this.rarity = rarity;
@@ -195,7 +214,7 @@ public class Item implements java.io.Serializable{
             displayName = name;
         }
         
-        //added stats for rarity
+        //added stats for rarity based on original item
         DMG += rarity * get(name).DMG * .2;
         HIT += rarity * get(name).HIT * .05;
         CRT += rarity * get(name).CRT * .2;
@@ -204,9 +223,9 @@ public class Item implements java.io.Serializable{
         INT += rarity * get(name).INT * .2;
         ACC += rarity * get(name).ACC * .1;
         STR += rarity * get(name).STR * .2;
-        DEX += rarity * get(name).DEX * .2;
         WIS += rarity * get(name).WIS * .2;
         LUK += rarity * get(name).LUK * .2;
+        CHA += rarity * get(name).CHA * .1;
         MHP += rarity * get(name).MHP * .4;
         CHP += rarity * get(name).CHP * .3;
         MMP += rarity * get(name).MMP * .4;
@@ -217,25 +236,9 @@ public class Item implements java.io.Serializable{
         VAL += rarity * get(name).VAL * .5;
     }
     
-    //constructor with all stats
-    Item(String name, String type, String des, int DMG, int HIT, int CRT, int PRC, 
-            int VIT, int INT, int ACC, int STR, int DEX, int WIS, int LUK, int MHP, 
-            int CHP, int MMP, int CMP, int DEF, int RES, int EVA, int VAL, byte RAR) {
-        exists = false;
-        this.name = name;
-        this.des = des;
-        setStats(type, DMG, HIT, CRT, PRC, VIT, INT, ACC, STR, DEX, 
-                WIS, LUK, MHP, CHP, MMP, CMP, DEF, RES, EVA, VAL, RAR, (byte)0);
-    }
-    
-    //construct an empty item
-    Item() {
-        reset();
-    }
-    
     //set stats
     final void setStats(String type, int DMG, int HIT, int CRT, int PRC, int VIT, 
-            int INT, int ACC, int STR, int DEX, int WIS, int LUK, int MHP, int CHP, 
+            int INT, int ACC, int STR, int WIS, int LUK, int CHA, int MHP, int CHP, 
             int MMP, int CMP, int DEF, int RES, int EVA, int VAL, byte RAR, byte LVL) {
         this.type = type;
         this.DMG = DMG;
@@ -246,7 +249,6 @@ public class Item implements java.io.Serializable{
         this.INT = INT;
         this.ACC = ACC;
         this.STR = STR;
-        this.DEX = DEX;
         this.WIS = WIS;
         this.LUK = LUK;
         this.MHP = MHP;
@@ -264,31 +266,10 @@ public class Item implements java.io.Serializable{
     //zero all properties
     final void reset() {
         exists = false;
-        type = "";
         displayName = "";
         name = "";
         rarity = 0;
-        
-        DMG = 0;
-        HIT = 0;
-        CRT = 0;
-        PRC = 0;
-        VIT = 0;
-        INT = 0;
-        ACC = 0;
-        STR = 0;
-        DEX = 0;
-        WIS = 0;
-        LUK = 0;
-        MHP = 0;
-        CHP = 0;
-        MMP = 0;
-        CMP = 0;
-        DEF = 0;
-        RES = 0;
-        EVA = 0;
-        VAL = 0;
-        RAR = 0;
-        LVL = 0;
+        setStats("", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+                0, 0, 0, 0, 0, 0, 0, (byte)0, (byte)0);
     }
 }
