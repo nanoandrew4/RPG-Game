@@ -152,6 +152,10 @@ public class Main extends Application {
         selectR.setOpacity(.5);
         selectR.relocate(screenWidth/4, screenHeight*2/3-screenHeight/20);
 
+        //load fonts
+        Font.loadFont(Main.class.getResourceAsStream("/fonts/Trattatello.ttf"), 10);
+        Font.loadFont(Main.class.getResourceAsStream("/fonts/Bradley Hand Bold.ttf"), 10);
+        
         //mainPane
         Text title = new Text(0, screenHeight * 2 / 5, "RISING LEGEND");
         title.setFont(Font.font("Bradley Hand", FontWeight.BOLD, 104));

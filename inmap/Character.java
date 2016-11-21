@@ -58,8 +58,8 @@ public class Character implements java.io.Serializable {
     public int getLVL() {return LVL;}
     
     //set stats
-    final void setStats(boolean exists, int LVL, int VIT, int INT, int ACC, int STR, int DEX, 
-            int WIS, int LUK, String name, String race, String AIMode, Path path, boolean hostile) {
+    final void setStats(boolean exists, int LVL, int VIT, int INT, int ACC, int STR, int WIS, 
+            int LUK, int CHA, String name, String race, String AIMode, Path path, boolean hostile) {
         this.exists = exists;
         this.LVL = LVL;
         EXP = 0;
