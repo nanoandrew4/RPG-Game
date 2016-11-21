@@ -54,6 +54,8 @@ public class Character implements java.io.Serializable {
     public String getName() {
         return name;
     }
+
+    public int getLVL() {return LVL;}
     
     //set stats
     final void setStats(boolean exists, int LVL, int VIT, int INT, int ACC, int STR, int DEX, 

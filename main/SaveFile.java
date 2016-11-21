@@ -4,13 +4,14 @@
 
 package main;
 
-public class SaveFile {
+class SaveFile implements java.io.Serializable{
     boolean exists;
     String name, file, sprite;
-    int level, playtime, slot;
+    int level, slot;
+    double playtime;
     
     SaveFile(String file, String name, String sprite,
-            int level, int playtime, int slot) {
+            int level, double playtime, int slot) {
         exists = true;
         this.name = name;
         this.file = file;

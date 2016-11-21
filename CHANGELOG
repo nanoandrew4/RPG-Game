@@ -1,3 +1,16 @@
+------------------------20/11/2016------------------------
+
++++ Added serialization, makes saving games MUCH easier
+++ Added load game capabilities with 6 slots to save to
+++ Implemented main menu UI
+
++ Pathfinding implemented, AI's code written (basic)
++ Fixed bugs
+
+++ Overhaul of menu UI
++ Added enemies
+++ Added inventory and items, can be equipped and used
+
 ------------------------13/10/2016------------------------
 
 General:

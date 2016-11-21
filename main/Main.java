@@ -30,6 +30,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 
 import javax.swing.*;
@@ -165,6 +167,7 @@ public class Main extends Application {
             mainT[i].setWrappingWidth(screenWidth);
             mainT[i].setTextAlignment(TextAlignment.CENTER);
         }
+
         mainT[0].setText("New Game");
         mainT[1].setText("Load Game");
         mainT[2].setText("Exit");
@@ -173,41 +176,43 @@ public class Main extends Application {
         mainPane.getChildren().addAll(mainT);
 
         //loadPane
+
+        File folder = new File("src/saves");
+        listOfFiles = folder.listFiles();
+
         saveInfo = new Text[6][2];
+        saveImages = new ImageView[6];
+
+        for (int x = 0; x < 6; x++) { // load files
+            loadSaveInfo((SaveFile) getSaveFile(x));
+        }
+
+        if (saveInfo[0][0] == null)
+            System.out.println("welp");
+
         for (int x = 0; x < 6; x++) {
-            saveInfo[x][0] = new Text(screenWidth/8 + (x%2) * screenWidth * 2/5 + screenWidth/10,
-                    screenHeight/10 + Math.floor(x/2) * screenHeight/4 + screenHeight/14, 
-                    "Save File Nonexistent");
-            saveInfo[x][1] = new Text(screenWidth/8 + (x%2) * screenWidth * 2/5 + screenWidth/10,
-                    screenHeight/10 + Math.floor(x/2) * screenHeight/4 + screenHeight/18 + screenHeight/14, "");
+            if (saveInfo[x][0] == null || saveInfo[x][1] == null) {
+                saveInfo[x][0] = new Text(screenWidth / 8 + (x % 2) * screenWidth * 2 / 5 + screenWidth / 10,
+                        screenHeight / 10 + Math.floor(x / 2) * screenHeight / 4 + screenHeight / 14,
+                        "Save File Nonexistent");
+                saveInfo[x][1] = new Text(screenWidth / 8 + (x % 2) * screenWidth * 2 / 5 + screenWidth / 10,
+                        screenHeight / 10 + Math.floor(x / 2) * screenHeight / 4 + screenHeight / 18 + screenHeight / 14, "");
+            }
             for (int y = 0; y < 2; y++) {
                 saveInfo[x][y].setFont(Font.font("Trattatello", FontWeight.NORMAL, 24));
                 saveInfo[x][y].setFill(Paint.valueOf("BLACK"));
             }
             loadPane.getChildren().addAll(saveInfo[x]);
         }
-        
-        saveImages = new ImageView[6];
+
         for (int i = 0; i < 6; i++) {
-            saveImages[i] = new ImageView(new Image("/media/graphics/inmap/trump.png",
-                    screenHeight/8, screenHeight/8, false, false));
-            saveImages[i].relocate(screenWidth/8 + i%2 * screenWidth * 2/5 + screenWidth/60, 
-                        screenHeight/10 + Math.floor(i/2) * screenHeight/4 + screenHeight/40);
+            if (saveImages[i] == null) {
+                saveImages[i] = new ImageView(new Image("/media/graphics/inmap/trump.png",
+                        screenHeight / 8, screenHeight / 8, false, false));
+                saveImages[i].relocate(screenWidth / 8 + i % 2 * screenWidth * 2 / 5 + screenWidth / 60,
+                        screenHeight / 10 + Math.floor(i / 2) * screenHeight / 4 + screenHeight / 40);
+            }
         }
-        
-        /* load saves here using loadSaveFile(SaveFile s) */
-//        File folder = new File("src/saves");
-//        listOfFiles = folder.listFiles();
-//
-//        for (int i = 0; i < listOfFiles.length; i++) {
-//            if (listOfFiles[i].isFile()) {
-//                Text b = new Text(0, screenHeight*(1+i)/16, listOfFiles[i].getName().split("\\.")[0]);
-//                b.setFont(Font.font("Times New Roman", FontWeight.NORMAL, 32));
-//                b.setWrappingWidth(screenWidth);
-//                b.setTextAlignment(TextAlignment.CENTER);
-//                loadPane.getChildren().add(b);
-//            }
-//        }
         
         Rectangle[] saveR = new Rectangle[6];
         for (int i = 0; i < 6; i++) {
@@ -235,7 +240,7 @@ public class Main extends Application {
         sizeT[3].setText("Large");
         sizeT[4].setText("Massive");
         
-        Text sizeTitle = new Text(0, screenHeight/3, "Select a world size.");
+        Text sizeTitle = new Text(0, screenHeight/3, "Select a world size");
         sizeTitle.setWrappingWidth(screenWidth);
         sizeTitle.setTextAlignment(TextAlignment.CENTER);
         sizeTitle.setFont(Font.font("Bradley Hand", FontWeight.BOLD, 48));
@@ -262,7 +267,7 @@ public class Main extends Application {
         raceT[6].setText("Mutant");
         raceT[7].setText("Skeleton");
         
-        Text raceTitle = new Text(0, screenHeight/6, "Select your race.");
+        Text raceTitle = new Text(0, screenHeight/6, "Select your race");
         raceTitle.setWrappingWidth(screenWidth);
         raceTitle.setTextAlignment(TextAlignment.CENTER);
         raceTitle.setFont(Font.font("Bradley Hand", FontWeight.BOLD, 48));
@@ -288,7 +293,7 @@ public class Main extends Application {
             statRolls[i].setFill(Paint.valueOf("BLACK"));
         }
         
-        Text statTitle = new Text(0, screenHeight/6, "Select your stats.");
+        Text statTitle = new Text(0, screenHeight/6, "Select your stats");
         statTitle.setWrappingWidth(screenWidth);
         statTitle.setTextAlignment(TextAlignment.CENTER);
         statTitle.setFont(Font.font("Bradley Hand", FontWeight.BOLD, 48));
@@ -570,6 +575,7 @@ public class Main extends Application {
                     }
                     else if (menuState.equals("load")) {
                         if (!saveInfo[select][1].getText().equals("")) {
+                            System.out.println(select);
                             loadGame(select);
                         }
                     }
@@ -828,13 +834,6 @@ public class Main extends Application {
         }
     }
     
-    //load save file information
-    private void loadSaveInfo(SaveFile s) {
-        saveImages[s.slot].setImage(new Image(s.sprite, screenHeight/8, screenHeight/8, false, false));
-        saveInfo[s.slot][0].setText(s.name + " " + s.level);
-        saveInfo[s.slot][1].setText("Playtime: " + s.playtime + " units of time");
-    }
-    
     //start new game
     private void startNewGame(int size, int VIT, int INT, int STR, int WIS, int LUK, 
             int CHA, String race, String name, String sprite, String portrait) {
@@ -853,6 +852,7 @@ public class Main extends Application {
     //load a game
     private void loadGame(int slot) {
         try {
+            System.out.println(listOfFiles[slot].getName().split("\\.")[0]);
             Object[] models = loadModel(listOfFiles[slot].getName().split("\\.")[0]);
             startOverworldController(-1, (OverworldModel) models[0]);
             startInMapController((InMapModel) models[1]);
@@ -883,7 +883,6 @@ public class Main extends Application {
         inmapThread.setDaemon(true);
 
         inmapThread.run();
-        
     }
 
     //start inmap controller with loaded model
@@ -898,15 +897,17 @@ public class Main extends Application {
         inmapThread.run();
     }
 
-    public void saveModel() throws IOException {
+    public void saveModel(int slot) throws IOException {
 //        if (overworldController.getModelName() == null)
 //            overworldController.setModelName(JOptionPane.showInputDialog(this, "Enter name to save game as: "));
-        overworldController.setModelName("asdf" + (int)(Math.random()*26));
+        overworldController.setModelName("save" + slot);
 
         System.out.println("Saving game...");
         long start = System.currentTimeMillis();
         FSTObjectOutput out = new FSTObjectOutput(new FileOutputStream("src/saves/" 
                 + overworldController.getModelName() + ".sav"));
+        out.writeObject(new SaveFile("src/saves/" + overworldController.getModelName() + ".sav", IMController.getModel().getParty()[0].getName(), "/media/graphics/inmap/trump.png",
+                IMController.getModel().getParty()[0].getLVL(), (double)(System.currentTimeMillis() - overworldController.getModel().getStartTime()) / 3600000d, slot));
         out.writeObject(keybindings);
         out.writeObject(overworldController.getModel());
         out.writeObject(IMController.getModel());
@@ -915,13 +916,43 @@ public class Main extends Application {
                 (System.currentTimeMillis() / 1000d - start / 1000d));
     }
 
-    private Object[] loadModel(String saveName) throws IOException, ClassNotFoundException {
-        FSTObjectInput in = new FSTObjectInput(new FileInputStream("src/saves/" + saveName + ".sav"));
+    private Object[] loadModel(String slot) throws IOException, ClassNotFoundException {
+        FSTObjectInput in = new FSTObjectInput(new FileInputStream("src/saves/" + slot + ".sav"));
+        in.readObject(); // skips savefile
         keybindings = (HashMap<KeyCode, Control>) in.readObject();
         Object[] models = {in.readObject(), in.readObject()};
         in.close();
         return models;
         // start other threads if necessary
+    }
+
+    //load save file information
+    private void loadSaveInfo(SaveFile s) {
+        if (s == null)
+            return;
+        saveImages[s.slot] = new ImageView(new Image(s.sprite, screenHeight/8, screenHeight/8, false, false));
+        saveImages[s.slot].relocate(screenWidth / 8 + s.slot % 2 * screenWidth * 2 / 5 + screenWidth / 60,
+                screenHeight / 10 + Math.floor(s.slot / 2) * screenHeight / 4 + screenHeight / 40);
+        saveInfo[s.slot][0] = new Text(screenWidth / 8 + (s.slot% 2) * screenWidth * 2 / 5 + screenWidth / 10,
+                screenHeight / 10 + Math.floor(s.slot / 2) * screenHeight / 4 + screenHeight / 14,
+                s.name + " " + s.level);
+        saveInfo[s.slot][1] = new Text(screenWidth / 8 + (s.slot % 2) * screenWidth * 2 / 5 + screenWidth / 10,
+                screenHeight / 10 + Math.floor(s.slot / 2) * screenHeight / 4 + screenHeight / 18 + screenHeight / 14,
+                "Playtime: " + String.format("%.2f", s.playtime) + " hours");
+    }
+
+    public Object getSaveFile(int slot) {
+        //File f = new File(Paths.get("/saves/save" + slot + ".sav"));
+        FSTObjectInput in;
+        try {
+            in = new FSTObjectInput(new FileInputStream("src/saves/save" + slot + ".sav"));
+            Object o = in.readObject();
+            in.close();
+            return o;
+        } catch (IOException | ClassNotFoundException e) {
+            //e.printStackTrace();
+            return null;
+        }
     }
 
     public void setStage(Scene scene) {

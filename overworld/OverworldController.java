@@ -236,7 +236,7 @@ public class OverworldController implements Runnable {
             if (key == Control.ESC) { // for now save when hit escape
                 //model.saveGame();
                 try {
-                    main.saveModel();
+                    main.saveModel(0);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

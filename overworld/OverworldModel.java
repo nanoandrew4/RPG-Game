@@ -24,6 +24,7 @@ public class OverworldModel implements java.io.Serializable {
     private ArrayList<Party> parties;
     private transient PartyAI partyAI;
     private String modelName;
+    private long startTime = System.currentTimeMillis();
 
     private FileAccess fileAccess;
 
@@ -51,6 +52,8 @@ public class OverworldModel implements java.io.Serializable {
     String getModelName() {
         return modelName;
     }
+
+    public long getStartTime() {return startTime;}
 
     void createPlayer(float baseSpeed, String faction) {
         player = new Party(0, 0, (short) fileAccess.getFromFile("locationX", "short"), (short) fileAccess.getFromFile("locationY", "short"), baseSpeed, (float) Math.random(), new ArrayList<>(), faction);
