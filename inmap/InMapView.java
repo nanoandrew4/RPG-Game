@@ -754,6 +754,11 @@ class InMapView {
         else return null;
     }
     
+    //return menuPane
+    Pane getMenuPane() {
+        return menuPane;
+    }
+    
     //animates imageview movement
 //    private void setMoveAnim(ImageView imageView) {
 //        

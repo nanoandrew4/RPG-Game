@@ -342,7 +342,7 @@ public class OverworldController implements Runnable {
                                 view.showSettlementInfo(model.getTiles()[xPos][yPos].settlementTile);
                             else if (model.getTiles()[xPos][yPos].type.equalsIgnoreCase("InMap")) {
                                 main.IMController.newLocation(new Point(xPos, yPos), model.getTiles()[xPos][yPos].inMapTile.inmapType.toLowerCase());
-                                view.showInMapInfo(main.IMController.getName(new Point(xPos, yPos)),
+                                view.showInMapInfo(main.IMController.getLocationName(new Point(xPos, yPos)),
                                         main.IMController.getDifficulty(new Point(xPos, yPos)));
                             }
                             controlsLocked = true;

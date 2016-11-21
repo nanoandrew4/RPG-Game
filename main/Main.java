@@ -907,6 +907,31 @@ public class Main extends Application {
             //e.printStackTrace();
             return null;
         }
+    } 
+
+    //create new location
+    public void newLocation(Point p, String type) {
+        IMController.newLocation(p, type);
+    }
+
+    //get name of current location
+    public String getLocationName(Point p) {
+        return IMController.getLocationName(p);
+    }
+
+    //get difficulty of current location
+    public String getDifficulty(Point p){
+        return IMController.getDifficulty(p);
+    }
+    
+    //get menu pane
+    public Pane getMenuPane() {
+        return IMController.getMenuPane();
+    }
+    
+    //process menu input from overworldController
+    public boolean processMenuInput(Control c) {
+        return IMController.menuInput(c);
     }
 
     public void setStage(Scene scene) {

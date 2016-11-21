@@ -8,6 +8,7 @@ import java.awt.Point;
 
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Pane;
 
 import main.*;
 
@@ -92,18 +93,29 @@ public class InMapController implements Runnable {
         model.makeLocation(p, type);
     }
 
-    public String getName(Point p) {
+    //get name of current location
+    public String getLocationName(Point p) {
         return model.getLocation(p).name;
     }
 
+    //get difficulty of current location
     public String getDifficulty(Point p){
         return "Easy peasy"; // temp
     }
     
-    public void menuInput(Control input) {
+    public Pane getMenuPane() {
+        return view.getMenuPane();
+    }
+    
+    public boolean menuInput(Control input) {
         model.process(input);
         updateViewData();
         view.update(viewdata);
+        
+        if(!model.getFocus().equals("menu"))
+            return true;
+        else
+            return false;
     }
     
     public void toggleMenu(boolean on) {
