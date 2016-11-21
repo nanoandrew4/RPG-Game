@@ -60,7 +60,7 @@ public class Main extends Application {
     //view vars
     private Stage stage;
     private Scene scene;
-    private Pane pane, mainPane, loadPane, sizePane, racePane, 
+    private Pane pane, mainPane, loadPane, racePane, 
             statPane, charPane, namePane, sumPane, waitPane; //all panes
     private Rectangle selectR; //selection box
     private int select = 0;
@@ -87,7 +87,7 @@ public class Main extends Application {
     private Text sumStats, sumChar, sumEqp;
     
     //saved vars for new game
-    private int ngSize, ngVIT, ngINT, ngSTR, ngWIS, ngLUK, ngCHA;
+    private int ngVIT, ngINT, ngSTR, ngWIS, ngLUK, ngCHA;
     private String ngRace, ngName, ngSprite, ngPortrait;
 
     public static void main(String[] args) {
@@ -134,7 +134,6 @@ public class Main extends Application {
         pane = new Pane();
         mainPane = new Pane();
         loadPane = new Pane();
-        sizePane = new Pane();
         racePane = new Pane();
         statPane = new Pane();
         charPane = new Pane();
@@ -180,19 +179,15 @@ public class Main extends Application {
         mainPane.getChildren().addAll(mainT);
 
         //loadPane
-
         File folder = new File("src/saves");
         listOfFiles = folder.listFiles();
 
         saveInfo = new Text[6][2];
         saveImages = new ImageView[6];
 
-        for (int x = 0; x < 6; x++) { // load files
+        for (int x = 0; x < 6; x++) { //load files
             loadSaveInfo((SaveFile) getSaveFile(x));
         }
-
-        if (saveInfo[0][0] == null)
-            System.out.println("welp");
 
         for (int x = 0; x < 6; x++) {
             if (saveInfo[x][0] == null || saveInfo[x][1] == null) {
@@ -228,30 +223,6 @@ public class Main extends Application {
         
         loadPane.getChildren().addAll(saveR);
         loadPane.getChildren().addAll(saveImages);
-        
-        //sizePane
-        Text[] sizeT = new Text[5];
-        for (int i = 0; i < 5; i++) {
-            sizeT[i] = new Text(0, screenHeight/2 + i*screenHeight/12, "");
-            sizeT[i].setWrappingWidth(screenWidth);
-            sizeT[i].setTextAlignment(TextAlignment.CENTER);
-            sizeT[i].setFont(Font.font("Trattatello", FontWeight.LIGHT, 32));
-            sizeT[i].setFill(Paint.valueOf("BLACK"));
-        }
-        sizeT[0].setText("Miniscule");
-        sizeT[1].setText("Small");
-        sizeT[2].setText("Moderate");
-        sizeT[3].setText("Large");
-        sizeT[4].setText("Massive");
-        
-        Text sizeTitle = new Text(0, screenHeight/3, "Select a world size");
-        sizeTitle.setWrappingWidth(screenWidth);
-        sizeTitle.setTextAlignment(TextAlignment.CENTER);
-        sizeTitle.setFont(Font.font("Bradley Hand", FontWeight.BOLD, 48));
-        sizeTitle.setFill(Paint.valueOf("SADDLEBROWN"));
-        
-        sizePane.getChildren().add(sizeTitle);
-        sizePane.getChildren().addAll(sizeT);
         
         //racePane
         raceT = new Text[8];
@@ -569,7 +540,7 @@ public class Main extends Application {
                     if (menuState.equals("main")) {
                         //new game: default very large
                         if (select == 0)
-                            menuState = "size";
+                            menuState = "race";
                         //load game
                         else if (select == 1)
                             menuState = "load";
@@ -582,10 +553,6 @@ public class Main extends Application {
                             System.out.println(select);
                             loadGame(select);
                         }
-                    }
-                    else if (menuState.equals("size")) {
-                        ngSize = select;
-                        menuState = "race";
                     }
                     else if (menuState.equals("race")) {
                         ngRace = raceT[select].getText();
@@ -626,7 +593,7 @@ public class Main extends Application {
                     else if (menuState.equals("sum")) {
                         pane.getChildren().remove(sumPane);
                         pane.getChildren().add(waitPane);
-                        startNewGame(ngSize, ngVIT, ngINT, ngSTR, ngWIS, ngLUK, 
+                        startNewGame(ngVIT, ngINT, ngSTR, ngWIS, ngLUK, 
                                 ngCHA, ngRace, ngName, ngSprite, ngPortrait);
                     }
                     select = 0;
@@ -637,10 +604,8 @@ public class Main extends Application {
                         select = 0;
                     if (menuState.equals("load"))
                         menuState = "main";
-                    else if (menuState.equals("size"))
-                        menuState = "main";
                     else if (menuState.equals("race"))
-                        menuState = "size";
+                        menuState = "main";
                     else if (menuState.equals("stat"))
                         menuState = "race";
                     else if (menuState.equals("char"))
@@ -692,7 +657,7 @@ public class Main extends Application {
                 break;
                 
             case "main":
-                if(pane.getChildren().removeAll(loadPane, sizePane)) {
+                if(pane.getChildren().removeAll(loadPane, racePane)) {
                     selectR.setWidth(screenWidth / 2);
                     selectR.setHeight(screenHeight / 15);
                     pane.getChildren().add(mainPane);
@@ -700,17 +665,8 @@ public class Main extends Application {
                 selectR.relocate(screenWidth/4, screenHeight*(8+select)/12-screenHeight/20);
                 break;
                 
-            case "size":
-                if(pane.getChildren().removeAll(mainPane, racePane)) {
-                    selectR.setWidth(screenWidth / 2);
-                    selectR.setHeight(screenHeight / 15);
-                    pane.getChildren().add(sizePane);
-                }
-                selectR.relocate(screenWidth/4, screenHeight*5/11 + select*screenHeight/12);
-                break;
-                
             case "race":
-                if(pane.getChildren().removeAll(sizePane, statPane)) {
+                if(pane.getChildren().removeAll(mainPane, statPane)) {
                     selectR.setWidth(screenWidth / 4);
                     selectR.setHeight(screenHeight / 15);
                     pane.getChildren().add(racePane);
@@ -839,15 +795,9 @@ public class Main extends Application {
     }
     
     //start new game
-    private void startNewGame(int size, int VIT, int INT, int STR, int WIS, int LUK, 
+    private void startNewGame(int VIT, int INT, int STR, int WIS, int LUK, 
             int CHA, String race, String name, String sprite, String portrait) {
-        switch(size) {
-            case 0: startOverworldController(100, null); break;
-            case 1: startOverworldController(250, null); break;
-            case 2: startOverworldController(500, null); break;
-            case 3: startOverworldController(750, null); break;
-            case 4: startOverworldController(1000, null); break;
-        }
+        startOverworldController(1000, null);
         startInMapController(VIT, INT, STR, WIS, LUK, CHA, race, name, sprite, portrait);
 
         System.out.println("All threads started");
