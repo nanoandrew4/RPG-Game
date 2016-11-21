@@ -107,7 +107,7 @@ class OverworldView {
     final DoubleProperty speedX = new SimpleDoubleProperty(), speedY = new SimpleDoubleProperty();
     private final LongProperty lastUpdateTime = new SimpleLongProperty();
 
-    private Pane overworldLayout, infoBox;
+    private Pane overworldLayout, infoBox, menu;
 
     ImageView[][][] imageViews; // for controller to access and add click events
     ImageView centerTile;
@@ -446,7 +446,7 @@ class OverworldView {
                     }
 
                     if (player.getPath() == null) {
-                        imageView.setLayoutX(imageView.getLayoutX() + player.getSpeedX());
+                        imageView.setLayoutX(imageView.getLayoutX() - player.getSpeedX());
                         imageView.setLayoutY(imageView.getLayoutY() + player.getSpeedY());
                         //System.out.println(player.getSpeedX());
                         //System.out.println(player.getSpeedY());
@@ -526,6 +526,14 @@ class OverworldView {
                 imageViews[x][y][1].setLayoutX(imageViews[x][y][1].getLayoutX() + xOffset);
                 imageViews[x][y][1].setLayoutY(imageViews[x][y][1].getLayoutY() + yOffset);
             }
+    }
+
+    void setMenuPane(Pane p) {
+        overworldLayout.getChildren().add(p);
+    }
+
+    void removeMenuPane(Pane p) {
+        overworldLayout.getChildren().remove(p);
     }
 
     void showSettlementInfo(SettlementTile tile) {

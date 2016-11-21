@@ -73,7 +73,10 @@ public class InMapController implements Runnable {
     }
     
     private void updateViewData() {
-        viewdata.floor = model.getCurrentLocation().getCurrentFloor();
+        if (model.getCurrentLocation() == null)
+            viewdata.floor = null;
+        else
+            viewdata.floor = model.getCurrentLocation().getCurrentFloor();
         viewdata.menuWindow = model.getMenuWindow();
         viewdata.focus = model.getFocus();
         viewdata.gold = model.getGold();
@@ -112,10 +115,7 @@ public class InMapController implements Runnable {
         updateViewData();
         view.update(viewdata);
         
-        if(!model.getFocus().equals("menu"))
-            return true;
-        else
-            return false;
+        return !model.getFocus().equals("menu");
     }
     
     public void toggleMenu(boolean on) {
@@ -149,7 +149,7 @@ public class InMapController implements Runnable {
             
             if(!model.hasControl && hasControl) {
                 hasControl = false;
-                main.overworldController.passControl();
+                main.passControl(null);
             }
         });
 

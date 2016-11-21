@@ -1127,12 +1127,12 @@ class Party implements java.io.Serializable {
         double leftAngle = angles[0];
         double rightAngle = angles[1];
 
-        /*System.out.println("xPos: " + getTileX());
+        System.out.println("xPos: " + getTileX());
         System.out.println("yPos: " + getTileY());
         System.out.println("Langle: " + leftAngle);
         System.out.println("Rangle: " + rightAngle);
         System.out.println("xOffset: " + xOffset);
-        System.out.println("yOffset: " + yOffset);*/
+        System.out.println("yOffset: " + yOffset);
 
         if (Math.abs(leftAngle) >= 22.5 || Math.abs(rightAngle) >= 22.5) { // new tile
             if (rightAngle >= 22.5) {

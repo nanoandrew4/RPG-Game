@@ -47,8 +47,8 @@ import overworld.OverworldModel;
 
 public class Main extends Application {
     //controllers
-    public OverworldController overworldController;
-    public InMapController IMController;
+    private OverworldController overworldController;
+    private InMapController IMController;
     public DBManager dbManager;
     //converts keycodes into control enums
     private HashMap<KeyCode, Control> keybindings;
@@ -913,6 +913,13 @@ public class Main extends Application {
         IMController.newLocation(p, type);
     }
 
+    public void passControl(Point p) {
+        if (p != null)
+            IMController.passControl(p);
+        else
+            overworldController.passControl();
+    }
+
     //get name of current location
     public String getLocationName(Point p) {
         return IMController.getLocationName(p);
@@ -927,6 +934,8 @@ public class Main extends Application {
     public Pane getMenuPane() {
         return IMController.getMenuPane();
     }
+
+    public void toggleMenu(boolean on) {IMController.toggleMenu(on);}
     
     //process menu input from overworldController
     public boolean processMenuInput(Control c) {

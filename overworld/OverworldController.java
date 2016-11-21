@@ -44,6 +44,7 @@ public class OverworldController implements Runnable {
 
     private Scene scene;
     private boolean controlsLocked = false;
+    boolean menuOpen = false;
 
     private long start; // for timing the creation of the Model and View
 
@@ -140,6 +141,20 @@ public class OverworldController implements Runnable {
             if (controlsLocked)
                 return;
 
+            if (key == Control.MENU || key == Control.OPENCHAR || key == Control.OPENINV || key == Control.OPENNOTES || key == Control.OPENOPTIONS || key == Control.OPENPARTY) {
+                if (!menuOpen)
+                    view.setMenuPane(main.getMenuPane());
+                menuOpen = true;
+            }
+
+            if (menuOpen) {
+                if (main.processMenuInput(key)) {
+                    menuOpen = false;
+                    view.removeMenuPane(main.getMenuPane());
+                }
+                return;
+            }
+
             model.getPlayer().setPath(null);
 
             //System.out.println("XPos: " + model.getCurrPos(0));
@@ -172,8 +187,6 @@ public class OverworldController implements Runnable {
                 }
             }
 
-            if (key == Control.MENU || key == Control.OPENCHAR || key == Control.OPENINV || key == Control.OPENNOTES || key == Control.OPENOPTIONS || key == Control.OPENPARTY)
-
 
             if (key == Control.ESC) { // for now save when hit escape
                 //model.saveGame();
@@ -191,7 +204,7 @@ public class OverworldController implements Runnable {
                 if (key == Control.UP || key == Control.DOWN)
                     model.getPlayer().setSpeedY(model.getPlayer().getSpeedY(key));
                 if (key == Control.RIGHT || key == Control.LEFT)
-                    model.getPlayer().setSpeedX(-model.getPlayer().getSpeedX(key));
+                    model.getPlayer().setSpeedX(model.getPlayer().getSpeedX(key));
 
                 model.getPlayer().detectTileChange(view.getMapTileSize());
             }
@@ -295,7 +308,7 @@ public class OverworldController implements Runnable {
                         });
 
                         view.enterDungeon.setOnAction(event1 -> {
-                            main.IMController.passControl(new Point(xPos, yPos));
+                            main.passControl(new Point(xPos, yPos));
                         });
                     } else if (event.getButton() == MouseButton.SECONDARY) { // move to tile
                         int areaStartX = p.getTileX() < xPos ? p.getTileX() - 10 > 0 ? p.getTileX() : 0 : xPos - 10 > 0 ? xPos : 0;
