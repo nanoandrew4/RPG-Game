@@ -364,31 +364,24 @@ class InMapView {
         //charPane
         ImageView portrait = new ImageView(images.portrait);
         portrait.relocate(screenWidth/5, screenHeight/3);
-        
         chName = new Text(screenWidth/5, screenHeight*12/20, "");
         chName.setFont(Font.font(null, FontWeight.NORMAL, 24));
         chName.setFill(Paint.valueOf("WHITE"));
-        
         chTitle = new Text(screenWidth/5, screenHeight*13/20, "");
         chTitle.setFont(Font.font(null, FontWeight.NORMAL, 24));
         chTitle.setFill(Paint.valueOf("WHITE"));
-        
         chHP = new Text(screenWidth/5, screenHeight*14/20, "");
         chHP.setFont(Font.font(null, FontWeight.NORMAL, 24));
         chHP.setFill(Paint.valueOf("WHITE"));
-        
         chMP = new Text(screenWidth/5, screenHeight*15/20, "");
         chMP.setFont(Font.font(null, FontWeight.NORMAL, 24));
         chMP.setFill(Paint.valueOf("WHITE"));
-        
         chLVL = new Text(screenWidth/5, screenHeight*16/20, "");
         chLVL.setFont(Font.font(null, FontWeight.NORMAL, 24));
         chLVL.setFill(Paint.valueOf("WHITE"));
-        
         chEXP = new Text(screenWidth/5, screenHeight*17/20, "");
         chEXP.setFont(Font.font(null, FontWeight.NORMAL, 24));
         chEXP.setFill(Paint.valueOf("WHITE"));
-        
         chText = new Text[14];
         charPane.getChildren().addAll(portrait, chName, chTitle, chHP, chMP, chLVL, chEXP);
 //        charPane.getChildren().addAll(chText);

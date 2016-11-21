@@ -155,7 +155,7 @@ public class Main extends Application {
         //load fonts
         Font.loadFont(Main.class.getResourceAsStream("/fonts/Trattatello.ttf"), 10);
         Font.loadFont(Main.class.getResourceAsStream("/fonts/Bradley Hand Bold.ttf"), 10);
-        
+
         //mainPane
         Text title = new Text(0, screenHeight * 2 / 5, "RISING LEGEND");
         title.setFont(Font.font("Bradley Hand", FontWeight.BOLD, 104));
