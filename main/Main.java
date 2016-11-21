@@ -629,7 +629,7 @@ public class Main extends Application {
                     
                 case ESC:
                     if (menuState.equals("main")) {
-                        startOverworldController(1000, null);
+                        startOverworldController(null);
                         startInMapController(null);
                     }
                     
@@ -797,7 +797,7 @@ public class Main extends Application {
     //start new game
     private void startNewGame(int VIT, int INT, int STR, int WIS, int LUK, 
             int CHA, String race, String name, String sprite, String portrait) {
-        startOverworldController(1000, null);
+        startOverworldController(null);
         startInMapController(VIT, INT, STR, WIS, LUK, CHA, race, name, sprite, portrait);
 
         System.out.println("All threads started");
@@ -806,9 +806,10 @@ public class Main extends Application {
     //load a game
     private void loadGame(int slot) {
         try {
-            System.out.println(listOfFiles[slot].getName().split("\\.")[0]);
+            if (listOfFiles[0].getName().equals(".DS_Store"))
+                slot++;
             Object[] models = loadModel(listOfFiles[slot].getName().split("\\.")[0]);
-            startOverworldController(-1, (OverworldModel) models[0]);
+            startOverworldController((OverworldModel) models[0]);
             startInMapController((InMapModel) models[1]);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -816,10 +817,10 @@ public class Main extends Application {
     }
 
     //start overworld controller
-    private void startOverworldController(int mapSize, OverworldModel overworldModel) {
+    private void startOverworldController(OverworldModel overworldModel) {
         //if controllers need to talk, initialize objects and run instead of instance of new class
         if (overworldModel == null)
-            overworldController = new OverworldController(this, mapSize);
+            overworldController = new OverworldController(this);
         else
             overworldController = new OverworldController(this, overworldModel);
 
@@ -852,8 +853,6 @@ public class Main extends Application {
     }
 
     public void saveModel(int slot) throws IOException {
-//        if (overworldController.getModelName() == null)
-//            overworldController.setModelName(JOptionPane.showInputDialog(this, "Enter name to save game as: "));
         overworldController.setModelName("save" + slot);
 
         System.out.println("Saving game...");

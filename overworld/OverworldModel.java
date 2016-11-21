@@ -28,18 +28,16 @@ public class OverworldModel implements java.io.Serializable {
 
     private FileAccess fileAccess;
 
-    OverworldModel(int mapSize, boolean newGame) {
+    OverworldModel() {
         parties = new ArrayList<>();
 
         fileAccess = new FileAccess();
         fileAccess.loadFile("src/data/player");
 
-        if (newGame) {
-            try {
-                newGame(mapSize);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+        try {
+            newGame(1000);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
         startPartyAI();
@@ -122,14 +120,6 @@ public class OverworldModel implements java.io.Serializable {
     private void newGame(int mapSize) throws SQLException {
         map = new Map(mapSize, true);
     }
-
-    void saveGame() { // saves game
-        /*try {
-            map.save();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }*/
-    }
 }
 
 class Map implements java.io.Serializable {
@@ -181,8 +171,8 @@ class Map implements java.io.Serializable {
 
         MIN_MOUNTAIN = (int) (1.0 * mapSize);
         MAX_MOUNTAIN = (int) (1.75 * mapSize);
-        MIN_FOREST = 5 * mapSize;
-        MAX_FOREST = (int) (12.5 * mapSize);
+        MIN_FOREST = (int) (2.5 * mapSize);
+        MAX_FOREST = (int) (7.5 * mapSize);
         MIN_SETTLEMENT = (int) (1.1 * mapSize);
         MAX_SETTLEMENT = 2 * mapSize;
         MIN_DUNGEON = (int) (0.7 * mapSize);
@@ -950,6 +940,7 @@ class Party implements java.io.Serializable {
     private Point dest;
 
     private float maxSpeed;
+    private float speedX, speedY; // only for player use
     private short fov;
 
     private char state;
@@ -980,6 +971,18 @@ class Party implements java.io.Serializable {
         return tileY;
     }
 
+    void setTileX(short tileX) {
+        this.tileX = tileX;
+    }
+
+    void setTileY(short tileY) {
+        this.tileY = tileY;
+    }
+
+    void setxOffset(float xOffset) {this.xOffset = xOffset;}
+
+    void setyOffset(float yOffset) {this.yOffset = yOffset;}
+
     float getxOffset() {
         return xOffset;
     }
@@ -987,6 +990,14 @@ class Party implements java.io.Serializable {
     float getyOffset() {
         return yOffset;
     }
+
+    float getSpeedX() {return speedX;}
+
+    float getSpeedY() {return speedY;}
+
+    void setSpeedX(float speed) {this.speedX = speed; this.xOffset += speed;}
+
+    void setSpeedY(float speed) {this.speedY = speed; this.yOffset -= speed;}
 
     Control getDir() {
         return dir;
@@ -1008,14 +1019,6 @@ class Party implements java.io.Serializable {
 
     float getMaxSpeed() {
         return maxSpeed;
-    }
-
-    void setTileX(short tileX) {
-        this.tileX = tileX;
-    }
-
-    void setTileY(short tileY) {
-        this.tileY = tileY;
     }
 
     void setDir(Control dir) {
@@ -1118,7 +1121,7 @@ class Party implements java.io.Serializable {
         return angles;
     }
 
-    private void detectTileChange(double mapTileSize) {
+    void detectTileChange(double mapTileSize) {
 
         double[] angles = calcAngles(xOffset, yOffset, mapTileSize);
         double leftAngle = angles[0];

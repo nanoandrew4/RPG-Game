@@ -15,6 +15,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import main.Control;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -445,19 +446,23 @@ class OverworldView {
                     }
 
                     if (player.getPath() == null) {
-                        imageView.setLayoutX(imageView.getLayoutX() + speedX.get());
-                        imageView.setLayoutY(imageView.getLayoutY() + speedY.get());
+                        imageView.setLayoutX(imageView.getLayoutX() + player.getSpeedX());
+                        imageView.setLayoutY(imageView.getLayoutY() + player.getSpeedY());
+                        //System.out.println(player.getSpeedX());
+                        //System.out.println(player.getSpeedY());
                     } else if ((player.getStart() != null) && (player.getPixelStartPos() != null)) {
-                        if ((Math.abs(player.getTileX() - player.getStart().getX()) == 1 || Math.abs(player.getTileY() - player.getStart().getY()) == 1)
-                                && (int) getPlayerXOffset() == (int) player.getPixelStartPos().getX() && (int) getPlayerYOffset() == (int) player.getPixelStartPos().getY()) {
+                        if ((Math.abs(player.getStart().getX() - player.getTileX()) == 1 || Math.abs(player.getStart().getY() - player.getTileY()) == 1)
+                                && (int) player.getPixelStartPos().getX() == (int) player.getxOffset() && (int) player.getPixelStartPos().getY() == (int) player.getyOffset()) {
                             player.setPixelStartPos((int) getPlayerXOffset(), (int) (getPlayerYOffset()));
                             player.setStart(player.getTileX(), player.getTileY());
                             player.setDir(player.getPath().next());
-                            System.out.println("Changed dir aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
                         } else {
-                            imageView.setLayoutX(imageView.getLayoutX() + player.getSpeedX(player.getDir()));
-                            imageView.setLayoutY(imageView.getLayoutY() + player.getSpeedY(player.getDir()));
+                            System.out.println((Math.abs(player.getTileX() - player.getStart().getX())));
+                            System.out.println(Math.abs(player.getTileY() - player.getStart().getY()));
+                            imageView.setLayoutX(imageView.getLayoutX() - player.getSpeedX(player.convertFromPath(player.getDir())));
+                            imageView.setLayoutY(imageView.getLayoutY() + player.getSpeedY(player.convertFromPath(player.getDir())));
                         }
+                        player.detectTileChange(mapTileSize);
                     }
                 }
                 lastUpdateTime.set(timestamp);

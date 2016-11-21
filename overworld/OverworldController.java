@@ -3,7 +3,9 @@
 
     TODO LIST - IN ORDER OF BLOCK PRIORITY
     Fix View scrolling in SW direction - Seems to have been self-fixed... Nov 17 2016
+    Player moves when tile is clicked on
     Player movement independent of AI's movement
+    All map sizes don't gen, too many forests in some, formula needs readjusting
     Fix Settlement banners
 
     Design and implement Economy
@@ -48,11 +50,11 @@ public class OverworldController implements Runnable {
     private OverworldView view;
     private OverworldModel model;
 
-    public OverworldController(Main main, int mapSize) { // new game
+    public OverworldController(Main main) { // new game
         this.main = main;
         start = System.currentTimeMillis();
 
-        model = new OverworldModel(mapSize, true);
+        model = new OverworldModel();
         System.out.println("Model init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
 
         view = new OverworldView(model.getMapSize(), main.screenWidth, main.screenHeight);
@@ -119,67 +121,6 @@ public class OverworldController implements Runnable {
         return (float) (100 / view.getMapTileSize());
     }
 
-    private double[] calcAngles(double xOffset, double yOffset) {
-
-        /*
-            Calculates and returns angles from current position on tile to leftmost and rightmost point
-         */
-
-        double[] angles = new double[2]; // stores langle, rangle
-
-        angles[0] = Math.toDegrees(Math.atan(yOffset / (xOffset + (view.getMapTileSize() / 2)))); // left
-        angles[1] = Math.toDegrees(Math.atan(yOffset / ((view.getMapTileSize() / 2) - xOffset))); // right
-
-        return angles;
-    }
-
-    private void detectTileChange() {
-
-        /*
-            Algorithm to detect whether there has been a change in tile (user moved off tile on to adjacent one)
-         */
-
-        long start = System.currentTimeMillis();
-
-        //TODO: TILE CHANGE DETECTION NEEDS FIXING AGAIN... PROBABLY TO DO WITH NEXT TWO LINES
-
-        //System.out.println(view.centerTile.screenToLocal(view.redDot.localToScreen(3, 3)));
-
-        double[] angles = calcAngles(view.getPlayerXOffset(), view.getPlayerYOffset());
-        double leftAngle = angles[0];
-        double rightAngle = angles[1];
-
-        /*System.out.println("xOffset: " + tileXOffset);
-        System.out.println("yOffset: " + tileYOffset);
-        System.out.println("Left side angle " + leftAngle);
-        System.out.println("Right side angle " + rightAngle);
-        System.out.println();*/
-
-        if (Math.abs(leftAngle) >= 22.5 || Math.abs(rightAngle) >= 22.5) { // new tile
-            /*System.out.println("Moved tile");
-            System.out.println();*/
-            if (rightAngle >= 22.5) {
-                model.setCurrPos(1, model.getCurrPos(1) - 1);
-                view.addRow(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), true);
-            }
-            if (rightAngle <= -22.5) {
-                model.setCurrPos(0, model.getCurrPos(0) + 1);
-                view.addColumn(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), true);
-            }
-            if (leftAngle >= 22.5) {
-                model.setCurrPos(0, model.getCurrPos(0) - 1);
-                view.addColumn(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), false);
-            }
-            if (leftAngle <= -22.5) {
-                model.setCurrPos(1, model.getCurrPos(1) + 1);
-                view.addRow(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), false);
-            }
-            setMouseEvents();
-
-            System.out.println("Change detection took " + (System.currentTimeMillis() - start) + "ms");
-        }
-    }
-
     private void setInput(Scene scene) {
 
         /*
@@ -224,14 +165,15 @@ public class OverworldController implements Runnable {
             if (key == Control.ALT) { // show borders
                 for (int y = -OverworldView.zoom; y < OverworldView.zoom; y++) {
                     for (int x = -OverworldView.zoom; x < OverworldView.zoom; x++) {
-                        if (view.imageViews[x + OverworldView.zoom][y + OverworldView.zoom][1] == null) {
-                            //System.out.println(xPos + " " + yPos);
+                        if (view.imageViews[x + OverworldView.zoom][y + OverworldView.zoom][1] == null)
                             continue;
-                        }
                         view.imageViews[x + OverworldView.zoom][y + OverworldView.zoom][1].setVisible(true);
                     }
                 }
             }
+
+            if (key == Control.MENU || key == Control.OPENCHAR || key == Control.OPENINV || key == Control.OPENNOTES || key == Control.OPENOPTIONS || key == Control.OPENPARTY)
+
 
             if (key == Control.ESC) { // for now save when hit escape
                 //model.saveGame();
@@ -243,18 +185,15 @@ public class OverworldController implements Runnable {
             }
 
             if (key == Control.LEFT || key == Control.RIGHT || key == Control.UP || key == Control.DOWN) {
-                if (model.getCurrPos(0) <= 0 || model.getCurrPos(0) >= model.getMapSize() || model.getCurrPos(1) <= 0 || model.getCurrPos(1) >= model.getMapSize()) {
-                    view.speedX.set(0);
-                    view.speedY.set(0);
+                if (model.getCurrPos(0) <= 0 || model.getCurrPos(0) >= model.getMapSize() || model.getCurrPos(1) <= 0 || model.getCurrPos(1) >= model.getMapSize())
                     return;
-                }
 
                 if (key == Control.UP || key == Control.DOWN)
-                    view.speedY.set(model.getPlayer().getSpeedY(key));
+                    model.getPlayer().setSpeedY(model.getPlayer().getSpeedY(key));
                 if (key == Control.RIGHT || key == Control.LEFT)
-                    view.speedX.set(-model.getPlayer().getSpeedX(key));
+                    model.getPlayer().setSpeedX(-model.getPlayer().getSpeedX(key));
 
-                detectTileChange();
+                model.getPlayer().detectTileChange(view.getMapTileSize());
             }
             event.consume();
         });
@@ -279,16 +218,16 @@ public class OverworldController implements Runnable {
                 }
             }
 
-            if (key == Control.RIGHT || key == Control.LEFT)
-                view.speedX.set(0);
-            else if (key == Control.UP || key == Control.DOWN)
-                view.speedY.set(0);
-
             if (key == Control.RIGHT || key == Control.LEFT || key == Control.UP || key == Control.DOWN) {
                 if (model.getCurrPos(0) <= 0 || model.getCurrPos(0) >= model.getMapSize() || model.getCurrPos(1) <= 0 || model.getCurrPos(1) >= model.getMapSize())
                     return;
 
-                detectTileChange();
+                if (key == Control.RIGHT || key == Control.LEFT)
+                    model.getPlayer().setSpeedX(0);
+                if (key == Control.UP || key == Control.DOWN)
+                    model.getPlayer().setSpeedY(0);
+
+                model.getPlayer().detectTileChange(view.getMapTileSize());
             }
             event.consume();
         });
@@ -341,9 +280,9 @@ public class OverworldController implements Runnable {
                             if (model.getTiles()[xPos][yPos].type.equalsIgnoreCase("Settlement")) // will change
                                 view.showSettlementInfo(model.getTiles()[xPos][yPos].settlementTile);
                             else if (model.getTiles()[xPos][yPos].type.equalsIgnoreCase("InMap")) {
-                                main.IMController.newLocation(new Point(xPos, yPos), model.getTiles()[xPos][yPos].inMapTile.inmapType.toLowerCase());
-                                view.showInMapInfo(main.IMController.getLocationName(new Point(xPos, yPos)),
-                                        main.IMController.getDifficulty(new Point(xPos, yPos)));
+                                main.newLocation(new Point(xPos, yPos), model.getTiles()[xPos][yPos].inMapTile.inmapType.toLowerCase());
+                                view.showInMapInfo(main.getLocationName(new Point(xPos, yPos)),
+                                        main.getDifficulty(new Point(xPos, yPos)));
                             }
                             controlsLocked = true;
                         }
@@ -371,6 +310,10 @@ public class OverworldController implements Runnable {
                         );
                         model.getPlayer().setStart(model.getPlayer().getTileX(), model.getPlayer().getTileY());
                         model.getPlayer().setPixelStartPos((int) view.getPlayerXOffset(), (int) view.getPlayerYOffset());
+                        model.getPlayer().setDir(model.getPlayer().getPath().next());
+
+                        System.out.println("Startpos: " + model.getPlayer().getTileX() + ", " + model.getPlayer().getTileY());
+                        System.out.println("Endpos: " + xPos + ", " + yPos);
 
                         System.out.println("Path to target tile created in " + (System.currentTimeMillis() - start) + "ms");
                     }
