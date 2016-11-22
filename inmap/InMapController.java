@@ -112,8 +112,11 @@ public class InMapController implements Runnable {
     
     public boolean menuInput(Control input) {
         model.process(input);
-        updateViewData();
-        view.update(viewdata);
+        
+        if(model.getFocus().equals("menu")) {
+            updateViewData();
+            view.update(viewdata);
+        }
         
         return !model.getFocus().equals("menu");
     }

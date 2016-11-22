@@ -60,6 +60,8 @@ class Location implements java.io.Serializable{
     
     //return current floor
     Floor getCurrentFloor() {
-        return floors[currentFloor];
+        if(currentFloor >= 0)
+            return floors[currentFloor];
+        return null;
     }
 }
