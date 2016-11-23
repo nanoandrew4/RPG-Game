@@ -79,7 +79,6 @@ public class InMapModel implements java.io.Serializable{
     InMapModel() {
         DBManager dbManager = new DBManager("IMDATA");
         
-        //should be loaded in
         party = new Character[5];
         maps = new HashMap();
         inv = new Item[64];

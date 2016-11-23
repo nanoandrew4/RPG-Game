@@ -116,12 +116,11 @@ class InMapView {
     public double screenWidth, screenHeight;
     private final Pane inmapLayout, floorPane, UIPane,
             menuPane, menubgPane, invPane, invTextPane, invStatPane, 
-            charPane, partyPane, notePane, opPane;
+            charPane, partyPane, notePane, opPane, ripPane;
     double width, height;
     final double zoom;
     String name;
     
-    private Text rip; //rip text
     private final Text charT, levelT, goldT; //quickinfo text
     private final Text diffT, floorT, nameT, typeT; //location text
     private Text[] invText; //menu inv text
@@ -164,6 +163,7 @@ class InMapView {
         partyPane = new Pane();
         notePane = new Pane();
         opPane = new Pane();
+        ripPane = new Pane();
 //        speedXVal = 64;
 //        speedYVal = 64;
         
@@ -232,7 +232,7 @@ class InMapView {
         menuText[2].setText("PARTY");
         menuText[3].setText("NOTES");
         menuText[4].setText("OPTIONS");
-        
+                
         menubgPane.getChildren().addAll(box4, menuFocus, menuCursor, tempCursor);
         menubgPane.getChildren().addAll(menuText);
         
@@ -411,14 +411,15 @@ class InMapView {
         t4.setFill(Paint.valueOf("WHITE"));
         opPane.getChildren().addAll(t4);
 
-        //rip text
-        rip = new Text(0, screenHeight/2, ("GAME OVER\nR TO RESTART"));
-        rip.setWrappingWidth(screenWidth);
-        rip.setTextAlignment(TextAlignment.CENTER);
-        rip.setFont(Font.font(null, FontWeight.BOLD, 80));
-        rip.setFill(Paint.valueOf("WHITE"));
-        rip.setVisible(false);
-        inmapLayout.getChildren().add(rip);
+        //ripPane
+        Text ripT = new Text(0, screenHeight/2, ("YOU ARE DEAD"));
+        ripT.setWrappingWidth(screenWidth);
+        ripT.setTextAlignment(TextAlignment.CENTER);
+        ripT.setFont(Font.font("Bradley Hand", FontWeight.BOLD, 80));
+        ripT.setFill(Paint.valueOf("MAROON"));
+        Rectangle ripR = new Rectangle(screenWidth, screenHeight, Paint.valueOf("RED"));
+        ripR.setOpacity(.3);
+        ripPane.getChildren().addAll(ripR, ripT);
         
         inmapLayout.setBackground(new Background(new BackgroundFill(Paint.valueOf("BLACK"), null, null)));
         
@@ -476,14 +477,14 @@ class InMapView {
             floorT.setText("Floor " + vd.floor.location.currentFloor);
 
             //rip
-            if(!vd.floor.party[0].exists)
-                rip.setVisible(true);
-            else
-                rip.setVisible(false);
+            if(!vd.floor.party[0].exists && !inmapLayout.getChildren().contains(ripPane))
+                inmapLayout.getChildren().add(ripPane);
+            else if(vd.floor.party[0].exists)
+                inmapLayout.getChildren().remove(ripPane);
         }
         else if(vd.focus.equals("menu")) {
             //add menu window
-            if(!inmapLayout.getChildren().contains(menuPane))
+            if(vd.floor != null && !inmapLayout.getChildren().contains(menuPane))
                 inmapLayout.getChildren().add(menuPane);
             
             //remove quick info box
@@ -576,7 +577,8 @@ class InMapView {
         }
         else {
             changeMenu(vd);
-            inmapLayout.getChildren().add(menuPane);
+            if(vd.floor != null)
+                inmapLayout.getChildren().add(menuPane);
         }
     }
     
