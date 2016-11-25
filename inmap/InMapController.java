@@ -1,10 +1,12 @@
 /*
-    Graphical controller for InMap.
+    Controller for InMap.
  */
 
 package inmap;
 
 import java.awt.Point;
+import java.io.IOException;
+import javafx.application.Platform;
 
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
@@ -54,7 +56,7 @@ public class InMapController implements Runnable {
     
     @Override
     public void run() {
-        scene = view.initDisplay();
+        scene = view.getScene();
         setInput(scene);
     }
 
@@ -69,7 +71,7 @@ public class InMapController implements Runnable {
         model.setCurrentMap(p);
         updateViewData();
         view.update(viewdata);
-        main.setStage(scene);
+        Platform.runLater(() -> main.setStage(scene));
     }
     
     private void updateViewData() {
@@ -89,6 +91,8 @@ public class InMapController implements Runnable {
         viewdata.qiVisible = model.getQIVisible();
         viewdata.menuToggle = model.getMenuToggle();
         viewdata.invDes = model.getInvDes();
+        viewdata.saveImages = main.saveImages;
+        viewdata.saveInfo = main.saveInfo;
     }
 
     //create new location
@@ -112,7 +116,27 @@ public class InMapController implements Runnable {
     
     public boolean menuInput(Control input) {
         model.process(input);
+
+        //save game
+        if(model.saveGame != -1) {
+            try {
+                main.saveModel(model.saveGame);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            model.saveGame = -1;
+                
+            main.refreshSaveInfo();
+            updateViewData();
+            view.refreshMenu(viewdata);
+        }
+        //load game
+        else if(model.loadGame != -1) {
+            main.loadGame(model.loadGame);
+        }
         
+        //update view
         if(model.getFocus().equals("menu")) {
             updateViewData();
             view.update(viewdata);
@@ -136,6 +160,27 @@ public class InMapController implements Runnable {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             
             model.process(main.getControl(event.getCode()));
+            
+            //save game
+            if(model.saveGame != -1) {
+                try {
+                    main.saveModel(model.saveGame);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                
+                model.saveGame = -1;
+                
+                main.refreshSaveInfo();
+                updateViewData();
+                view.refreshMenu(viewdata);
+            }
+            //load game
+            else if(model.loadGame != -1) {
+                main.loadGame(model.loadGame);
+            }
+            
+            //update view
             if(model.hasControl) {
                 updateViewData();
                 view.update(viewdata);
@@ -148,12 +193,12 @@ public class InMapController implements Runnable {
 //                case LEFT: view.speedX.set(view.speedXVal); break;
 //            }
             
-            event.consume();
-            
             if(!model.hasControl && hasControl) {
                 hasControl = false;
                 main.passControl(null);
             }
+            
+            event.consume();
         });
 
         //key release events

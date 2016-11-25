@@ -4,13 +4,31 @@
 
 package inmap;
 
+import java.util.HashMap;
+
 class Tile implements java.io.Serializable{
+    //static vars
+    static transient HashMap<String, Tile> tiles = new HashMap();
+    static transient HashMap<Integer, String> idname = new HashMap();
+    
+    //vars
     boolean isWall, openable;
+    int id;
     String name;
     int floorMovement;
     
+        //static methods
+    static void load(String name, Tile t) {
+        tiles.put(name, t);
+    }
+    
     //constructor given entity name
     Tile(String entity) {
+//        Tile t = tiles.get(entity);
+//        isWall = t.isWall;
+//        openable = t.openable;
+//        floorMovement = t.floorMovement;
+        
         isWall = false;
         openable = false;
         floorMovement = 0;

@@ -30,11 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
-
-import javax.swing.*;
 
 import org.nustaq.serialization.FSTObjectInput;
 import org.nustaq.serialization.FSTObjectOutput;
@@ -66,8 +62,8 @@ public class Main extends Application {
     private int select = 0;
     private String menuState = "main";
     //loadPane vars
-    private Text[][] saveInfo;
-    private ImageView[] saveImages;
+    public Text[][] saveInfo;
+    public ImageView[] saveImages;
     private File[] listOfFiles;
     //racePane vars
     private Text[] raceT;
@@ -184,34 +180,27 @@ public class Main extends Application {
 
         saveInfo = new Text[6][2];
         saveImages = new ImageView[6];
-
-        for (int x = 0; x < 6; x++) { //load files
-            loadSaveInfo((SaveFile) getSaveFile(x));
-        }
-
-        for (int x = 0; x < 6; x++) {
-            if (saveInfo[x][0] == null || saveInfo[x][1] == null) {
-                saveInfo[x][0] = new Text(screenWidth / 8 + (x % 2) * screenWidth * 2 / 5 + screenWidth / 10,
-                        screenHeight / 10 + Math.floor(x / 2) * screenHeight / 4 + screenHeight / 14,
-                        "Save File Nonexistent");
-                saveInfo[x][1] = new Text(screenWidth / 8 + (x % 2) * screenWidth * 2 / 5 + screenWidth / 10,
-                        screenHeight / 10 + Math.floor(x / 2) * screenHeight / 4 + screenHeight / 18 + screenHeight / 14, "");
-            }
-            for (int y = 0; y < 2; y++) {
-                saveInfo[x][y].setFont(Font.font("Trattatello", FontWeight.NORMAL, 24));
-                saveInfo[x][y].setFill(Paint.valueOf("BLACK"));
-            }
-            loadPane.getChildren().addAll(saveInfo[x]);
-        }
-
+        
         for (int i = 0; i < 6; i++) {
-            if (saveImages[i] == null) {
-                saveImages[i] = new ImageView(new Image("/media/graphics/inmap/trump.png",
-                        screenHeight / 8, screenHeight / 8, false, false));
-                saveImages[i].relocate(screenWidth / 8 + i % 2 * screenWidth * 2 / 5 + screenWidth / 60,
-                        screenHeight / 10 + Math.floor(i / 2) * screenHeight / 4 + screenHeight / 40);
+            saveInfo[i][0] = new Text(screenWidth/8 + i%2 * screenWidth * 2/5 + screenWidth/10,
+                    screenHeight/10 + Math.floor(i/2) * screenHeight/4 + screenHeight/14, "");
+            saveInfo[i][1] = new Text(screenWidth/8 + i%2 * screenWidth * 2/5 + screenWidth/10,
+                    screenHeight/10 + Math.floor(i/2) * screenHeight/4 + screenHeight/18 + screenHeight/14, "");
+            
+            for (int y = 0; y < 2; y++) {
+                saveInfo[i][y].setFont(Font.font("Trattatello", FontWeight.NORMAL, 24));
+                saveInfo[i][y].setFill(Paint.valueOf("BLACK"));
             }
+            
+            loadPane.getChildren().addAll(saveInfo[i]);
+            
+            saveImages[i] = new ImageView();
+            saveImages[i].relocate(screenWidth/8 + i%2 * screenWidth * 2/5 + screenWidth/60,
+                    screenHeight/10 + Math.floor(i/2) * screenHeight/4 + screenHeight/40);
         }
+        
+        //load text
+        refreshSaveInfo();
         
         Rectangle[] saveR = new Rectangle[6];
         for (int i = 0; i < 6; i++) {
@@ -298,20 +287,20 @@ public class Main extends Application {
         
         //charPane
         spritePaths = new String[5];
-        spritePaths[0] = "/media/graphics/inmap/trump.png";
-        spritePaths[1] = "/media/graphics/inmap/adelf.png";
-        spritePaths[2] = "/media/graphics/inmap/longcat.png";
-        spritePaths[3] = "/media/graphics/inmap/skelebro.png";
-        spritePaths[4] = "/media/graphics/inmap/mote.png";
+        spritePaths[0] = "/media/graphics/inmap/sprites/trump.png";
+        spritePaths[1] = "/media/graphics/inmap/sprites/adelf.png";
+        spritePaths[2] = "/media/graphics/inmap/sprites/longcat.png";
+        spritePaths[3] = "/media/graphics/inmap/sprites/skelebro.png";
+        spritePaths[4] = "/media/graphics/inmap/sprites/mote.png";
         sprites = new Image[spritePaths.length];
         for (int i = 0; i < spritePaths.length; i++) {
             sprites[i] = new Image(spritePaths[i], screenHeight/4, screenHeight/4, false, false);
         }
         
         portraitPaths = new String[3];
-        portraitPaths[0] = "/media/graphics/inmap/portrait.jpg";
-        portraitPaths[1] = "/media/graphics/inmap/clinton.jpg";
-        portraitPaths[2] = "/media/graphics/inmap/harambe.png";
+        portraitPaths[0] = "/media/graphics/inmap/sprites/portrait.jpg";
+        portraitPaths[1] = "/media/graphics/inmap/sprites/clinton.jpg";
+        portraitPaths[2] = "/media/graphics/inmap/sprites/harambe.png";
         portraits = new Image[3];
         for (int i = 0; i < portraitPaths.length; i++) {
             portraits[i] = new Image(portraitPaths[i], screenHeight/4, screenHeight/4, false, false);
@@ -622,8 +611,14 @@ public class Main extends Application {
                         IMController.newLocation(new Point(-1, -1), "cave");
                         IMController.passControl(new Point(-1, -1));
                     }
-                    else if (menuState.equals("name")) {
-                        menuState = "sum";
+                    break;
+                    
+                case OPENNOTES:
+                    if (menuState.equals("main")) {
+                        startOverworldController(null);
+                        startInMapController(null);
+                        IMController.newLocation(new Point(-1, -1), "cave");
+                        IMController.passControl(new Point(-1, -1));
                     }
                     break;
                     
@@ -804,7 +799,7 @@ public class Main extends Application {
     }
     
     //load a game
-    private void loadGame(int slot) {
+    public void loadGame(int slot) {
         try {
             if (listOfFiles[0].getName().equals(".DS_Store"))
                 slot++;
@@ -859,8 +854,10 @@ public class Main extends Application {
         long start = System.currentTimeMillis();
         FSTObjectOutput out = new FSTObjectOutput(new FileOutputStream("src/saves/" 
                 + overworldController.getModelName() + ".sav"));
-        out.writeObject(new SaveFile("src/saves/" + overworldController.getModelName() + ".sav", IMController.getModel().getParty()[0].getName(), "/media/graphics/inmap/trump.png",
-                IMController.getModel().getParty()[0].getLVL(), (double)(System.currentTimeMillis() - overworldController.getModel().getStartTime()) / 3600000d, slot));
+        out.writeObject(new SaveFile("src/saves/" + overworldController.getModelName() + ".sav", 
+                IMController.getModel().getParty()[0].getName(), "/media/graphics/inmap/sprites/trump.png",
+                IMController.getModel().getParty()[0].getLVL(), 
+                (double)(System.currentTimeMillis() - overworldController.getModel().getStartTime()) / 3600000d, slot));
         out.writeObject(keybindings);
         out.writeObject(overworldController.getModel());
         out.writeObject(IMController.getModel());
@@ -878,35 +875,35 @@ public class Main extends Application {
         return models;
         // start other threads if necessary
     }
-
-    //load save file information
-    private void loadSaveInfo(SaveFile s) {
-        if (s == null)
-            return;
-        saveImages[s.slot] = new ImageView(new Image(s.sprite, screenHeight/8, screenHeight/8, false, false));
-        saveImages[s.slot].relocate(screenWidth / 8 + s.slot % 2 * screenWidth * 2 / 5 + screenWidth / 60,
-                screenHeight / 10 + Math.floor(s.slot / 2) * screenHeight / 4 + screenHeight / 40);
-        saveInfo[s.slot][0] = new Text(screenWidth / 8 + (s.slot% 2) * screenWidth * 2 / 5 + screenWidth / 10,
-                screenHeight / 10 + Math.floor(s.slot / 2) * screenHeight / 4 + screenHeight / 14,
-                s.name + " " + s.level);
-        saveInfo[s.slot][1] = new Text(screenWidth / 8 + (s.slot % 2) * screenWidth * 2 / 5 + screenWidth / 10,
-                screenHeight / 10 + Math.floor(s.slot / 2) * screenHeight / 4 + screenHeight / 18 + screenHeight / 14,
-                "Playtime: " + String.format("%.2f", s.playtime) + " hours");
-    }
-
-    public Object getSaveFile(int slot) {
-        //File f = new File(Paths.get("/saves/save" + slot + ".sav"));
+    
+    //load save file information and set text
+    public void refreshSaveInfo() {
         FSTObjectInput in;
-        try {
-            in = new FSTObjectInput(new FileInputStream("src/saves/save" + slot + ".sav"));
-            Object o = in.readObject();
-            in.close();
-            return o;
-        } catch (IOException | ClassNotFoundException e) {
-            //e.printStackTrace();
-            return null;
+        SaveFile s;
+        
+        for (int i = 0; i < 6; i++) {
+            //get savefile
+            try {
+                in = new FSTObjectInput(new FileInputStream("src/saves/save" + i + ".sav"));
+                s = (SaveFile) in.readObject();
+                in.close();
+            } catch (IOException | ClassNotFoundException e) {
+                s = null;
+            }
+            
+            //load info
+            if (s != null) {
+                saveInfo[s.slot][0].setText(s.name + " LVL " + s.level);
+                saveInfo[s.slot][1].setText("Playtime: " + String.format("%.2f", s.playtime) + " hours");
+                saveImages[s.slot].setImage(new Image(s.sprite, screenHeight/8, screenHeight/8, false, false));
+            }
+            else {
+                saveInfo[i][0].setText("Save File Nonexistent");
+                saveImages[i].setImage(new Image("/media/graphics/inmap/sprites/trump.png",
+                        screenHeight / 8, screenHeight / 8, false, false));
+            }
         }
-    } 
+    }
 
     //create new location
     public void newLocation(Point p, String type) {

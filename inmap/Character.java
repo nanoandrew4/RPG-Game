@@ -23,10 +23,11 @@ public class Character implements java.io.Serializable {
     //vars
     boolean exists;
     int x, y;
-    int LVL, EXP, VIT, ACC, INT, STR, WIS, LUK, CHA; //base stats
+    int LVL, EXP, ACC, VIT, INT, STR, WIS, LUK, CHA; //base stats
     int maxHP, currentHP, maxMP, currentMP; //calculated stats
     double CRT, HIT, EVA, DMG, DEF, RES, PRC; //combat stats
-    String name, AIMode;
+    String name;
+    AIType AIMode;
     Path path;
     boolean hostile;
     Race race;
@@ -47,7 +48,7 @@ public class Character implements java.io.Serializable {
     
     //generate character given parameters
     Character(int LVL, int VIT, int INT, int ACC, int STR, int WIS, int LUK, int CHA, 
-            String name, String race, String AIMode, Path path, boolean hostile) {
+            String name, String race, AIType AIMode, Path path, boolean hostile) {
         setStats(true, LVL, VIT, INT, ACC, STR, WIS, LUK, CHA, name, race, AIMode, path, hostile);
     }
     
@@ -59,7 +60,7 @@ public class Character implements java.io.Serializable {
 
     //set stats
     final void setStats(boolean exists, int LVL, int VIT, int INT, int ACC, int STR, int WIS,
-                        int LUK, int CHA, String name, String race, String AIMode, Path path, boolean hostile) {
+                        int LUK, int CHA, String name, String race, AIType AIMode, Path path, boolean hostile) {
         this.exists = exists;
         this.LVL = LVL;
         EXP = 0;
@@ -91,7 +92,7 @@ public class Character implements java.io.Serializable {
     
     //random NPC generation
     void generateNPC() {
-        setStats(true, 1, 5, 1, 90, 1, 1, 1, 1, "NPC", "Human", "wandering", new Path(), false);
+        setStats(true, 1, 5, 1, 90, 1, 1, 1, 1, "NPC", "Human", AIType.WANDER, new Path(), false);
     }
     
     //random enemy generation
@@ -102,30 +103,30 @@ public class Character implements java.io.Serializable {
 //            case 1: setStats(true,   1,   5,   1,  90,   1,   1,   1,   0, "Slug",   "Monster", "wandering", true); break;
 //            case 2: setStats(true,   5,   8,   3,  75,   6,   3,   2,   3, "Goblin", "Monster", "wandering", true); break;
 //            case 3: setStats(true,   3,   6,   3,  85,   3,   3,   1,   2, "Bat",    "Monster", "wandering", true); break;
-            case 0:  setStats(true,   5,   9,   3,  90,   9,   5,   5,   0, "adelf", "Monster", "wandering", new Path(), true); break;
-            case 1:  setStats(true,   2,   6,   3,  75,   3,   3,   3,   0, "bat", "Monster", "wandering", new Path(), true); break;
-            case 2:  setStats(true,   2,   5,   3,  80,   2,   2,   2,   0, "bell", "Monster", "fleeing", new Path(), false); break;
-            case 3:  setStats(true,  15,  10,   3,   0,   1,   1,   1,   0, "chest", "Monster", "stationary", new Path(), false); break;
-            case 4:  setStats(true,   1,   3,   3,  60,   2,   1,   1,   0, "chick", "Monster", "wandering", new Path(), false); break;
-            case 5:  setStats(true,   2,   5,   3,  85,   4,   1,   1,   0, "chicken", "Monster", "wandering", new Path(), true); break;
-            case 6:  setStats(true,   4,  11,   3,  85,   8,   3,   3,   0, "fishman", "Monster", "wandering", new Path(), true); break;
-            case 7:  setStats(true,   5,   8,   3,  80,   6,   5,   5,   0, "flan", "Monster", "wandering", new Path(), true); break;
-            case 8:  setStats(true,   4,   7,   3,  50,   5,   3,   3,   0, "ghost", "Monster", "wandering", new Path(), true); break;
-            case 9:  setStats(true,   8,   9,   3,  90,  10,   3,   3,   0, "kingslime", "Monster", "wandering", new Path(), true); break;
-            case 10: setStats(true,   5,   8,   3,  90,   9,   3,   3,   0, "longcat", "Monster", "wandering", new Path(), true); break;
-            case 11: setStats(true,  10,  15,   3,  85,  15,   3,   3,   0, "manta", "Monster", "wandering", new Path(), true); break;
-            case 12: setStats(true,   2,   3,   3,  60,   2,   3,   3,   0, "mote", "Monster", "wandering", new Path(), false); break;
-            case 13: setStats(true,  13,  17,   3,  90,  22,   3,   3,   0, "skelebro", "Monster", "wandering", new Path(), true); break;
-            case 14: setStats(true,   4,   6,   3,  70,   4,   3,   3,   0, "snail", "Monster", "wandering", new Path(), true); break;
-            case 15: setStats(true,   7,  15,   3,  60,  13,   3,   3,   0, "spookyslime", "Monster", "wandering", new Path(), true); break;
-            case 16: setStats(true,   6,   9,   3,  85,  16,   3,   3,   0, "spookyslug", "Monster", "wandering", new Path(), true); break;
+            case 0:  setStats(true,   5,   9,   3,  90,   9,   5,   5,   0, "adelf", "Monster", AIType.WANDER, new Path(), true); break;
+            case 1:  setStats(true,   2,   6,   3,  75,   3,   3,   3,   0, "bat", "Monster", AIType.WANDER, new Path(), true); break;
+            case 2:  setStats(true,   2,   5,   3,  80,   2,   2,   2,   0, "bell", "Monster", AIType.FLEE, new Path(), false); break;
+            case 3:  setStats(true,  15,  10,   3,   0,   1,   1,   1,   0, "chest", "Monster", AIType.STILL, new Path(), false); break;
+            case 4:  setStats(true,   1,   3,   3,  60,   2,   1,   1,   0, "chick", "Monster", AIType.WANDER, new Path(), false); break;
+            case 5:  setStats(true,   2,   5,   3,  85,   4,   1,   1,   0, "chicken", "Monster", AIType.WANDER, new Path(), true); break;
+            case 6:  setStats(true,   4,  11,   3,  85,   8,   3,   3,   0, "fishman", "Monster", AIType.WANDER, new Path(), true); break;
+            case 7:  setStats(true,   5,   8,   3,  80,   6,   5,   5,   0, "flan", "Monster", AIType.WANDER, new Path(), true); break;
+            case 8:  setStats(true,   4,   7,   3,  50,   5,   3,   3,   0, "ghost", "Monster", AIType.WANDER, new Path(), true); break;
+            case 9:  setStats(true,   8,   9,   3,  90,  10,   3,   3,   0, "kingslime", "Monster", AIType.WANDER, new Path(), true); break;
+            case 10: setStats(true,   5,   8,   3,  90,   9,   3,   3,   0, "longcat", "Monster", AIType.WANDER, new Path(), true); break;
+            case 11: setStats(true,  10,  15,   3,  85,  15,   3,   3,   0, "manta", "Monster", AIType.WANDER, new Path(), true); break;
+            case 12: setStats(true,   2,   3,   3,  60,   2,   3,   3,   0, "mote", "Monster", AIType.WANDER, new Path(), false); break;
+            case 13: setStats(true,  13,  17,   3,  90,  22,   3,   3,   0, "skelebro", "Monster", AIType.WANDER, new Path(), true); break;
+            case 14: setStats(true,   4,   6,   3,  70,   4,   3,   3,   0, "snail", "Monster", AIType.WANDER, new Path(), true); break;
+            case 15: setStats(true,   7,  15,   3,  60,  13,   3,   3,   0, "spookyslime", "Monster", AIType.WANDER, new Path(), true); break;
+            case 16: setStats(true,   6,   9,   3,  85,  16,   3,   3,   0, "spookyslug", "Monster", AIType.WANDER, new Path(), true); break;
             
         }
     }
     
     //make boss: temporary
     void generateBoss() {
-        setStats(true, 8, 15, 5, 90, 12, 12, 12, 12, "Clinton", "Monster", "wandering", new Path(), true);
+        setStats(true, 8, 15, 5, 90, 12, 12, 12, 12, "Clinton", "Monster", AIType.WANDER, new Path(), true);
     }
     
     //gain exp, calculate level
@@ -172,11 +173,11 @@ public class Character implements java.io.Serializable {
         CRT += weapon.CRT + armor.CRT + acc1.CRT + acc2.CRT + acc3.CRT;
         HIT = weapon.HIT * (-200 / (ACC+weapon.ACC+armor.ACC+acc1.ACC+acc2.ACC+acc3.ACC+400) + 1.3);
         HIT += armor.HIT + acc1.HIT + acc2.HIT + acc3.HIT;
-        switch(weapon.type) {
-            case "w": DMG = weapon.DMG * (Math.sqrt(STR + 40) / 5 - 0.45); break;
-            case "m": DMG = weapon.DMG * (Math.sqrt(WIS + 40) / 5 - 0.45); break;
-            default: DMG = 10;
-        }
+        if(weapon.CRT > 0)
+            DMG = weapon.DMG * (Math.sqrt(STR + 40) / 5 - 0.45);
+        else if(weapon.CRT == 0)
+            DMG = weapon.DMG * (Math.sqrt(WIS + 40) / 5 - 0.45);
+        
         //below are not implemented correctly
         DMG = Math.pow(STR, 2) / 4;
         DEF = 50;

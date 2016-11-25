@@ -77,7 +77,7 @@ class Floor implements java.io.Serializable{
                 
                 int dx = 0, dy = 0;
                 switch(n.AIMode) {
-                    case "attacking":
+                    case ATTACK:
                         //make new path
                         n.pathTo(new Point(party[0].x, party[0].y), booleanMap(), false);
                         //get next direction from npc path
@@ -88,7 +88,7 @@ class Floor implements java.io.Serializable{
                             case LEFT: dx = -1; break;
                         }
                         break;
-                    case "fleeing": 
+                    case FLEE: 
                         //x movement
                         if(party[0].x < n.x)
                             dx = 1;
@@ -107,7 +107,7 @@ class Floor implements java.io.Serializable{
                         else 
                             dy = (dx == 0 ? dy : 0);
                         break;
-                    case "wandering":
+                    case WANDER:
                         //wander randomly
                         int i = (int)(Math.random() * 20);
                         if(i < 4) {
@@ -124,12 +124,12 @@ class Floor implements java.io.Serializable{
                         //start attacking if within range
                         if(n.hostile && Math.sqrt(Math.pow((party[0].x-n.x),2)+
                                 Math.pow((party[0].y-n.y),2)) < 5) {
-                            n.AIMode = "attacking";
+                            n.AIMode = AIType.ATTACK;
                         }
                         break;
-                    case "stationary":
+                    case STILL:
                         break;
-                    case "NA":
+                    case NONE:
                         break;
                     default: 
                         break;
@@ -196,7 +196,7 @@ class Floor implements java.io.Serializable{
         //crit chance
         if((int)(Math.random() * 100) < c1.CRT) damage *= 2;
         //calculate for defences and pierce
-        if(c1.weapon.type.equals("m") && c2.RES > c1.PRC)
+        if(c1.weapon.CRT == 0 && c2.RES > c1.PRC)
             damage *= (c1.PRC / (c2.RES + c1.PRC));
         else if(c2.RES > c1.PRC)
             damage *= (c1.PRC / (c2.DEF + c1.PRC));

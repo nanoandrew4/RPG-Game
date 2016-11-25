@@ -4,11 +4,6 @@
 
 package inmap;
 
-//import javafx.animation.AnimationTimer;
-//import javafx.beans.property.DoubleProperty;
-//import javafx.beans.property.LongProperty;
-//import javafx.beans.property.SimpleDoubleProperty;
-//import javafx.beans.property.SimpleLongProperty;
 import javafx.scene.Scene;
 import javafx.scene.effect.BoxBlur;
 import javafx.scene.image.Image;
@@ -67,41 +62,41 @@ class Images {
     Image black;
     
     Images(double width, double height, String heroSprite, String heroPortrait) {
-        stoneFloor = new Image("/media/graphics/inmap/StoneFloor.png", width, height, false, false);
-        stoneWall = new Image("/media/graphics/inmap/StoneWall.png", width, height, false, false);
-        stoneTop = new Image("/media/graphics/inmap/StoneTop.png", width, height, false, false);
-        door = new Image("/media/graphics/inmap/door.png", width, height, false, false);
-        opendoor = new Image("/media/graphics/inmap/opendoor.png", width, height, false, false);
-        stairsup = new Image("/media/graphics/inmap/stairsup.png", width, height, false, false);
-        stairsdown = new Image("/media/graphics/inmap/stairsdown.png", width, height, false, false);
+        stoneFloor = new Image("/media/graphics/inmap/tiles/StoneFloor.png", width, height, false, false);
+        stoneWall = new Image("/media/graphics/inmap/tiles/StoneWall.png", width, height, false, false);
+        stoneTop = new Image("/media/graphics/inmap/tiles/StoneTop.png", width, height, false, false);
+        door = new Image("/media/graphics/inmap/tiles/door.png", width, height, false, false);
+        opendoor = new Image("/media/graphics/inmap/tiles/opendoor.png", width, height, false, false);
+        stairsup = new Image("/media/graphics/inmap/tiles/stairsup.png", width, height, false, false);
+        stairsdown = new Image("/media/graphics/inmap/tiles/stairsdown.png", width, height, false, false);
 
-        npc1 = new Image("/media/graphics/inmap/elonaSin.png", width, width, true, false);
-        npc2 = new Image("/media/graphics/inmap/elonaGilbert.png", width, width, true, false);
-//        spider = new Image("/media/graphics/inmap/spooder.png", width, width, true, false);
-//        bat = new Image("/media/graphics/inmap/batman.png", width, width, true, false);
-//        slug = new Image("/media/graphics/inmap/slug.png", width, width, true, false);
-//        goblin = new Image("/media/graphics/inmap/harambe.png", width, width, true, false);
-//        boss = new Image("/media/graphics/inmap/clinton.jpg", width, width, true, false);
-//        hero = new Image("/media/graphics/inmap/knight.png", width, width, true, false);
+        npc1 = new Image("/media/graphics/inmap/sprites/elonaSin.png", width, width, true, false);
+        npc2 = new Image("/media/graphics/inmap/sprites/elonaGilbert.png", width, width, true, false);
+//        spider = new Image("/media/graphics/inmap/sprites/spooder.png", width, width, true, false);
+//        bat = new Image("/media/graphics/inmap/sprites/batman.png", width, width, true, false);
+//        slug = new Image("/media/graphics/inmap/sprites/slug.png", width, width, true, false);
+//        goblin = new Image("/media/graphics/inmap/sprites/harambe.png", width, width, true, false);
+//        boss = new Image("/media/graphics/inmap/sprites/clinton.jpg", width, width, true, false);
+//        hero = new Image("/media/graphics/inmap/sprites/knight.png", width, width, true, false);
         hero = new Image(heroSprite, width, width, true, false);
         portrait = new Image(heroPortrait, width*2, width*2, false, false);
-        adelf = new Image("/media/graphics/inmap/adelf.png", width, width, true, false);
-        bat = new Image("/media/graphics/inmap/bat.png", width, width, true, false);
-        bell = new Image("/media/graphics/inmap/bell.png", width, width, true, false);
-        chest = new Image("/media/graphics/inmap/chest.png", width, width, true, false);
-        chick = new Image("/media/graphics/inmap/chick.png", width, width, true, false);
-        chicken = new Image("/media/graphics/inmap/chicken.png", width, width, true, false);
-        fishman = new Image("/media/graphics/inmap/fishman.png", width, width, true, false);
-        flan = new Image("/media/graphics/inmap/flan.png", width, width, true, false);
-        ghost = new Image("/media/graphics/inmap/ghost.png", width, width, true, false);
-        kingslime = new Image("/media/graphics/inmap/kingslime.png", width, width, true, false);
-        longcat = new Image("/media/graphics/inmap/longcat.png", width, width, true, false);
-        manta = new Image("/media/graphics/inmap/manta.png", width, width, true, false);
-        mote = new Image("/media/graphics/inmap/mote.png", width, width, true, false);
-        skelebro = new Image("/media/graphics/inmap/skelebro.png", width, width, true, false);
-        snail = new Image("/media/graphics/inmap/snail.png", width, width, true, false);
-        spookyslime = new Image("/media/graphics/inmap/spookyslime.png", width, width, true, false);
-        spookyslug = new Image("/media/graphics/inmap/spookyslug.png", width, width, true, false);
+        adelf = new Image("/media/graphics/inmap/sprites/adelf.png", width, width, true, false);
+        bat = new Image("/media/graphics/inmap/sprites/bat.png", width, width, true, false);
+        bell = new Image("/media/graphics/inmap/sprites/bell.png", width, width, true, false);
+        chest = new Image("/media/graphics/inmap/sprites/chest.png", width, width, true, false);
+        chick = new Image("/media/graphics/inmap/sprites/chick.png", width, width, true, false);
+        chicken = new Image("/media/graphics/inmap/sprites/chicken.png", width, width, true, false);
+        fishman = new Image("/media/graphics/inmap/sprites/fishman.png", width, width, true, false);
+        flan = new Image("/media/graphics/inmap/sprites/flan.png", width, width, true, false);
+        ghost = new Image("/media/graphics/inmap/sprites/ghost.png", width, width, true, false);
+        kingslime = new Image("/media/graphics/inmap/sprites/kingslime.png", width, width, true, false);
+        longcat = new Image("/media/graphics/inmap/sprites/longcat.png", width, width, true, false);
+        manta = new Image("/media/graphics/inmap/sprites/manta.png", width, width, true, false);
+        mote = new Image("/media/graphics/inmap/sprites/mote.png", width, width, true, false);
+        skelebro = new Image("/media/graphics/inmap/sprites/skelebro.png", width, width, true, false);
+        snail = new Image("/media/graphics/inmap/sprites/snail.png", width, width, true, false);
+        spookyslime = new Image("/media/graphics/inmap/sprites/spookyslime.png", width, width, true, false);
+        spookyslug = new Image("/media/graphics/inmap/sprites/spookyslug.png", width, width, true, false);
         
         health = new Image("/media/graphics/inmap/health.jpg", width, width/5, true, false);
         
@@ -114,6 +109,7 @@ class InMapView {
     Images images;
     ImageView[][][] imageViews;
     public double screenWidth, screenHeight;
+    private final Scene scene;
     private final Pane inmapLayout, floorPane, UIPane,
             menuPane, menubgPane, invPane, invTextPane, invStatPane, 
             charPane, partyPane, notePane, opPane, ripPane;
@@ -121,19 +117,27 @@ class InMapView {
     final double zoom;
     String name;
     
-    private final Text charT, levelT, goldT; //quickinfo text
-    private final Text diffT, floorT, nameT, typeT; //location text
-    private Text[] invText; //menu inv text
-    private Text invName, invDes, invType; //item information
-    private Text[] invStats; //item stat information
-    private Text[] invButtons; //item manipulation
-    private Rectangle[] invRButtons; //item button boxes
-    private Text[] chText; //menu char text
-    private Text chName, chTitle, chHP, chMP, chLVL, chEXP;
-    private Text[][] parText; //menu party text
+    //quickinfo
+    private Text charT, levelT, goldT;
+    private Text diffT, floorT, nameT, typeT;
+    //inventory
+    private Text[] invText; //item names
+    private Text invName, invDes, invType;
+    private Text[] invStats; //stats
+    private Rectangle[] invRButtons; //button boxes
+    //character
+    private Text chName, chTitle, chHP, chMP, chLVL, chEXP; //main stats
+    private Text[] chStats, chEqp; //stats and equipment
+    //party
+    private Text[][] parText;
+    //options
+    private Text[][] saveInfo;
+    private ImageView[] saveImages; //save information
+    private Rectangle[] opRButtons; //button boxes
+    private Rectangle[] opRSaves; //save boxes
     
-    private final Rectangle menuFocus;
-    private final Rectangle menuCursor, tempCursor;
+    private Rectangle menuFocus;
+    private Rectangle menuCursor, tempCursor;
     
     //constructor
     InMapView(double screenWidth, double screenHeight, String name, String sprite, String portrait) {
@@ -164,13 +168,41 @@ class InMapView {
         notePane = new Pane();
         opPane = new Pane();
         ripPane = new Pane();
-//        speedXVal = 64;
-//        speedYVal = 64;
         
         //initialize UI
+        initDisplay();
+        
+        scene = new Scene(inmapLayout, screenWidth, screenHeight);
+    }
+
+    //set tile size
+    private void setTileSize() {
+        if (screenWidth > screenHeight) {
+            width = (screenHeight / zoom);
+            height = (screenHeight / zoom) * 1.5;
+        } 
+        else {
+            width = (screenWidth / zoom);
+            height = (screenWidth / zoom) * 1.5;
+        }
+        width = Math.floor(width);
+        height = Math.floor(height);
+    }
+    
+    //initialize display
+    public final void initDisplay() {
+        //quickinfo
         Rectangle box = new Rectangle(screenWidth/5, screenHeight*1/3, Paint.valueOf("WHITE"));
         box.setOpacity(.7);
         box.relocate(screenWidth*4/5, 0); //top right
+
+        Rectangle box2 = new Rectangle(screenWidth/14, screenHeight*3/5, Paint.valueOf("WHITE"));
+        box2.setOpacity(.7);
+        box2.relocate(0, screenHeight/8); //top left
+        
+        Rectangle box3 = new Rectangle(screenWidth/4, screenHeight/4, Paint.valueOf("WHITE"));
+        box3.setOpacity(.7);
+        box3.relocate(0, screenHeight*3/4); //bottom left
         
         nameT = new Text(screenWidth*4/5+20, 40, "");
         nameT.setFont(Font.font(null, FontWeight.BOLD, 20));
@@ -183,14 +215,6 @@ class InMapView {
         
         floorT = new Text(screenWidth*4/5+20, 190, "");
         floorT.setFont(Font.font(null, FontWeight.NORMAL, 18));
-
-        Rectangle box2 = new Rectangle(screenWidth/14, screenHeight*3/5, Paint.valueOf("WHITE"));
-        box2.setOpacity(.7);
-        box2.relocate(0, screenHeight/8); //top left
-        
-        Rectangle box3 = new Rectangle(screenWidth/4, screenHeight/4, Paint.valueOf("WHITE"));
-        box3.setOpacity(.7);
-        box3.relocate(0, screenHeight*3/4); //bottom left
         
         charT = new Text(30, screenHeight*3/4+40, "");
         charT.setFont(Font.font(null, FontWeight.NORMAL, 24));
@@ -202,7 +226,7 @@ class InMapView {
         
         UIPane.getChildren().addAll(box, box2, box3, nameT, typeT, diffT, floorT, charT, levelT, goldT);
         
-        //initialize menu
+        //menu
         Rectangle box4 = new Rectangle(screenWidth, screenHeight, Paint.valueOf("GREY"));
         box4.relocate(0, 0);
         box4.setOpacity(.5);
@@ -237,23 +261,7 @@ class InMapView {
         menubgPane.getChildren().addAll(menuText);
         
         menuPane.getChildren().add(menubgPane);
-    }
-
-    //set tile size
-    private void setTileSize() {
-        if (screenWidth > screenHeight) {
-            width = (screenHeight / zoom);
-            height = (screenHeight / zoom) * 1.5;
-        } else {
-            width = (screenWidth / zoom);
-            height = (screenWidth / zoom) * 1.5;
-        }
-        width = Math.floor(width);
-        height = Math.floor(height);
-    }
-    
-    //initialize display
-    public Scene initDisplay() {
+        
         //floorPane
         for(int x = 0; x < 24; x++) {
             for(int y = 0; y < 16; y++) {
@@ -304,18 +312,19 @@ class InMapView {
         //invPane
         invText = new Text[64];
         for(int i = 0; i < 64; i++) {
-            invText[i] = new Text(screenWidth/7+screenWidth/7*(int)(i/16), screenHeight*2/7+screenHeight/28*(i%16), "-");
+            invText[i] = new Text(screenWidth/7+screenWidth/7*(int)(i/16), 
+                    screenHeight*2/7+screenHeight/28*(i%16), "-");
             invText[i].setFill(Paint.valueOf("WHITE"));
             invText[i].setFont(Font.font("Arial", FontWeight.NORMAL, 14));
         }
-        invButtons = new Text[4];
+        Text[] invButtons = new Text[4];
         invRButtons = new Rectangle[4];
         for(int i = 0; i < 4; i++) {
-            invButtons[i] = new Text(screenWidth*5/7, screenHeight*3/5+screenHeight/18*i, "");
-            invButtons[i].setWrappingWidth(300);
+            invButtons[i] = new Text(screenWidth*3/4, screenHeight*3/5+screenHeight/18*i, "");
+            invButtons[i].setWrappingWidth(screenWidth/6);
             invButtons[i].setTextAlignment(TextAlignment.CENTER);
             invButtons[i].setFill(Paint.valueOf("WHITE"));
-            invButtons[i].setFont(Font.font("Monaco", FontWeight.NORMAL, 24));
+            invButtons[i].setFont(Font.font("Arial", FontWeight.NORMAL, 24));
             
             invRButtons[i] = new Rectangle(screenWidth/6, screenHeight/20, Paint.valueOf("WHITE"));
             invRButtons[i].relocate(screenWidth*3/4, screenHeight*40/71+screenHeight/18*i);
@@ -328,7 +337,7 @@ class InMapView {
         
         //invTextPane
         invName = new Text(screenWidth*5/7, screenHeight*2/7, "");
-        invName.setWrappingWidth(300);
+        invName.setWrappingWidth(screenWidth*2/9);
         invName.setTextAlignment(TextAlignment.CENTER);
         invName.setFill(Paint.valueOf("WHITE"));
         invName.setFont(Font.font(null, FontWeight.BOLD, 30));
@@ -340,11 +349,11 @@ class InMapView {
         invTextPane.getChildren().addAll(invName, invDes);
         
         //invStatPane
-        invType = new Text(screenWidth*5/7, screenHeight*2/7, "");
-        invType.setWrappingWidth(300);
+        invType = new Text(screenWidth*5/7, screenHeight*8/31, "");
+        invType.setWrappingWidth(screenWidth*2/9);
         invType.setTextAlignment(TextAlignment.CENTER);
         invType.setFill(Paint.valueOf("WHITE"));
-        invType.setFont(Font.font(null, FontWeight.NORMAL, 30));
+        invType.setFont(Font.font(null, FontWeight.NORMAL, 16));
         invStats = new Text[19];
         for(int i = 0; i < 19; i++) {
             invStats[i] = new Text(screenWidth*5/7+screenWidth/8*(i%2), 
@@ -389,9 +398,36 @@ class InMapView {
         chEXP.setFont(Font.font(null, FontWeight.NORMAL, 24));
         chEXP.setFill(Paint.valueOf("WHITE"));
         
-        chText = new Text[14];
+        Text[] chEqpT = new Text[3];
+        for(int i = 0; i < 3; i++) {
+            chEqpT[i] = new Text(screenWidth/2, screenHeight/3 + screenHeight*i/7, "");
+            chEqpT[i].setFont(Font.font("Bradley Hand", FontWeight.NORMAL, 32));
+            chEqpT[i].setFill(Paint.valueOf("WHITE"));
+        }
+        chEqpT[0].setText("Weapon");
+        chEqpT[1].setText("Armor");
+        chEqpT[2].setText("Accessories");
+        
+        chEqp = new Text[5];
+        for(int i = 0; i < 5; i++) {
+            chEqp[i] = new Text(screenWidth/2, screenHeight*6/15 + screenHeight*i/7, "");
+            chEqp[i].setFont(Font.font(null, FontWeight.NORMAL, 28));
+            chEqp[i].setFill(Paint.valueOf("WHITE"));
+        }
+        chEqp[3].setY(screenHeight*6/15 + screenHeight*5/14);
+        chEqp[4].setY(screenHeight*6/15 + screenHeight*3/7);
+        
+        chStats = new Text[14];
+        for(int i = 0; i < 14; i++) {
+            chStats[i] = new Text(screenWidth*3/4, screenHeight/3 + screenHeight*i/25, "");
+            chStats[i].setFont(Font.font(null, FontWeight.NORMAL, 18));
+            chStats[i].setFill(Paint.valueOf("WHITE"));
+        }
+        
+        charPane.getChildren().addAll(chEqpT);
+        charPane.getChildren().addAll(chStats);
+        charPane.getChildren().addAll(chEqp);
         charPane.getChildren().addAll(portrait, chName, chTitle, chHP, chMP, chLVL, chEXP);
-//        charPane.getChildren().addAll(chText);
         
         //partyPane
         Text t2 = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you have no friends");
@@ -406,10 +442,58 @@ class InMapView {
         notePane.getChildren().addAll(t3);
         
         //opPane
-        Text t4 = new Text(screenWidth/3, screenHeight/3+screenHeight/5, "you have no options in life");
-        t4.setFont(Font.font(null, FontWeight.NORMAL, 24));
-        t4.setFill(Paint.valueOf("WHITE"));
-        opPane.getChildren().addAll(t4);
+        
+        Text[] opButtons = new Text[3];
+        opRButtons = new Rectangle[3];
+        for(int i = 0; i < 3; i++) {
+            opButtons[i] = new Text(screenWidth*3/4, screenHeight*3/5+screenHeight/18*i, "");
+            opButtons[i].setWrappingWidth(screenWidth/6);
+            opButtons[i].setTextAlignment(TextAlignment.CENTER);
+            opButtons[i].setFill(Paint.valueOf("WHITE"));
+            opButtons[i].setFont(Font.font("Monaco", FontWeight.NORMAL, 24));
+            
+            opRButtons[i] = new Rectangle(screenWidth/6, screenHeight/20, Paint.valueOf("WHITE"));
+            opRButtons[i].relocate(screenWidth*3/4, screenHeight*40/71+screenHeight/18*i);
+            opRButtons[i].setOpacity(.2);
+        }
+        opButtons[0].setText("SAVE GAME");
+        opButtons[1].setText("LOAD GAME");
+        opButtons[2].setText("OPTIONS");
+        
+        opRSaves = new Rectangle[6];
+        for(int i = 0; i < 6; i++) {
+            opRSaves[i] = new Rectangle(screenWidth/4, screenHeight/5, Paint.valueOf("WHITE"));
+            opRSaves[i].relocate(screenWidth/7 + i%2 * screenWidth*2/7, 
+                    screenHeight/4 + Math.floor(i/2) * screenHeight*2/9);
+            opRSaves[i].setOpacity(.2);
+        }
+        
+        //save info
+        saveInfo = new Text[6][2];
+        saveImages = new ImageView[6];
+        
+        for (int i = 0; i < 6; i++) {
+            saveInfo[i][0] = new Text(screenWidth/7 + i%2 * screenWidth * 2/7 + screenWidth/10,
+                    screenHeight/4 + Math.floor(i/2) * screenHeight*2/9 + screenHeight/14, "");
+            saveInfo[i][1] = new Text(screenWidth/7 + i%2 * screenWidth * 2/7 + screenWidth/10,
+                    screenHeight/4 + Math.floor(i/2) * screenHeight*2/9 + screenHeight/18 + screenHeight/14, "");
+            
+            for (int y = 0; y < 2; y++) {
+                saveInfo[i][y].setFont(Font.font("Trattatello", FontWeight.NORMAL, 24));
+                saveInfo[i][y].setFill(Paint.valueOf("BLACK"));
+            }
+            
+            opPane.getChildren().addAll(saveInfo[i]);
+            
+            saveImages[i] = new ImageView();
+            saveImages[i].relocate(screenWidth/7 + i%2 * screenWidth * 2/7 + screenWidth/60,
+                    screenHeight/4 + Math.floor(i/2) * screenHeight*2/9 + screenHeight/40);
+        }
+        
+        opPane.getChildren().addAll(opButtons);
+        opPane.getChildren().addAll(opRButtons);
+        opPane.getChildren().addAll(opRSaves);
+        opPane.getChildren().addAll(saveImages);
 
         //ripPane
         Text ripT = new Text(0, screenHeight/2, ("YOU ARE DEAD"));
@@ -422,8 +506,6 @@ class InMapView {
         ripPane.getChildren().addAll(ripR, ripT);
         
         inmapLayout.setBackground(new Background(new BackgroundFill(Paint.valueOf("BLACK"), null, null)));
-        
-        return new Scene(inmapLayout, screenWidth, screenHeight);
     }
     
     //update
@@ -506,6 +588,7 @@ class InMapView {
                 tempCursor.setOpacity(0);
                 menuCursor.setOpacity(0);
                 invName.setText("");
+                invType.setText("");
                 invDes.setText("");
                 changeMenu(vd);
             }
@@ -522,11 +605,13 @@ class InMapView {
                                     screenHeight*4/15+screenHeight/28*vd.tempP.y);
                             if(vd.inv[vd.tempP.x*16+vd.tempP.y].exists) {
                                 invName.setText(vd.inv[vd.tempP.x*16+vd.tempP.y].displayName);
+                                invType.setText(vd.inv[vd.tempP.x*16+vd.tempP.y].type.toString());
                                 invDes.setText(vd.invDes);
                                 updateInvStats(vd.inv[vd.tempP.x*16+vd.tempP.y]);
                             }
                             else {
                                 invName.setText("");
+                                invType.setText("");
                                 invDes.setText("There's nothing here.");
                                 updateInvStats(new Item());
                             }
@@ -545,24 +630,42 @@ class InMapView {
                                     screenHeight*4/15+screenHeight/28*vd.menuP.y);
                             if(vd.inv[vd.menuP.x*16+vd.menuP.y].exists) {
                                 invName.setText(vd.inv[vd.menuP.x*16+vd.menuP.y].displayName);
+                                invType.setText(vd.inv[vd.menuP.x*16+vd.menuP.y].type.toString());
                                 invDes.setText(vd.invDes);
                                 updateInvStats(vd.inv[vd.menuP.x*16+vd.menuP.y]);
                             }
                             else {
                                 invName.setText("");
+                                invType.setText("");
                                 invDes.setText(vd.invDes);
                                 updateInvStats(new Item());
                             }
                         }
                         break;
+                        
                     case "char":
                         break;
+                        
                     case "party":
                         break;
+                        
                     case "notes":
                         break;
+                        
                     case "options":
+                        for(Rectangle r: opRButtons)
+                            r.setOpacity(.2);
+                        for(Rectangle r: opRSaves)
+                            r.setOpacity(.2);
+                        //selectP
+                        if(vd.selectP != -1) {
+                            opRSaves[vd.selectP].setOpacity(.5);
+                        }
+                        else if(vd.menuP.y != -1) {
+                            opRButtons[vd.menuP.y].setOpacity(.5);
+                        }
                         break;
+                        
                     default:
                         break;
                 }
@@ -637,6 +740,23 @@ class InMapView {
             chMP.setText("MP " + vd.party[0].currentMP + "/" + vd.party[0].maxMP);
             chLVL.setText("Level " + vd.party[0].LVL);
             chEXP.setText("To next: "+((int)(150*Math.sqrt(vd.party[0].LVL+10)-430)-vd.party[0].EXP)+" EXP");
+            chEqp[0].setText(vd.party[0].weapon.displayName);
+            chEqp[1].setText(vd.party[0].armor.displayName);
+            chEqp[2].setText(vd.party[0].acc1.displayName);
+            chEqp[3].setText(vd.party[0].acc2.displayName);
+            chEqp[4].setText(vd.party[0].acc3.displayName);
+            chStats[0].setText("VIT: " + vd.party[0].VIT);
+            chStats[1].setText("INT: " + vd.party[0].INT);
+            chStats[2].setText("STR: " + vd.party[0].STR);
+            chStats[3].setText("WIS: " + vd.party[0].WIS);
+            chStats[4].setText("LUK: " + vd.party[0].LUK);
+            chStats[5].setText("CHA: " + vd.party[0].CHA);
+            chStats[6].setText("CRT: " + vd.party[0].CRT);
+            chStats[7].setText("ACC: " + vd.party[0].ACC);
+            chStats[8].setText("EVA: " + vd.party[0].EVA);
+            chStats[9].setText("DEF: " + vd.party[0].DEF);
+            chStats[10].setText("RES: " + vd.party[0].RES);
+            chStats[11].setText("PRC: " + vd.party[0].PRC);
         }
         else if(vd.menuWindow.equals("party")) {
             
@@ -645,7 +765,15 @@ class InMapView {
             
         }
         else if(vd.menuWindow.equals("options")) {
-            
+            for(Rectangle r: opRButtons)
+                r.setOpacity(.2);
+            for(Rectangle r: opRSaves)
+                r.setOpacity(.2);
+            for(int i = 0; i < 6; i++) {
+                saveInfo[i][0].setText(vd.saveInfo[i][0].getText());
+                saveInfo[i][1].setText(vd.saveInfo[i][1].getText());
+                saveImages[i].setImage(vd.saveImages[i].getImage());
+            }
         }
     }
     
@@ -675,23 +803,24 @@ class InMapView {
     //choose image based on data
     private Image genTile(int x, int y, Floor floor) {
         if(x >= 0 && x < floor.sizeX && y >= 0 && y < floor.sizeY) {
-            String type = floor.tiles[x][y].name;
-        
-            if(type == null)
+//            String tname = Tile.idname.get(floor.tiles[x][y].id);
+            String tname = floor.tiles[x][y].name;
+            
+            if(tname == null)
                 return null;
-            else if(type.equalsIgnoreCase("wall"))
+            else if(tname.equalsIgnoreCase("wall"))
                 if(y < floor.sizeY - 1 && floor.tiles[x][y+1].name.equalsIgnoreCase("wall"))
                     return images.stoneTop;
                 else return images.stoneWall;
-            else if(type.equalsIgnoreCase("door") && floor.tiles[x][y].isWall)
+            else if(tname.equalsIgnoreCase("door") && floor.tiles[x][y].isWall)
                 return images.door;
-            else if(type.equalsIgnoreCase("door"))
+            else if(tname.equalsIgnoreCase("door"))
                 return images.opendoor;
-            else if(type.equalsIgnoreCase("stairsup"))
+            else if(tname.equalsIgnoreCase("stairsup"))
                 return images.stairsup;
-            else if(type.equalsIgnoreCase("stairsdown"))
+            else if(tname.equalsIgnoreCase("stairsdown"))
                 return images.stairsdown;
-            else if(type.equalsIgnoreCase(""))
+            else if(tname.equalsIgnoreCase(""))
                 return images.stoneFloor;
         }
         return null;
@@ -761,27 +890,8 @@ class InMapView {
         return menuPane;
     }
     
-    //animates imageview movement
-//    private void setMoveAnim(ImageView imageView) {
-//        
-//        new AnimationTimer() {
-//            double oldX = 0;
-//            double oldY = 0;
-//            boolean waiting = false;
-//            
-//            @Override
-//            public void handle(long timestamp) {
-//                
-//                if (lastUpdateTime.get() > 0) {
-//                    final double oldX = imageView.getTranslateX();
-//                    final double newX = oldX + speedX.get();
-//                    final double oldY = imageView.getTranslateY();
-//                    final double newY = oldY + speedY.get();
-//                    imageView.setTranslateX(newX);
-//                    imageView.setTranslateY(newY);
-//                }
-//                lastUpdateTime.set(timestamp);
-//            }
-//        }.start();
-//    }
+    //return scene
+    Scene getScene() {
+        return scene;
+    }
 }

@@ -9,10 +9,15 @@ import java.util.HashMap;
 import java.util.ArrayList;
 
 public class Item implements java.io.Serializable {
-    //static vars
+        //static vars
+    //take name, return item template
     static transient HashMap<String, Item> items = new HashMap();
-    static transient HashMap<Short, String> iditem = new HashMap();
-    static transient HashMap<String, Short> itemid = new HashMap();
+    //take id, return item template
+    static transient HashMap<Short, Item> iditems = new HashMap();
+    //take id, return name
+    static transient HashMap<Short, String> idname = new HashMap();
+    //take name, return id
+    static transient HashMap<String, Short> nameid = new HashMap();
     static transient ArrayList<String> 
             wpns = new ArrayList(), //weapons
             arms = new ArrayList(), //armor
@@ -22,7 +27,9 @@ public class Item implements java.io.Serializable {
     
     //vars
     boolean exists;
-    String type, displayName, name, des;
+    String displayName, des;
+    ItemType type;
+    short id;
     int DMG, HIT, CRT, PRC; //weapon stats
     int VIT, INT, ACC, STR, WIS, LUK, CHA, MHP, CHP, MMP, CMP; //bonuses
     int DEF, RES, EVA; //armor stats
@@ -39,29 +46,27 @@ public class Item implements java.io.Serializable {
     
     //get item template given id
     static Item get(short id) {
-        return items.get(iditem.get(id));
+        return iditems.get(id);
     }
     
     //get item id given name
     static short getID(String name) {
-        return itemid.get(name);
+        return nameid.get(name);
     }
     
     //load an item into lists
-    static void load(Item i, short id) {
-        items.put(i.name, i);
-        if(i.type.equals("weapon"))
-            wpns.add(i.name);
-        else if(i.type.equals("armor"))
-            arms.add(i.name);
-        else if(i.type.equals("accessory"))
-            accs.add(i.name);
-        else if(i.type.equals("material"))
-            mats.add(i.name);
-        else if(i.type.equals("consumable"))
-            cons.add(i.name);
-        iditem.put(id, i.name);
-        itemid.put(i.name, id);
+    static void load(String name, Item i) {
+        items.put(name, i);
+        iditems.put(i.id, i);
+        idname.put(i.id, name);
+        nameid.put(name, i.id);
+        switch(i.type) {
+            case WEAPON: wpns.add(name); break;
+            case ARMOR: arms.add(name); break;
+            case ACCESSORY: accs.add(name); break;
+            case MATERIAL: mats.add(name); break;
+            case CONSUMABLE: cons.add(name); break;
+        }
     }
     
     //return completely random item: shouldn't be used
@@ -139,7 +144,6 @@ public class Item implements java.io.Serializable {
     //default constructor with name
     Item(String name) {
         exists = true;
-        this.name = name;
         Item i = get(name);
         des = i.des;
         setStats(i.type, i.DMG, i.HIT, i.CRT, i.PRC, i.VIT, i.INT, i.ACC, i.STR,
@@ -154,7 +158,7 @@ public class Item implements java.io.Serializable {
     Item(Item i, byte rarity, byte LVL) {
         //copy stats
         exists = true;
-        name = i.name;
+        id = i.id;
         des = i.des;
         setStats(i.type, i.DMG, i.HIT, i.CRT, i.PRC, i.VIT, i.INT, i.ACC, i.STR,
                 i.WIS, i.LUK, i.CHA, i.MHP, i.CHP, i.MMP, i.CMP, i.DEF, i.RES,
@@ -165,13 +169,22 @@ public class Item implements java.io.Serializable {
     }
     
     //constructor with all stats: mostly for loading
-    Item(String name, String type, String des, int DMG, int HIT, int CRT, int PRC, 
+    Item(short id, String type, String des, int DMG, int HIT, int CRT, int PRC, 
             int VIT, int INT, int ACC, int STR, int WIS, int LUK, int CHA, int MHP, 
             int CHP, int MMP, int CMP, int DEF, int RES, int EVA, int VAL, byte RAR) {
         exists = false;
-        this.name = name;
+        this.id = id;
         this.des = des;
-        setStats(type, DMG, HIT, CRT, PRC, VIT, INT, ACC, STR, 
+        ItemType it;
+        switch(type) {
+            case "weapon": it = ItemType.WEAPON; break;
+            case "armor": it = ItemType.ARMOR; break;
+            case "accessory": it = ItemType.ACCESSORY; break;
+            case "consumable": it = ItemType.CONSUMABLE; break;
+            case "material": it = ItemType.MATERIAL; break;
+            default: it = null;
+        }
+        setStats(it, DMG, HIT, CRT, PRC, VIT, INT, ACC, STR, 
                 WIS, LUK, CHA, MHP, CHP, MMP, CMP, DEF, RES, EVA, VAL, RAR, (byte)0);
     }
     
@@ -186,58 +199,58 @@ public class Item implements java.io.Serializable {
         //rarity
         this.rarity = rarity;
         if(rarity == 0 || type.equals("consumable")) {
-            displayName = name;
+            displayName = idname.get(id);
             this.rarity = 0;
         }
         else if(rarity == 1) {
-            displayName = name + " ★";
+            displayName = idname.get(id) + " ★";
             des += " An unusual item.";
         }
         else if(rarity == 2) {
-            displayName = name + " ▲";
+            displayName = idname.get(id) + " ▲";
             des += " A strange item.";
         }
         else if(rarity == 3) {
-            displayName = name + " ☆";
+            displayName = idname.get(id) + " ☆";
             des += " An unique item.";
         }
         else if(rarity == 4) {
-            displayName = name + " ✪";
+            displayName = idname.get(id) + " ✪";
             des += " An extraordinary item.";
         }
         else if(rarity == 5) {
-            displayName = name + " ꕤ";
+            displayName = idname.get(id) + " ꕤ";
             des += " A fear-inducing item.";
         }
         else {
             System.out.println("Rarity issue.");
-            displayName = name;
+            displayName = idname.get(id);
         }
         
         //added stats for rarity based on original item
-        DMG += rarity * get(name).DMG * .2;
-        HIT += rarity * get(name).HIT * .05;
-        CRT += rarity * get(name).CRT * .2;
-        PRC += rarity * get(name).PRC * .1;
-        VIT += rarity * get(name).VIT * .2;
-        INT += rarity * get(name).INT * .2;
-        ACC += rarity * get(name).ACC * .1;
-        STR += rarity * get(name).STR * .2;
-        WIS += rarity * get(name).WIS * .2;
-        LUK += rarity * get(name).LUK * .2;
-        CHA += rarity * get(name).CHA * .1;
-        MHP += rarity * get(name).MHP * .4;
-        CHP += rarity * get(name).CHP * .3;
-        MMP += rarity * get(name).MMP * .4;
-        CMP += rarity * get(name).CMP * .3;
-        DEF += rarity * get(name).DEF * .2;
-        RES += rarity * get(name).RES * .2;
-        EVA += rarity * get(name).EVA * .1;
-        VAL += rarity * get(name).VAL * .5;
+        DMG += rarity * get(id).DMG * .2;
+        HIT += rarity * get(id).HIT * .05;
+        CRT += rarity * get(id).CRT * .2;
+        PRC += rarity * get(id).PRC * .1;
+        VIT += rarity * get(id).VIT * .2;
+        INT += rarity * get(id).INT * .2;
+        ACC += rarity * get(id).ACC * .1;
+        STR += rarity * get(id).STR * .2;
+        WIS += rarity * get(id).WIS * .2;
+        LUK += rarity * get(id).LUK * .2;
+        CHA += rarity * get(id).CHA * .1;
+        MHP += rarity * get(id).MHP * .4;
+        CHP += rarity * get(id).CHP * .3;
+        MMP += rarity * get(id).MMP * .4;
+        CMP += rarity * get(id).CMP * .3;
+        DEF += rarity * get(id).DEF * .2;
+        RES += rarity * get(id).RES * .2;
+        EVA += rarity * get(id).EVA * .1;
+        VAL += rarity * get(id).VAL * .5;
     }
     
     //set stats
-    final void setStats(String type, int DMG, int HIT, int CRT, int PRC, int VIT, 
+    final void setStats(ItemType type, int DMG, int HIT, int CRT, int PRC, int VIT, 
             int INT, int ACC, int STR, int WIS, int LUK, int CHA, int MHP, int CHP, 
             int MMP, int CMP, int DEF, int RES, int EVA, int VAL, byte RAR, byte LVL) {
         this.type = type;
@@ -267,9 +280,9 @@ public class Item implements java.io.Serializable {
     final void reset() {
         exists = false;
         displayName = "";
-        name = "";
+        id = -1;
         rarity = 0;
-        setStats("", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        setStats(null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
                 0, 0, 0, 0, 0, 0, 0, (byte)0, (byte)0);
     }
 }

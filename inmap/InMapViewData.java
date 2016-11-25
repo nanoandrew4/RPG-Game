@@ -5,6 +5,8 @@
 package inmap;
 
 import java.awt.Point;
+import javafx.scene.image.ImageView;
+import javafx.scene.text.Text;
 
 public class InMapViewData {
     String focus, menuWindow, invDes;
@@ -14,6 +16,8 @@ public class InMapViewData {
     Character[] party;
     Item[] inv;
     boolean qiVisible, menuToggle;
+    Text[][] saveInfo;
+    ImageView[] saveImages;
     
     InMapViewData() {
         tempP = new Point();
