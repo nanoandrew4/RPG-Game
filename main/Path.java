@@ -8,7 +8,7 @@ import java.util.ArrayDeque;
 import java.awt.Point;
 
 public class Path implements java.io.Serializable{
-    private ArrayDeque<Control> path;
+    private final ArrayDeque<Control> path;
     
     //constructor
     public Path() {

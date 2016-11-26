@@ -173,7 +173,7 @@ class Floor implements java.io.Serializable{
         }
         //open doors
         else if(tiles[ex][ey].openable) {
-            tiles[ex][ey].isWall = false;
+            tiles[ex][ey].open();
         }
     }
     
@@ -196,10 +196,18 @@ class Floor implements java.io.Serializable{
         //crit chance
         if((int)(Math.random() * 100) < c1.CRT) damage *= 2;
         //calculate for defences and pierce
-        if(c1.weapon.CRT == 0 && c2.RES > c1.PRC)
-            damage *= (c1.PRC / (c2.RES + c1.PRC));
-        else if(c2.RES > c1.PRC)
-            damage *= (c1.PRC / (c2.DEF + c1.PRC));
+        if(c1.weapon.CRT == 0) { 
+            if(c2.RES > c1.PRC)
+                damage *= (c1.PRC / (c2.RES + c1.PRC));
+            else if(c2.RES < c1.PRC)
+                damage *= (c1.PRC / (c2.RES + c1.PRC));
+        }
+        else {
+            if(c2.DEF > c1.PRC)
+                damage *= (c1.PRC / (c2.DEF + c1.PRC));
+            else if(c2.DEF < c1.PRC)
+                damage *= (c1.PRC / (c2.DEF + c1.PRC));
+        }
         //calculate critical chance
         if((int)(Math.random() * 100) < c1.CRT) {
             damage *= 2;
@@ -259,8 +267,8 @@ class Floor implements java.io.Serializable{
                 for(int x = 0; x < sizeX; x++) {
                     for(int y = 0; y < sizeY; y++) {
                         if(x == 0 || x == sizeX-1 || y == 0 || y == sizeY-1)
-                            tiles[x][y] = new Tile("wall");
-                        else tiles[x][y] = new Tile();
+                            tiles[x][y] = new Tile("StoneWall");
+                        else tiles[x][y] = new Tile("StoneFloor");
                         chars[x][y] = new Character();
                     }
                 }
@@ -268,23 +276,30 @@ class Floor implements java.io.Serializable{
                 //generate wall somewhere
                 int hWall = (int)(Math.random() * (sizeY-4)) + 2;
                 for(int i = 0; i < sizeX; i++)
-                    tiles[i][hWall] = new Tile("wall");
+                    tiles[i][hWall] = new Tile("StoneWall");
                 int hDoor = (int)(Math.random() * (sizeX-2) + 1);
-                tiles[hDoor][hWall] = new Tile("door");
+                tiles[hDoor][hWall] = new Tile("Door");
                 
                 //vertical wall somewhere
                 int vWall1 = (int)(Math.random() * (sizeX-4)) + 2;
                 vWall1 = (vWall1 == hDoor ? vWall1+1: vWall1);
                 for(int i = hWall; i < sizeY; i++)
-                    tiles[vWall1][i] = new Tile("wall");
-                tiles[vWall1][(int)(Math.random() * (sizeY-2-hWall) +hWall+1)] = new Tile("door");
+                    tiles[vWall1][i] = new Tile("StoneWall");
+                tiles[vWall1][(int)(Math.random() * (sizeY-2-hWall) +hWall+1)] = new Tile("Door");
                 
                 //other vertical wall
                 int vWall2 = (int)(Math.random() * (sizeX-4)) + 2;
                 vWall2 = (vWall2 == hDoor ? vWall2+1: vWall2);
                 for(int i = hWall; i >= 0; i--)
-                    tiles[vWall2][i] = new Tile("wall");
-                tiles[vWall2][(int)(Math.random() * (hWall-1) + 1)] = new Tile("door");
+                    tiles[vWall2][i] = new Tile("StoneWall");
+                tiles[vWall2][(int)(Math.random() * (hWall-1) + 1)] = new Tile("Door");
+                
+                //replace walls with tops
+                for(int x = 0; x < sizeX; x++)
+                    for(int y = 0; y < sizeY - 1; y++)
+                        if(Tile.idname.get(tiles[x][y+1].id).equals("StoneWall"))
+                            if(Tile.idname.get(tiles[x][y].id).equals("StoneWall"))
+                                tiles[x][y] = new Tile("StoneTop");
                 
                 //generate stairsup if not at top
                 if(floorNum != location.numFloors - 1) {
@@ -292,7 +307,7 @@ class Floor implements java.io.Serializable{
                         int x = (int)(Math.random() * sizeX);
                         int y = (int)(Math.random() * sizeY);
                         if(!tiles[x][y].isWall) {
-                            tiles[x][y] = new Tile("stairsUp");
+                            tiles[x][y] = new Tile("StairsUp");
                             endX = x;
                             endY = y;
                             break;
@@ -305,7 +320,7 @@ class Floor implements java.io.Serializable{
                     int x = (int)(Math.random() * sizeX);
                     int y = (int)(Math.random() * sizeY);
                     if(!tiles[x][y].isWall && tiles[x][y].floorMovement == 0) {
-                        tiles[x][y] = new Tile("stairsDown");
+                        tiles[x][y] = new Tile("StairsDown");
                         enterX = x;
                         enterY = y;
                         break;
@@ -344,7 +359,7 @@ class Floor implements java.io.Serializable{
                 items = new Item[sizeX][sizeY];
                 for(int x = 0; x < sizeX; x++) {
                     for(int y = 0; y < sizeY; y++) {
-                        tiles[x][y] = new Tile("wall");
+                        tiles[x][y] = new Tile("StoneWall");
                         chars[x][y] = new Character();
                     }
                 }
@@ -355,25 +370,32 @@ class Floor implements java.io.Serializable{
                         y += (x < size + 1 ? size + 1 - x : 1)) {
                     for(int x2 = x; x2 < sizeX - x; x2++) {
                         for(int y2 = y; y2 < sizeY - y; y2++) {
-                            tiles[x2][y2] = new Tile();
+                            tiles[x2][y2] = new Tile("StoneFloor");
                         }
                     }
                 }
                 
                 //create walls and doors
                 for(int x = 1; x < sizeX; x++)
-                    tiles[x][sizeY/2] = new Tile("wall");
+                    tiles[x][sizeY/2] = new Tile("StoneWall");
                 for(int y = 1; y < sizeY; y++)
-                    tiles[sizeX/2][y] = new Tile("wall");
+                    tiles[sizeX/2][y] = new Tile("StoneWall");
                 int rand = (int)(Math.random()*4);
                 if(rand != 0) 
-                    tiles[(int)(Math.random()*(sizeX/2-1)+1)][sizeY/2] = new Tile("door");
+                    tiles[(int)(Math.random()*(sizeX/2-1)+1)][sizeY/2] = new Tile("Door");
                 if(rand != 1) 
-                    tiles[(int)(Math.random()*(sizeX/2-2)+sizeX/2+1)][sizeY/2] = new Tile("door");
+                    tiles[(int)(Math.random()*(sizeX/2-2)+sizeX/2+1)][sizeY/2] = new Tile("Door");
                 if(rand != 2) 
-                    tiles[sizeX/2][(int)(Math.random()*(sizeY/2-1)+1)] = new Tile("door");
+                    tiles[sizeX/2][(int)(Math.random()*(sizeY/2-1)+1)] = new Tile("Door");
                 if(rand != 3) 
-                    tiles[sizeX/2][(int)(Math.random()*(sizeY/2-2)+sizeY/2+1)] = new Tile("door");
+                    tiles[sizeX/2][(int)(Math.random()*(sizeY/2-2)+sizeY/2+1)] = new Tile("Door");
+                
+                //replace walls with tops
+                for(int x = 0; x < sizeX; x++)
+                    for(int y = 0; y < sizeY - 1; y++)
+                        if(Tile.idname.get(tiles[x][y+1].id).equals("StoneWall"))
+                            if(Tile.idname.get(tiles[x][y].id).equals("StoneWall"))
+                                tiles[x][y] = new Tile("StoneTop");
                 
                 //generate stairsup if not at top
                 if(floorNum != location.numFloors - 1) {
@@ -381,7 +403,7 @@ class Floor implements java.io.Serializable{
                         int x = (int)(Math.random() * sizeX);
                         int y = (int)(Math.random() * sizeY);
                         if(!tiles[x][y].isWall) {
-                            tiles[x][y] = new Tile("stairsUp");
+                            tiles[x][y] = new Tile("StairsUp");
                             endX = x;
                             endY = y;
                             break;
@@ -394,7 +416,7 @@ class Floor implements java.io.Serializable{
                     int x = (int)(Math.random() * sizeX);
                     int y = (int)(Math.random() * sizeY);
                     if(!tiles[x][y].isWall && tiles[x][y].floorMovement == 0) {
-                        tiles[x][y] = new Tile("stairsDown");
+                        tiles[x][y] = new Tile("StairsDown");
                         enterX = x;
                         enterY = y;
                         break;
@@ -453,8 +475,8 @@ class Floor implements java.io.Serializable{
                 for(int x = 0; x < sizeX; x++) {
                     for(int y = 0; y < sizeY; y++) {
                         if(x == 0 || x == sizeX-1 || y == 0 || y == sizeY-1)
-                            tiles[x][y] = new Tile("wall");
-                        else tiles[x][y] = new Tile();
+                            tiles[x][y] = new Tile("StoneWall");
+                        else tiles[x][y] = new Tile("StoneFloor");
                         chars[x][y] = new Character();
                     }
                 }
@@ -464,7 +486,7 @@ class Floor implements java.io.Serializable{
                     y += (int)(Math.random() * 3) - 1;
                     for(int i = (int)(Math.random() * 4 + 2); i > 0 && x < sizeX; i--, x++) {
                         for(int y2 = y; y2 > 0; y2--) {
-                            tiles[x][y2] = new Tile("wall");
+                            tiles[x][y2] = new Tile("StoneWall");
                         }
                     }
                     x--;
@@ -478,11 +500,18 @@ class Floor implements java.io.Serializable{
                         y++;
                     for(int i = (int)(Math.random() * 4 + 2); i > 0 && x < sizeX; i--, x++) {
                         for(int y2 = y; y2 < sizeY; y2++) {
-                            tiles[x][y2] = new Tile("wall");
+                            tiles[x][y2] = new Tile("StoneWall");
                         }
                     }
                     x--;
                 }
+                
+                //replace walls with tops
+                for(int x = 0; x < sizeX; x++)
+                    for(int y = 0; y < sizeY - 1; y++)
+                        if(Tile.idname.get(tiles[x][y+1].id).equals("StoneWall"))
+                            if(Tile.idname.get(tiles[x][y].id).equals("StoneWall"))
+                                tiles[x][y] = new Tile("StoneTop");
                 
                 //generate stairsup if not at top
                 if(floorNum != location.numFloors - 1) {
@@ -490,7 +519,7 @@ class Floor implements java.io.Serializable{
                         int x = (int)(Math.random() * sizeX);
                         int y = (int)(Math.random() * sizeY);
                         if(!tiles[x][y].isWall) {
-                            tiles[x][y] = new Tile("stairsUp");
+                            tiles[x][y] = new Tile("StairsUp");
                             endX = x;
                             endY = y;
                             break;
@@ -503,7 +532,7 @@ class Floor implements java.io.Serializable{
                     int x = (int)(Math.random() * sizeX);
                     int y = (int)(Math.random() * sizeY);
                     if(!tiles[x][y].isWall && tiles[x][y].floorMovement == 0) {
-                        tiles[x][y] = new Tile("stairsDown");
+                        tiles[x][y] = new Tile("StairsDown");
                         enterX = x;
                         enterY = y;
                         break;
@@ -539,16 +568,23 @@ class Floor implements java.io.Serializable{
                 for(int x = 0; x < sizeX; x++) {
                     for(int y = 0; y < sizeY; y++) {
                         if(x == 0 || x == sizeX-1 || y == 0 || y == sizeY-1)
-                            tiles[x][y] = new Tile("wall");
-                        else tiles[x][y] = new Tile();
+                            tiles[x][y] = new Tile("StoneWall");
+                        else tiles[x][y] = new Tile("StoneFloor");
                         chars[x][y] = new Character();
                     }
                 }
                 
+                //replace walls with tops
+                for(int x = 0; x < sizeX; x++)
+                    for(int y = 0; y < sizeY - 1; y++)
+                        if(Tile.idname.get(tiles[x][y+1].id).equals("StoneWall"))
+                            if(Tile.idname.get(tiles[x][y].id).equals("StoneWall"))
+                                tiles[x][y] = new Tile("StoneTop");
+                
                 //stairs
-                tiles[4][4] = new Tile("stairsUp");
+                tiles[4][4] = new Tile("StairsUp");
                 endX = 4; endY = 4;
-                tiles[6][4] = new Tile("stairsDown");
+                tiles[6][4] = new Tile("StairsDown");
                 enterX = 6; enterY = 4;
                 
                 npcs = new Character[2];

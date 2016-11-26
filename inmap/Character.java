@@ -120,8 +120,9 @@ public class Character implements java.io.Serializable {
             case 14: setStats(true,   4,   6,   3,  70,   4,   3,   3,   0, "snail", "Monster", AIType.WANDER, new Path(), true); break;
             case 15: setStats(true,   7,  15,   3,  60,  13,   3,   3,   0, "spookyslime", "Monster", AIType.WANDER, new Path(), true); break;
             case 16: setStats(true,   6,   9,   3,  85,  16,   3,   3,   0, "spookyslug", "Monster", AIType.WANDER, new Path(), true); break;
-            
         }
+        weapon = new Item("Monster Sword");
+        calculateStats();
     }
     
     //make boss: temporary
@@ -172,19 +173,21 @@ public class Character implements java.io.Serializable {
         CRT = -20000 / (LUK+weapon.LUK+armor.LUK+acc1.LUK+acc2.LUK+acc3.LUK+250) + 80;
         CRT += weapon.CRT + armor.CRT + acc1.CRT + acc2.CRT + acc3.CRT;
         HIT = weapon.HIT * (-200 / (ACC+weapon.ACC+armor.ACC+acc1.ACC+acc2.ACC+acc3.ACC+400) + 1.3);
-        HIT += armor.HIT + acc1.HIT + acc2.HIT + acc3.HIT;
-        if(weapon.CRT > 0)
+        if(weapon.DMG == 0) { //melee weapon
+            DMG = Math.pow(STR, 2) / 4;
+            HIT = 90;
+        }
+        else if(weapon.CRT > 0) {
             DMG = weapon.DMG * (Math.sqrt(STR + 40) / 5 - 0.45);
-        else if(weapon.CRT == 0)
+        }
+        else if(weapon.CRT == 0) { //ranged weapon
             DMG = weapon.DMG * (Math.sqrt(WIS + 40) / 5 - 0.45);
-        
-        //below are not implemented correctly
-        DMG = Math.pow(STR, 2) / 4;
-        DEF = 50;
-        RES = 50;
-        PRC = 100;
-        EVA = 0;
-        HIT = ACC;
+        }
+        HIT += armor.HIT + acc1.HIT + acc2.HIT + acc3.HIT;
+        DEF = weapon.DEF + armor.DEF + acc1.DEF + acc2.DEF + acc3.DEF;
+        RES = weapon.RES + armor.RES + acc1.RES + acc2.RES + acc3.RES;
+        PRC = weapon.PRC + armor.PRC + acc1.PRC + acc2.PRC + acc3.PRC;
+        EVA = weapon.EVA + armor.EVA + acc1.EVA + acc2.EVA + acc3.EVA;
     }
     
     //kill

@@ -19,11 +19,13 @@ class Location implements java.io.Serializable{
         this.type = type;
         difficulty = (int)(Math.random() * 5 + 1);
         currentFloor = 0;
-        numFloors = (int)(Math.random() * 10 + 5); 
+        numFloors = (int)(Math.random() * 10 + 5);
+        numFloors = 10;
         floors = new Floor[numFloors];
         randName();
         for(int i = 0; i < numFloors; i++) {
-            floors[i] = new Floor(model, this, i, type, difficulty, size, party);
+//            floors[i] = new Floor(model, this, i, type, difficulty, size, party);
+            floors[i] = new Floor(model, this, i, type, difficulty, 2, party);
         }
     }
     

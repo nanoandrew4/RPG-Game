@@ -8,6 +8,8 @@ import javafx.scene.Scene;
 import javafx.scene.effect.BoxBlur;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -20,13 +22,7 @@ import javafx.scene.text.FontWeight;
 
 class Images {
     //contains images
-    Image stoneFloor;
-    Image stoneWall;
-    Image stoneTop;
-    Image door;
-    Image opendoor;
-    Image stairsup;
-    Image stairsdown;
+    Image[] tiles;
     
     Image hero;
     Image portrait;
@@ -62,13 +58,12 @@ class Images {
     Image black;
     
     Images(double width, double height, String heroSprite, String heroPortrait) {
-        stoneFloor = new Image("/media/graphics/inmap/tiles/StoneFloor.png", width, height, false, false);
-        stoneWall = new Image("/media/graphics/inmap/tiles/StoneWall.png", width, height, false, false);
-        stoneTop = new Image("/media/graphics/inmap/tiles/StoneTop.png", width, height, false, false);
-        door = new Image("/media/graphics/inmap/tiles/door.png", width, height, false, false);
-        opendoor = new Image("/media/graphics/inmap/tiles/opendoor.png", width, height, false, false);
-        stairsup = new Image("/media/graphics/inmap/tiles/stairsup.png", width, height, false, false);
-        stairsdown = new Image("/media/graphics/inmap/tiles/stairsdown.png", width, height, false, false);
+        //load images
+        PixelReader pr = new Image("/media/graphics/inmap/IMTiles.png", 640, 960, false, false).getPixelReader();
+        tiles = new Image[100];
+        for(int i = 0; i < 100; i++) {
+            tiles[i] = new WritableImage(pr, i%10*64, (int)(Math.floor(i/10))*96, 64, 96);
+        }
 
         npc1 = new Image("/media/graphics/inmap/sprites/elonaSin.png", width, width, true, false);
         npc2 = new Image("/media/graphics/inmap/sprites/elonaGilbert.png", width, width, true, false);
@@ -268,6 +263,7 @@ class InMapView {
                 //tiles
                 imageViews[x][y][0] = new ImageView();
                 imageViews[x][y][0].relocate(width*x - width*3/2, width*y - width*2);
+                imageViews[x][y][0].setFitHeight(height);
                 
                 //characters
                 imageViews[x][y][2] = new ImageView();
@@ -531,7 +527,12 @@ class InMapView {
             //tiles
             for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
                 for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
-                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0].setImage(genTile(x, y, vd.floor));
+                    if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.tiles[x][y].id != -1) {
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0]
+                                .setImage(images.tiles[vd.floor.tiles[x][y].id]);
+                    }
+                    else
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0].setImage(null);
                 }
             }
 
@@ -798,32 +799,6 @@ class InMapView {
         invStats[16].setText("MAXMP: " + i.MMP);
         invStats[17].setText("HEALMP: " + i.CMP);
         invStats[18].setText("VAL: " + i.VAL);
-    }
-    
-    //choose image based on data
-    private Image genTile(int x, int y, Floor floor) {
-        if(x >= 0 && x < floor.sizeX && y >= 0 && y < floor.sizeY) {
-//            String tname = Tile.idname.get(floor.tiles[x][y].id);
-            String tname = floor.tiles[x][y].name;
-            
-            if(tname == null)
-                return null;
-            else if(tname.equalsIgnoreCase("wall"))
-                if(y < floor.sizeY - 1 && floor.tiles[x][y+1].name.equalsIgnoreCase("wall"))
-                    return images.stoneTop;
-                else return images.stoneWall;
-            else if(tname.equalsIgnoreCase("door") && floor.tiles[x][y].isWall)
-                return images.door;
-            else if(tname.equalsIgnoreCase("door"))
-                return images.opendoor;
-            else if(tname.equalsIgnoreCase("stairsup"))
-                return images.stairsup;
-            else if(tname.equalsIgnoreCase("stairsdown"))
-                return images.stairsdown;
-            else if(tname.equalsIgnoreCase(""))
-                return images.stoneFloor;
-        }
-        return null;
     }
     
     //choose character image based on model data

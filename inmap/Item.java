@@ -145,6 +145,7 @@ public class Item implements java.io.Serializable {
     Item(String name) {
         exists = true;
         Item i = get(name);
+        id = i.id;
         des = i.des;
         setStats(i.type, i.DMG, i.HIT, i.CRT, i.PRC, i.VIT, i.INT, i.ACC, i.STR,
                 i.WIS, i.LUK, i.CHA, i.MHP, i.CHP, i.MMP, i.CMP, i.DEF, i.RES,

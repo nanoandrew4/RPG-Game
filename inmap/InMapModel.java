@@ -59,7 +59,7 @@ public class InMapModel implements java.io.Serializable{
             load(dbManager);
         }
         catch(SQLException e) {
-            e.printStackTrace();
+            
         }
         
         //initial items
@@ -457,6 +457,7 @@ public class InMapModel implements java.io.Serializable{
                                     Item temp = inv[menuP.x*16+menuP.y];
                                     inv[menuP.x*16+menuP.y] = party[0].weapon;
                                     party[0].weapon = temp;
+                                    party[0].calculateStats();
                                     invText = Item.idname.get(party[0].weapon.id) + " equipped.";
                                 }
                                 else if(inv[menuP.x*16+menuP.y].type == ItemType.ARMOR) {
@@ -464,32 +465,37 @@ public class InMapModel implements java.io.Serializable{
                                     Item temp = inv[menuP.x*16+menuP.y];
                                     inv[menuP.x*16+menuP.y] = party[0].armor;
                                     party[0].armor = temp;
+                                    party[0].calculateStats();
                                     invText = Item.idname.get(party[0].armor.id) + " equipped.";
                                 }
                                 else if(inv[menuP.x*16+menuP.y].type == ItemType.ACCESSORY) {
                                     //insert in first
                                     if(!party[0].acc1.exists) {
                                         party[0].acc1 = inv[menuP.x*16+menuP.y];
-                                        invText = Item.idname.get(party[0].acc1.id) + " equipped.";
                                         inv[menuP.x*16+menuP.y] = new Item();
+                                        party[0].calculateStats();
+                                        invText = Item.idname.get(party[0].acc1.id) + " equipped.";
                                     }
                                     //second
                                     else if(!party[0].acc2.exists) {
                                         party[0].acc2 = inv[menuP.x*16+menuP.y];
-                                        invText = Item.idname.get(party[0].acc2.id) + " equipped.";
                                         inv[menuP.x*16+menuP.y] = new Item();
+                                        party[0].calculateStats();
+                                        invText = Item.idname.get(party[0].acc2.id) + " equipped.";
                                     }
                                     //third
                                     else if(!party[0].acc3.exists) {
                                         party[0].acc3 = inv[menuP.x*16+menuP.y];
-                                        invText = Item.idname.get(party[0].acc3.id) + " equipped.";
                                         inv[menuP.x*16+menuP.y] = new Item();
+                                        party[0].calculateStats();
+                                        invText = Item.idname.get(party[0].acc3.id) + " equipped.";
                                     }
                                     //swap with first
                                     else {
                                         Item temp = inv[menuP.x*16+menuP.y];
                                         inv[menuP.x*16+menuP.y] = party[0].acc1;
                                         party[0].acc1 = temp;
+                                        party[0].calculateStats();
                                         invText = Item.idname.get(party[0].acc1.id) + " equipped.";
                                     }
                                 }
