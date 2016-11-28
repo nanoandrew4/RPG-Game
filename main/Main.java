@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Random;
 
 import org.nustaq.serialization.FSTObjectInput;
 import org.nustaq.serialization.FSTObjectOutput;
@@ -65,6 +66,7 @@ public class Main extends Application {
     public Text[][] saveInfo;
     public ImageView[] saveImages;
     private File[] listOfFiles;
+    private HashMap<Integer, Integer> saveFileHM;
     //racePane vars
     private Text[] raceT;
     private Text raceDes, raceStats;
@@ -177,6 +179,10 @@ public class Main extends Application {
         //loadPane
         File folder = new File("src/saves");
         listOfFiles = folder.listFiles();
+        saveFileHM = new HashMap<>();
+
+        for (int x = 0; x < listOfFiles.length; x++)
+            saveFileHM.put((int)listOfFiles[x].getName().split("\\.")[0].charAt(4) - 48, x);
 
         saveInfo = new Text[6][2];
         saveImages = new ImageView[6];
@@ -803,7 +809,7 @@ public class Main extends Application {
         try {
             if (listOfFiles[0].getName().equals(".DS_Store"))
                 slot++;
-            Object[] models = loadModel(listOfFiles[slot].getName().split("\\.")[0]);
+            Object[] models = loadModel(listOfFiles[saveFileHM.get(slot)].getName().split("\\.")[0]);
             startOverworldController((OverworldModel) models[0]);
             startInMapController((InMapModel) models[1]);
         } catch (IOException | ClassNotFoundException e) {
@@ -955,5 +961,50 @@ public class Main extends Application {
             return Control.NULL;
         else
             return keybindings.get(k);
+    }
+
+    public static String genRandName(int length) {
+        String str = "";
+        Random rand = new Random();
+
+        str += (char)(65 + rand.nextInt(26));
+
+        for (int x = 1; x < length; x++) {
+
+            char p = str.charAt(x - 1);
+
+            if (p == 'a' || p == 'e' || p == 'i' || p == 'o' || p =='u') { // if vowel
+                if (rand.nextInt(10) < 2 && x > 1 && !isVowel(str.charAt(x - 2)))
+                    str += genVowel(rand);
+                else
+                    str += genConsonant(rand);
+            } else { // if consonant
+                str += genVowel(rand);
+            }
+        }
+        return str;
+    }
+
+    private static boolean isVowel(char c) {
+        return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u';
+    }
+
+    private static char genVowel(Random rand) {
+        switch (rand.nextInt(5)) {
+            case 0: return 'a';
+            case 1: return 'e';
+            case 2: return 'i';
+            case 3: return 'o';
+            case 4: return 'u';
+            default: return 'a';
+        }
+    }
+
+    private static char genConsonant(Random rand) {
+        char c;
+        do {
+            c = (char)(97 + rand.nextInt(26));
+        } while (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c =='u');
+        return c;
     }
 }
