@@ -75,39 +75,53 @@ public class Item implements java.io.Serializable {
                 [(int)(Math.random()*items.size())]), (byte)(Math.random()*6), (byte)0);
     }
     
+    //return random monster drop
+    static Item randomMonsterDrop() {
+        Item i;
+        
+        double rand = Math.random();
+        if(rand < .8)
+            return randomItem(0, ItemType.MATERIAL);
+        else if(rand < .85)
+            return randomItem(0, ItemType.WEAPON);
+        else if(rand < .90)
+            return randomItem(0, ItemType.ARMOR);
+        else if(rand < .95)
+            return randomItem(0, ItemType.ACCESSORY);
+        else if(rand < 1)
+            return randomItem(0, ItemType.CONSUMABLE);
+        else
+            i = null;
+        
+        return i;
+    }
+    
     //return random item given type and rarity context
-    static Item randomItem(int rarcon, String type) {
+    static Item randomItem(int rarcon, ItemType t) {
         Item i;
         
         //get random type if null
-        if(type == null) {
-            switch((int)(Math.random()*5)) {
-                case 0: type = "weapon"; break;
-                case 1: type = "armor"; break;
-                case 2: type = "accessory"; break;
-                case 3: type = "material"; break;
-                case 4: type = "consumable"; break;
-                default: type = ""; break;
-            }
+        if(t == null) {
+            t = ItemType.values()[(int)(Math.random()*ItemType.values().length)];
         }
         
         //loop for rarity checks
         do {
-            switch(type) {
+            switch(t) {
                 //get random weapon
-                case "weapon":
+                case WEAPON:
                     i =  items.get(wpns.get((int)(Math.random()*wpns.size())));
                     break;
-                case "armor":
+                case ARMOR:
                     i = items.get(arms.get((int)(Math.random()*arms.size())));
                     break;
-                case "accessory":
+                case ACCESSORY:
                     i = items.get(accs.get((int)(Math.random()*accs.size())));
                     break;
-                case "material":
+                case MATERIAL:
                     i = items.get(mats.get((int)(Math.random()*mats.size())));
                     break;
-                case "consumable":
+                case CONSUMABLE:
                     i = items.get(cons.get((int)(Math.random()*cons.size())));
                     break;
                 default:
@@ -116,9 +130,10 @@ public class Item implements java.io.Serializable {
             }
             
             //check for rarity
-            if((int)(Math.random()*6) > i.RAR-rarcon)
+            if((int)(Math.random()*6) > i.RAR)
                 break;
         } while(true);
+        
         
         return new Item(i, randRarity(rarcon), (byte)0);
     }
@@ -128,7 +143,7 @@ public class Item implements java.io.Serializable {
         return items.size();
     }
     
-    //get random rarity
+    //get random rarity: need to implement context
     static byte randRarity(int rarcon) {
         int temp = (int)(Math.random()*1000000);
         if(temp < 900000) return 0; //90%

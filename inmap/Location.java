@@ -20,12 +20,10 @@ class Location implements java.io.Serializable{
         difficulty = (int)(Math.random() * 5 + 1);
         currentFloor = 0;
         numFloors = (int)(Math.random() * 10 + 5);
-        numFloors = 10;
         floors = new Floor[numFloors];
         randName();
         for(int i = 0; i < numFloors; i++) {
-//            floors[i] = new Floor(model, this, i, type, difficulty, size, party);
-            floors[i] = new Floor(model, this, i, type, difficulty, 2, party);
+            floors[i] = new Floor(model, this, i, type, difficulty, size, party);
         }
     }
     
@@ -56,8 +54,8 @@ class Location implements java.io.Serializable{
     }
     
     //process input
-    void process(Control direction) {
-        floors[currentFloor].processPlayer(direction);
+    int process(Control direction) {
+        return floors[currentFloor].processPlayer(direction);
     }
     
     //return current floor

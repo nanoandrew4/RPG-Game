@@ -21,7 +21,8 @@ public class InMapModel implements java.io.Serializable{
     private Character[] party;
     private Item[] inv;
     private int gold;
-    private String name, sprite, portrait;
+    private String name, portrait;
+    private int sprite;
     
     //temporary variables
     private String focus, menuWindow, invText;
@@ -29,13 +30,17 @@ public class InMapModel implements java.io.Serializable{
     private int useP, usePmax, selectP; //selection pointer
     private boolean qiVisible; //quick info window
     private boolean menuToggle; //menu toggle
+    private int talkState; //not talking, talking, selecting
+    private int talkSelect; //selection pointer for talking
+    private String talkText; //text in the talk box
+    private long timer;
     
     boolean hasControl;
     int saveGame, loadGame;
     
     //new game constructor
     InMapModel(int VIT, int INT, int STR, int WIS, int LUK, int CHA, 
-            String race, String name, String sprite, String portrait) {
+            String race, String name, int sprite, String portrait) {
         DBManager dbManager = new DBManager("IMDATA");
         
         //init arrays
@@ -48,6 +53,7 @@ public class InMapModel implements java.io.Serializable{
         //create character
         party[0] = new Character(1, VIT, INT, 90, STR, WIS, LUK, CHA, 
                 name, race, AIType.NONE, new Path(), false);
+        party[0].id = 99;
         this.name = name;
         this.sprite = sprite;
         this.portrait = portrait;
@@ -80,6 +86,7 @@ public class InMapModel implements java.io.Serializable{
         hasControl = false;
         saveGame = -1;
         loadGame = -1;
+        timer = -1;
     }
     
     //quick start game
@@ -96,9 +103,10 @@ public class InMapModel implements java.io.Serializable{
         //create temp hero
         party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, 
                 "Hero " + (char)(Math.random()*9+49), "Human", AIType.NONE, new Path(), false);
+        party[0].id = 99;
         name = party[0].name;
-        sprite = "/media/graphics/inmap/sprites/trump.png";
-        portrait = "/media/graphics/inmap/sprites/portrait.jpg";
+        sprite = 99;
+        portrait = "/media/graphics/inmap/portrait.jpg";
         currentMap = new Point(-1, -1);
         gold = 500;
         
@@ -111,8 +119,8 @@ public class InMapModel implements java.io.Serializable{
         }
         
         //testing
-        for(int i = 0; i < (int)(Math.random()*60)+10; i++)
-            inv[(int)(Math.random()*64)] = Item.randomItem(0, null);
+        for(int i = (int)(Math.random()*30)+20; i >= 0; i--)
+            inv[i] = Item.randomItem(0, null);
 //        for(int i = 0; i < 100; i++)
 //            makeLocation(new Point(i, i), "tower");
         
@@ -127,6 +135,7 @@ public class InMapModel implements java.io.Serializable{
         hasControl = false;
         saveGame = -1;
         loadGame = -1;
+        timer = -1;
     }
     
     //load game data
@@ -154,9 +163,10 @@ public class InMapModel implements java.io.Serializable{
     }
     
     //process input
-    void process(Control input) {
+    int process(Control input) {
         //floor input
         if(focus.equals("floor")) {
+            int r = -1;
             switch (input) {
                 case BACK:
                     //default open menu
@@ -164,7 +174,10 @@ public class InMapModel implements java.io.Serializable{
                     break;
                     
                 case TOGGLE:
-                    qiVisible = true;
+                    if(timer == -1) {
+                        timer = System.currentTimeMillis();
+                        qiVisible = !qiVisible;
+                    }
                     break;
                     
                 case R:
@@ -203,12 +216,30 @@ public class InMapModel implements java.io.Serializable{
                     
                 default:
                     //process movement input
-                    maps.get(currentMap).process(input);
+                    r = maps.get(currentMap).process(input);
+                    
                     //process ai if haven't left location
-                    if(hasControl)
+                    if(r != 1 && r != 3 && hasControl) {
                         maps.get(currentMap).getCurrentFloor().processAI();
+                    }
+                    //pick up item
+                    if(r >= 1000) {
+                        r -= 1000;
+                        for(int i = 0; i < 64; i++) {
+                            if(!inv[i].exists) {
+                                inv[i] = new Item(Item.get((short)r), (byte)0, (byte)0);
+                                break;
+                            }
+                        }
+                    }
+                    //start talking to npc
+                    else if(r == 3) {
+                        talkState = 1;
+                        talkText = "top kek dood";
+                    }
                     break;
             }
+            return r;
         }
         //menu input
         else if(focus.equals("menu")) {
@@ -634,15 +665,21 @@ public class InMapModel implements java.io.Serializable{
                 default:
                     break;
             }
+            return 100;
         }
-        else
+        else {
             System.out.println("Failed focus.");
+            return -1;
+        }
     }
     
     //process release of input
     public void processRelease(Control input) {
         if(input == Control.TOGGLE) {
-            qiVisible = false;
+            if(System.currentTimeMillis() - timer > 300) {
+                qiVisible = !qiVisible;
+            }
+            timer = -1;
         }
     }
     
@@ -670,11 +707,12 @@ public class InMapModel implements java.io.Serializable{
         party[0].currentHP = party[0].maxHP;
         party[0].exists = true;
         Location temp;
-        switch((int)(Math.random()*3)) {
+        switch((int)(Math.random()*4)) {
             case 0: temp = new Location(this, "tower", (int)(Math.random()*3+1), party); break;
             case 1: temp = new Location(this, "dungeon", (int)(Math.random()*3+1), party); break;
             case 2: temp = new Location(this, "cave", (int)(Math.random()*3+1), party); break;
-            default: temp = new Location(this, "city", 2, party); break;
+            case 3: temp = new Location(this, "city", 2, party); break;
+            default: temp = null;
         }
         maps.put(new Point(-1, -1), temp);
         maps.get(currentMap).getCurrentFloor().passControl(Control.UP);
@@ -728,8 +766,23 @@ public class InMapModel implements java.io.Serializable{
     
     //make a location
     void makeLocation(Point p, String type) {
-        if(!maps.containsKey(p))
-            maps.put(p, new Location(this, type, (int)(Math.random()*3+1), party));
+        if(!maps.containsKey(p)) {
+            if(!type.equals("random"))
+                maps.put(p, new Location(this, type, (int)(Math.random()*3+1), party));
+            else {
+                maps.put(p, new Location(this, "city", 1, party));
+//                switch((int)(Math.random()*3)) {
+//                    case 0: maps.put(p, new Location(this, "tower", 
+//                            (int)(Math.random()*3+1), party)); break;
+//                    case 1: maps.put(p, new Location(this, "dungeon", 
+//                            (int)(Math.random()*3+1), party)); break;
+//                    case 2: maps.put(p, new Location(this, "cave", 
+//                            (int)(Math.random()*3+1), party)); break;
+//                    default: maps.put(p, new Location(this, "city", 
+//                            (int)(Math.random()*5+1), party)); break;
+//                }
+            }
+        }
     }
     
     //getters
@@ -737,7 +790,7 @@ public class InMapModel implements java.io.Serializable{
     Location getLocation(Point id) { return maps.get(id); }
     public Character[] getParty() { return party; }
     String getName() { return name; }
-    String getSprite() { return sprite; }
+    int getSprite() { return sprite; }
     String getPortrait() { return portrait; }
     Item[] getInventory() { return inv; }
     String getInvDes() { return invText; }
@@ -750,4 +803,7 @@ public class InMapModel implements java.io.Serializable{
     String getFocus() { return focus; }
     boolean getQIVisible() { return qiVisible; }
     boolean getMenuToggle() { return menuToggle; }
+    int getTalkState() { return talkState; }
+    int getTalkSelect() { return talkSelect; }
+    String getTalkText() { return talkText; }
 }

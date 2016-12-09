@@ -6,10 +6,7 @@ package inmap;
 
 import javafx.scene.Scene;
 import javafx.scene.effect.BoxBlur;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelReader;
-import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -20,101 +17,24 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.FontWeight;
 
-class Images {
-    //contains images
-    Image[] tiles;
-    
-    Image hero;
-    Image portrait;
-    
-    Image adelf;
-    Image bat;
-    Image bell;
-    Image chest;
-    Image chick;
-    Image chicken;
-    Image fishman;
-    Image flan;
-    Image ghost;
-    Image kingslime;
-    Image longcat;
-    Image manta;
-    Image mote;
-    Image skelebro;
-    Image snail;
-    Image spookyslime;
-    Image spookyslug;
-    
-//    Image spider;
-//    Image slug;
-//    Image goblin;
-//    Image boss;
-    
-    Image npc1;
-    Image npc2;
-    
-    Image health;
-    
-    Image black;
-    
-    Images(double width, double height, String heroSprite, String heroPortrait) {
-        //load images
-        PixelReader pr = new Image("/media/graphics/inmap/IMTiles.png", 640, 960, false, false).getPixelReader();
-        tiles = new Image[100];
-        for(int i = 0; i < 100; i++) {
-            tiles[i] = new WritableImage(pr, i%10*64, (int)(Math.floor(i/10))*96, 64, 96);
-        }
-
-        npc1 = new Image("/media/graphics/inmap/sprites/elonaSin.png", width, width, true, false);
-        npc2 = new Image("/media/graphics/inmap/sprites/elonaGilbert.png", width, width, true, false);
-//        spider = new Image("/media/graphics/inmap/sprites/spooder.png", width, width, true, false);
-//        bat = new Image("/media/graphics/inmap/sprites/batman.png", width, width, true, false);
-//        slug = new Image("/media/graphics/inmap/sprites/slug.png", width, width, true, false);
-//        goblin = new Image("/media/graphics/inmap/sprites/harambe.png", width, width, true, false);
-//        boss = new Image("/media/graphics/inmap/sprites/clinton.jpg", width, width, true, false);
-//        hero = new Image("/media/graphics/inmap/sprites/knight.png", width, width, true, false);
-        hero = new Image(heroSprite, width, width, true, false);
-        portrait = new Image(heroPortrait, width*2, width*2, false, false);
-        adelf = new Image("/media/graphics/inmap/sprites/adelf.png", width, width, true, false);
-        bat = new Image("/media/graphics/inmap/sprites/bat.png", width, width, true, false);
-        bell = new Image("/media/graphics/inmap/sprites/bell.png", width, width, true, false);
-        chest = new Image("/media/graphics/inmap/sprites/chest.png", width, width, true, false);
-        chick = new Image("/media/graphics/inmap/sprites/chick.png", width, width, true, false);
-        chicken = new Image("/media/graphics/inmap/sprites/chicken.png", width, width, true, false);
-        fishman = new Image("/media/graphics/inmap/sprites/fishman.png", width, width, true, false);
-        flan = new Image("/media/graphics/inmap/sprites/flan.png", width, width, true, false);
-        ghost = new Image("/media/graphics/inmap/sprites/ghost.png", width, width, true, false);
-        kingslime = new Image("/media/graphics/inmap/sprites/kingslime.png", width, width, true, false);
-        longcat = new Image("/media/graphics/inmap/sprites/longcat.png", width, width, true, false);
-        manta = new Image("/media/graphics/inmap/sprites/manta.png", width, width, true, false);
-        mote = new Image("/media/graphics/inmap/sprites/mote.png", width, width, true, false);
-        skelebro = new Image("/media/graphics/inmap/sprites/skelebro.png", width, width, true, false);
-        snail = new Image("/media/graphics/inmap/sprites/snail.png", width, width, true, false);
-        spookyslime = new Image("/media/graphics/inmap/sprites/spookyslime.png", width, width, true, false);
-        spookyslug = new Image("/media/graphics/inmap/sprites/spookyslug.png", width, width, true, false);
-        
-        health = new Image("/media/graphics/inmap/health.jpg", width, width/5, true, false);
-        
-        black = new Image("/media/graphics/inmap/black.jpg", width, height, true, false);
-    }
-}
-
 class InMapView {
     //vars
-    Images images;
     ImageView[][][] imageViews;
     public double screenWidth, screenHeight;
     private final Scene scene;
-    private final Pane inmapLayout, floorPane, UIPane,
+    private final Pane inmapLayout, floorPane, overlayPane, UIPane,
             menuPane, menubgPane, invPane, invTextPane, invStatPane, 
-            charPane, partyPane, notePane, opPane, ripPane;
+            charPane, partyPane, notePane, opPane, talkPane, ripPane;
     double width, height;
     final double zoom;
     String name;
     
     //quickinfo
-    private Text charT, levelT, goldT;
-    private Text diffT, floorT, nameT, typeT;
+    private Text qiChar, qiLevel, qiGold;
+    private Text qiDiff, qiFloor, qiName, qiType;
+    private ImageView qiPortrait, uiHealth, uiMana;
+    private Rectangle uiHealthR, uiManaR;
+    private Text uiHealthT, uiManaT;
     //inventory
     private Text[] invText; //item names
     private Text invName, invDes, invType;
@@ -135,24 +55,26 @@ class InMapView {
     private Rectangle menuCursor, tempCursor;
     
     //constructor
-    InMapView(double screenWidth, double screenHeight, String name, String sprite, String portrait) {
+    InMapView(double screenWidth, double screenHeight, String name, int sprite, String portrait) {
         //0: tiles
-        //1: items
-        //2: characters
-        //3: health
-        //4: overlay
-        //5: fog
-        imageViews = new ImageView[24][16][6];
+        //1: shadow
+        //2: items
+        //3: characters
+        //4: health
+        //5: overlay
+        //6: fog
+        imageViews = new ImageView[24][16][7];
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.name = name;
         zoom = 12;
         setTileSize();
-        images = new Images(width, height, sprite, portrait);
+        Images.setHeroSprite(width, height, sprite, portrait);
         
         inmapLayout = new Pane();
         floorPane = new Pane();
         UIPane = new Pane();
+        overlayPane = new Pane();
         menuPane = new Pane();
         menubgPane = new Pane();
         invPane = new Pane();
@@ -162,6 +84,7 @@ class InMapView {
         partyPane = new Pane();
         notePane = new Pane();
         opPane = new Pane();
+        talkPane = new Pane();
         ripPane = new Pane();
         
         //initialize UI
@@ -186,40 +109,74 @@ class InMapView {
     
     //initialize display
     public final void initDisplay() {
-        //quickinfo
-        Rectangle box = new Rectangle(screenWidth/5, screenHeight*1/3, Paint.valueOf("WHITE"));
-        box.setOpacity(.7);
-        box.relocate(screenWidth*4/5, 0); //top right
+        //quickinfo boxes
+        Rectangle qiInfoBox = new Rectangle(screenWidth/8, screenHeight/4, Paint.valueOf("WHITE"));
+        qiInfoBox.setOpacity(.7);
+        qiInfoBox.relocate(screenWidth*7/8, 0);
+        
+        qiName = new Text(screenWidth*7/8 + 20, 40, "");
+        qiName.setTextAlignment(TextAlignment.CENTER);
+        qiName.setWrappingWidth(screenWidth/8-40);
+        qiName.setFont(Font.font(null, FontWeight.BOLD, 20));
+        
+        qiType = new Text(screenWidth*7/8 + 20, 90, "");
+        qiType.setFont(Font.font(null, FontWeight.NORMAL, 18));
+        
+        qiDiff = new Text(screenWidth*7/8 + 20, 120, "");
+        qiDiff.setFont(Font.font(null, FontWeight.NORMAL, 18));
+        
+        qiFloor = new Text(screenWidth*7/8 + 20, 150, "");
+        qiFloor.setFont(Font.font(null, FontWeight.NORMAL, 18));
 
-        Rectangle box2 = new Rectangle(screenWidth/14, screenHeight*3/5, Paint.valueOf("WHITE"));
-        box2.setOpacity(.7);
-        box2.relocate(0, screenHeight/8); //top left
+        Rectangle qiPartyBox = new Rectangle(screenWidth/14, screenHeight*3/5, Paint.valueOf("WHITE"));
+        qiPartyBox.setOpacity(.7);
+        qiPartyBox.relocate(0, screenHeight/8);
         
-        Rectangle box3 = new Rectangle(screenWidth/4, screenHeight/4, Paint.valueOf("WHITE"));
-        box3.setOpacity(.7);
-        box3.relocate(0, screenHeight*3/4); //bottom left
+        Rectangle qiCharBox = new Rectangle(screenWidth/8, screenHeight/7, Paint.valueOf("WHITE"));
+        qiCharBox.setOpacity(.7);
+        qiCharBox.relocate(screenWidth/8, screenHeight*3/4);
         
-        nameT = new Text(screenWidth*4/5+20, 40, "");
-        nameT.setFont(Font.font(null, FontWeight.BOLD, 20));
+        qiChar = new Text(screenWidth/8 + 10, screenHeight*3/4+screenHeight/28, "");
+        qiChar.setFont(Font.font(null, FontWeight.NORMAL, screenHeight/48));
         
-        typeT = new Text(screenWidth*4/5+20, 90, "");
-        typeT.setFont(Font.font(null, FontWeight.NORMAL, 18));
+        qiLevel = new Text(screenWidth/8 + 10, screenHeight*3/4+screenHeight*2/28, "");
+        qiLevel.setFont(Font.font(null, FontWeight.NORMAL, screenHeight/48));
         
-        diffT = new Text(screenWidth*4/5+20, 140, "");
-        diffT.setFont(Font.font(null, FontWeight.NORMAL, 18));
+        qiGold = new Text(screenWidth/8 + 10, screenHeight*3/4+screenHeight*3/28, "");
+        qiGold.setFont(Font.font(null, FontWeight.NORMAL, screenHeight/48));
         
-        floorT = new Text(screenWidth*4/5+20, 190, "");
-        floorT.setFont(Font.font(null, FontWeight.NORMAL, 18));
+        overlayPane.getChildren().addAll(qiInfoBox, qiPartyBox, qiCharBox, qiName, 
+                qiType, qiDiff, qiFloor, qiChar, qiLevel, qiGold);
         
-        charT = new Text(30, screenHeight*3/4+40, "");
-        charT.setFont(Font.font(null, FontWeight.NORMAL, 24));
+        qiPortrait = new ImageView(Images.portrait);
+        qiPortrait.relocate(0, screenHeight-Images.portrait.getHeight()*1.5);
         
-        levelT = new Text(30, screenHeight*3/4+90, "");
-        levelT.setFont(Font.font(null, FontWeight.NORMAL, 24));
-        goldT = new Text(30, screenHeight*3/4+140, "");
-        goldT.setFont(Font.font(null, FontWeight.NORMAL, 24));
+        //ui
+        uiHealth = new ImageView(Images.health);
+        uiHealth.relocate(0, screenHeight*46/50);
+        uiHealth.setFitHeight(screenHeight/50);
+        uiMana = new ImageView(Images.mana);
+        uiMana.relocate(0, screenHeight*47/50);
+        uiMana.setFitHeight(screenHeight/50);
         
-        UIPane.getChildren().addAll(box, box2, box3, nameT, typeT, diffT, floorT, charT, levelT, goldT);
+        uiHealthR = new Rectangle(0, screenHeight/50, Paint.valueOf("GREY"));
+        uiHealthR.relocate(0, screenHeight*46/50);
+        uiHealthR.setOpacity(.4);
+        uiManaR = new Rectangle(0, screenHeight/50, Paint.valueOf("GREY"));
+        uiManaR.relocate(0, screenHeight*47/50);
+        uiManaR.setOpacity(.4);
+        
+        uiHealthT = new Text(10, screenHeight*47/50, "");
+        uiHealthT.setFill(Paint.valueOf("WHITE"));
+        uiHealthT.setFont(Font.font(null, FontWeight.NORMAL, screenHeight/50));
+        uiManaT = new Text(10, screenHeight*48/50, "");
+        uiManaT.setFill(Paint.valueOf("WHITE"));
+        uiManaT.setFont(Font.font(null, FontWeight.NORMAL, screenHeight/50));
+        
+        UIPane.getChildren().addAll(qiPortrait, uiHealthR, uiHealth, 
+                uiHealthT, uiManaR, uiMana, uiManaT);
+        
+        inmapLayout.getChildren().add(UIPane);
         
         //menu
         Rectangle box4 = new Rectangle(screenWidth, screenHeight, Paint.valueOf("GREY"));
@@ -264,46 +221,60 @@ class InMapView {
                 imageViews[x][y][0] = new ImageView();
                 imageViews[x][y][0].relocate(width*x - width*3/2, width*y - width*2);
                 imageViews[x][y][0].setFitHeight(height);
+                imageViews[x][y][0].setFitWidth(width);
+                
+                //shadows
+                imageViews[x][y][1] = new ImageView(Images.blackcircle);
+                imageViews[x][y][1].relocate(width*x-width*3/2, width*y-width*7/6);
+                imageViews[x][y][1].setFitHeight(width/2);
+                imageViews[x][y][1].setFitWidth(width);
+                imageViews[x][y][1].setEffect(new BoxBlur(5, 5, 3));
+                imageViews[x][y][1].setOpacity(.3);
+                
+                //items
+                imageViews[x][y][2] = new ImageView();
+                imageViews[x][y][2].relocate(width*x-width*3/2, width*y-width*9/6);
+                imageViews[x][y][2].setFitHeight(width);
+                imageViews[x][y][2].setFitWidth(width);
                 
                 //characters
-                imageViews[x][y][2] = new ImageView();
-                imageViews[x][y][2].relocate(width*x - width*3/2, width*y - width*3/2);
+                imageViews[x][y][3] = new ImageView();
+                imageViews[x][y][3].relocate(width*x - width*3/2, width*y - width*9/4);
                 
                 //health
-                imageViews[x][y][3] = new ImageView(images.health);
-                imageViews[x][y][3].relocate(width*x - width*3/2, width*y - width/2);
-                imageViews[x][y][3].setVisible(false);
+                imageViews[x][y][4] = new ImageView(Images.health);
+                imageViews[x][y][4].relocate(width*x - width*3/2, width*y - width/2);
+                imageViews[x][y][4].setVisible(false);
+                
+                //overlay
                 
                 //fog
-                imageViews[x][y][5] = new ImageView(images.black);
-                imageViews[x][y][5].relocate(width*x-width/2, width*y-width/2);
-                imageViews[x][y][5].setOpacity(Math.sqrt(Math.pow(Math.abs(x-10),2)+Math.pow(Math.abs(y-6),2))/10);
+                imageViews[x][y][6] = new ImageView(Images.black);
+                imageViews[x][y][6].relocate(width*x-width*3/2, width*y-width*3/2);
+                imageViews[x][y][6].setOpacity(Math.sqrt(Math.pow(Math.abs(x-10),2)+Math.pow(Math.abs(y-6),2))/10);
             }
         }
         
-        for(int x = 0; x < 24; x++)
-            for(int y = 0; y < 16; y++)
+        //add to pane
+        for(int y = 0; y < 16; y++) {
+            for(int x = 0; x < 24; x++)
                 floorPane.getChildren().add(imageViews[x][y][0]);
-        for(int x = 0; x < 24; x++)
-            for(int y = 0; y < 16; y++)
+            for(int x = 0; x < 24; x++)
+                floorPane.getChildren().add(imageViews[x][y][1]);
+            for(int x = 0; x < 24; x++)
                 floorPane.getChildren().add(imageViews[x][y][2]);
-        for(int x = 0; x < 24; x++)
-            for(int y = 0; y < 16; y++)
+            for(int x = 0; x < 24; x++)
                 floorPane.getChildren().add(imageViews[x][y][3]);
+        }
+
         for(int x = 0; x < 24; x++)
             for(int y = 0; y < 16; y++)
-                floorPane.getChildren().add(imageViews[x][y][5]);
+                floorPane.getChildren().add(imageViews[x][y][4]);
+        for(int x = 0; x < 24; x++)
+            for(int y = 0; y < 16; y++)
+                floorPane.getChildren().add(imageViews[x][y][6]);
         
-        inmapLayout.getChildren().add(floorPane);
-        
-        //add all animations
-//        for(int x = 0; x < 24; x++) {
-//            for(int y = 0; y < 16; y++) {
-//                setMoveAnim(imageViews[x][y][0]);
-//                setMoveAnim(imageViews[x][y][2]);
-//                setMoveAnim(imageViews[x][y][3]);
-//            }
-//        }
+        inmapLayout.getChildren().add(0, floorPane);
         
         //invPane
         invText = new Text[64];
@@ -367,7 +338,7 @@ class InMapView {
         invPane.getChildren().add(invTextPane);
         
         //charPane
-        ImageView portrait = new ImageView(images.portrait);
+        ImageView portrait = new ImageView(Images.portrait);
         portrait.relocate(screenWidth/5, screenHeight/3);
         
         chName = new Text(screenWidth/5, screenHeight*12/20, "");
@@ -438,7 +409,6 @@ class InMapView {
         notePane.getChildren().addAll(t3);
         
         //opPane
-        
         Text[] opButtons = new Text[3];
         opRButtons = new Rectangle[3];
         for(int i = 0; i < 3; i++) {
@@ -483,7 +453,7 @@ class InMapView {
             
             saveImages[i] = new ImageView();
             saveImages[i].relocate(screenWidth/7 + i%2 * screenWidth * 2/7 + screenWidth/60,
-                    screenHeight/4 + Math.floor(i/2) * screenHeight*2/9 + screenHeight/40);
+                    screenHeight*7/32 + Math.floor(i/2) * screenHeight*2/9);
         }
         
         opPane.getChildren().addAll(opButtons);
@@ -511,35 +481,93 @@ class InMapView {
             inmapLayout.getChildren().remove(menuPane);
             
             //quick info
-            if(vd.qiVisible && !inmapLayout.getChildren().contains(UIPane)) {
-                nameT.setText(vd.floor.location.name);
-                typeT.setText(vd.floor.location.type);
-                diffT.setText("Difficulty: " + vd.floor.location.difficulty);
-                floorT.setText("Floor " + vd.floor.location.currentFloor);
-                charT.setText(vd.party[0].name);
-                levelT.setText("Level " + vd.party[0].LVL);
-                goldT.setText("Gold: " + String.valueOf(vd.gold));
-                inmapLayout.getChildren().add(UIPane);
+            if(vd.qiVisible) {
+                if(!inmapLayout.getChildren().contains(overlayPane))
+                    inmapLayout.getChildren().add(overlayPane);
+                qiName.setText(vd.floor.location.name);
+                qiType.setText(vd.floor.location.type);
+                qiDiff.setText("Difficulty: " + vd.floor.location.difficulty);
+                qiFloor.setText("Floor " + vd.floor.location.currentFloor);
+                qiChar.setText(vd.party[0].name);
+                qiLevel.setText("Level " + vd.party[0].LVL);
+                qiGold.setText("Gold: " + String.valueOf(vd.gold));
             }
             else if(!vd.qiVisible)
-                inmapLayout.getChildren().remove(UIPane);
+                inmapLayout.getChildren().remove(overlayPane);
+            
+            //health and mana
+            uiHealthR.setWidth(((double)-10000/(vd.party[0].maxHP+11000)+1)*screenWidth);
+            uiHealth.setFitWidth((double)vd.party[0].currentHP/vd.party[0].maxHP*uiHealthR.getWidth());
+            uiManaR.setWidth(((double)-10000/(vd.party[0].maxMP+11000)+1)*screenWidth);
+            uiMana.setFitWidth((double)vd.party[0].currentMP/vd.party[0].maxMP*uiManaR.getWidth());
+            uiHealthT.setText(vd.party[0].currentHP + "/" + vd.party[0].maxHP);
+            uiManaT.setText(vd.party[0].currentMP + "/" + vd.party[0].maxMP);
             
             //tiles
             for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
                 for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
                     if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.tiles[x][y].id != -1) {
                         imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0]
-                                .setImage(images.tiles[vd.floor.tiles[x][y].id]);
+                                .setImage(Images.tiles[vd.floor.tiles[x][y].id]);
                     }
                     else
                         imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0].setImage(null);
+                }
+            }
+            
+            //shadows
+            for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
+                for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+                    if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY 
+                            && (vd.floor.chars[x][y].exists || vd.floor.items[x][y].exists))
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][1].setVisible(true);
+                    else
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][1].setVisible(false);
+                }
+            }
+            
+            //items
+            for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
+                for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+                    if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.items[x][y].exists) {
+                        switch(vd.floor.items[x][y].type) {
+                            case WEAPON:
+                                imageViews[x-vd.floor.party[0].x+11]
+                                        [y-vd.floor.party[0].y+7][2].setImage(Images.weapon);
+                                break;
+                            case ARMOR:
+                                imageViews[x-vd.floor.party[0].x+11]
+                                        [y-vd.floor.party[0].y+7][2].setImage(Images.armor);
+                                break;
+                            case ACCESSORY:
+                                imageViews[x-vd.floor.party[0].x+11]
+                                        [y-vd.floor.party[0].y+7][2].setImage(Images.accessory);
+                                break;
+                            case MATERIAL:
+                                imageViews[x-vd.floor.party[0].x+11]
+                                        [y-vd.floor.party[0].y+7][2].setImage(Images.material);
+                                break;
+                            case CONSUMABLE:
+                                imageViews[x-vd.floor.party[0].x+11]
+                                        [y-vd.floor.party[0].y+7][2].setImage(Images.consumable);
+                                break;
+                        }
+                    }
+                    else {
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][2].setImage(null);
+                    }
                 }
             }
 
             //characters
             for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
                 for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
-                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][2].setImage(genChar(x, y, vd.floor));
+                    if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.chars[x][y].exists) {
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][3]
+                                .setImage(Images.getSprite(vd.floor.chars[x][y].id));
+                    }
+                    else
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][3].setImage(null);
                 }
             }
 
@@ -547,17 +575,29 @@ class InMapView {
             for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
                 for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
                     if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.chars[x][y].exists) {
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][3].setVisible(true);
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][3].setFitWidth(64 * 
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][4].setVisible(true);
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][4].setFitWidth(64 * 
                                 (double)vd.floor.chars[x][y].currentHP / vd.floor.chars[x][y].maxHP);
                     }
                     else
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][3].setVisible(false);
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][4].setVisible(false);
+                }
+            }
+            
+            //fog
+            for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
+                for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+                    if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY) {
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][6]
+                                .setOpacity(1-(double)vd.floor.tiles[x][y].vis/10);
+                    }
+                    else
+                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][6].setOpacity(1);
                 }
             }
 
             //floor text
-            floorT.setText("Floor " + vd.floor.location.currentFloor);
+            qiFloor.setText("Floor " + vd.floor.location.currentFloor);
 
             //rip
             if(!vd.floor.party[0].exists && !inmapLayout.getChildren().contains(ripPane))
@@ -570,8 +610,8 @@ class InMapView {
             if(vd.floor != null && !inmapLayout.getChildren().contains(menuPane))
                 inmapLayout.getChildren().add(menuPane);
             
-            //remove quick info box
-            inmapLayout.getChildren().remove(UIPane);
+            //remove quick info boxes
+            inmapLayout.getChildren().remove(overlayPane);
             
             //toggle menu
             if(vd.menuToggle && invPane.getChildren().contains(invTextPane)) {
@@ -799,65 +839,6 @@ class InMapView {
         invStats[16].setText("MAXMP: " + i.MMP);
         invStats[17].setText("HEALMP: " + i.CMP);
         invStats[18].setText("VAL: " + i.VAL);
-    }
-    
-    //choose character image based on model data
-    private Image genChar(int x, int y, Floor floor) {
-        if(x >= 0 && x < floor.sizeX && y >= 0 && y < floor.sizeY) {
-            String type = floor.chars[x][y].name;
-
-            if(!floor.chars[x][y].exists)
-                return null;
-            if(type.equalsIgnoreCase(name))
-                return images.hero;
-            else if(type.equalsIgnoreCase("bat"))
-                return images.bat;
-            else if(type.equalsIgnoreCase("adelf"))
-                return images.adelf;
-            else if(type.equalsIgnoreCase("bell"))
-                return images.bell;
-            else if(type.equalsIgnoreCase("chest"))
-                return images.chest;
-            else if(type.equalsIgnoreCase("chick"))
-                return images.chick;
-            else if(type.equalsIgnoreCase("chicken"))
-                return images.chicken;
-            else if(type.equalsIgnoreCase("fishman"))
-                return images.fishman;
-            else if(type.equalsIgnoreCase("flan"))
-                return images.flan;
-            else if(type.equalsIgnoreCase("ghost"))
-                return images.ghost;
-            else if(type.equalsIgnoreCase("kingslime"))
-                return images.kingslime;
-            else if(type.equalsIgnoreCase("longcat"))
-                return images.longcat;
-            else if(type.equalsIgnoreCase("manta"))
-                return images.manta;
-            else if(type.equalsIgnoreCase("mote"))
-                return images.mote;
-            else if(type.equalsIgnoreCase("skelebro"))
-                return images.skelebro;
-            else if(type.equalsIgnoreCase("snail"))
-                return images.snail;
-            else if(type.equalsIgnoreCase("spookyslime"))
-                return images.spookyslime;
-            else if(type.equalsIgnoreCase("spookyslug"))
-                return images.spookyslug;
-            
-//            else if(type.equalsIgnoreCase("spider"))
-//                return images.spider;
-//            else if(type.equalsIgnoreCase("slug"))
-//                return images.slug;
-//            else if(type.equalsIgnoreCase("goblin"))
-//                return images.goblin;
-//            else if(type.equalsIgnoreCase("clinton"))
-//                return images.boss;
-            else if(type.equalsIgnoreCase("npc"))
-                return images.npc1;
-            else return null;
-        }
-        else return null;
     }
     
     //return menuPane

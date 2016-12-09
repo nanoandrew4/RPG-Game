@@ -21,11 +21,12 @@ public class InMapController implements Runnable {
     private final InMapModel model;
     private final InMapView view;
     private final InMapViewData viewdata;
+    private int returnCode;
     boolean hasControl;
     
     //new game constructor
     public InMapController(Main main, int VIT, int INT, int STR, int WIS, int LUK, 
-            int CHA, String race, String name, String sprite, String portrait) {
+            int CHA, String race, String name, int sprite, String portrait) {
         this.main = main;
         model = new InMapModel(VIT, INT, STR, WIS, 
                 LUK, CHA, race, name, sprite, portrait);
@@ -91,8 +92,12 @@ public class InMapController implements Runnable {
         viewdata.qiVisible = model.getQIVisible();
         viewdata.menuToggle = model.getMenuToggle();
         viewdata.invDes = model.getInvDes();
+        viewdata.talkText = model.getTalkText();
+        viewdata.talkState = model.getTalkState();
+        viewdata.talkSelect = model.getTalkSelect();
         viewdata.saveImages = main.saveImages;
         viewdata.saveInfo = main.saveInfo;
+        viewdata.returnCode = returnCode;
     }
 
     //create new location
@@ -115,7 +120,7 @@ public class InMapController implements Runnable {
     }
     
     public boolean menuInput(Control input) {
-        model.process(input);
+        returnCode = model.process(input);
 
         //save game
         if(model.saveGame != -1) {
@@ -159,7 +164,7 @@ public class InMapController implements Runnable {
         //key press events
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             
-            model.process(main.getControl(event.getCode()));
+            returnCode = model.process(main.getControl(event.getCode()));
             
             //save game
             if(model.saveGame != -1) {
@@ -209,13 +214,6 @@ public class InMapController implements Runnable {
                 updateViewData();
                 view.update(viewdata);
             }
-            
-//            switch(main.getControl(event.getCode())) {
-//                case UP: view.speedY.set(0); break;
-//                case RIGHT: view.speedX.set(0); break;
-//                case DOWN: view.speedY.set(0); break;
-//                case LEFT: view.speedX.set(0); break;
-//            }
             
             event.consume();
         });

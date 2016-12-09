@@ -74,7 +74,7 @@ public class Main extends Application {
     private Text[] statRolls;
     private int VIT, INT, STR, WIS, LUK, CHA;
     //charPane vars
-    private String[] spritePaths, portraitPaths;
+    private String[] portraitPaths;
     private Image[] sprites, portraits;
     private ImageView sprite, portrait;
     private int spriteSelect, portraitSelect;
@@ -85,8 +85,8 @@ public class Main extends Application {
     private Text sumStats, sumChar, sumEqp;
     
     //saved vars for new game
-    private int ngVIT, ngINT, ngSTR, ngWIS, ngLUK, ngCHA;
-    private String ngRace, ngName, ngSprite, ngPortrait;
+    private int ngVIT, ngINT, ngSTR, ngWIS, ngLUK, ngCHA, ngSprite;
+    private String ngRace, ngName, /*ngSprite,*/ ngPortrait;
 
     public static void main(String[] args) {
         launch(args);
@@ -179,10 +179,14 @@ public class Main extends Application {
         //loadPane
         File folder = new File("src/saves");
         listOfFiles = folder.listFiles();
-        saveFileHM = new HashMap<>();
+        saveFileHM = new HashMap();
 
-        for (int x = 0; x < listOfFiles.length; x++)
-            saveFileHM.put((int)listOfFiles[x].getName().split("\\.")[0].charAt(4) - 48, x);
+        for (int x = 0; x < listOfFiles.length; x++) {
+            if(listOfFiles[0].getName().equals(".DS_Store") && !listOfFiles[x].getName().equals(".DS_Store"))
+                saveFileHM.put((int)listOfFiles[x].getName().split("\\.")[0].charAt(4) - 48, x-1);
+            else if(!listOfFiles[0].getName().equals(".DS_Store"))
+                saveFileHM.put((int)listOfFiles[x].getName().split("\\.")[0].charAt(4) - 48, x);
+        }
 
         saveInfo = new Text[6][2];
         saveImages = new ImageView[6];
@@ -202,7 +206,7 @@ public class Main extends Application {
             
             saveImages[i] = new ImageView();
             saveImages[i].relocate(screenWidth/8 + i%2 * screenWidth * 2/5 + screenWidth/60,
-                    screenHeight/10 + Math.floor(i/2) * screenHeight/4 + screenHeight/40);
+                    screenHeight/12 + Math.floor(i/2) * screenHeight/4);
         }
         
         //load text
@@ -292,28 +296,22 @@ public class Main extends Application {
         statPane.getChildren().addAll(statTitle, statRoll, statGo);
         
         //charPane
-        spritePaths = new String[5];
-        spritePaths[0] = "/media/graphics/inmap/sprites/trump.png";
-        spritePaths[1] = "/media/graphics/inmap/sprites/adelf.png";
-        spritePaths[2] = "/media/graphics/inmap/sprites/longcat.png";
-        spritePaths[3] = "/media/graphics/inmap/sprites/skelebro.png";
-        spritePaths[4] = "/media/graphics/inmap/sprites/mote.png";
-        sprites = new Image[spritePaths.length];
-        for (int i = 0; i < spritePaths.length; i++) {
-            sprites[i] = new Image(spritePaths[i], screenHeight/4, screenHeight/4, false, false);
-        }
+        sprites = new Image[inmap.Images.playerSprites.length];
+        System.arraycopy(inmap.Images.playerSprites, 0, sprites, 0, sprites.length);
         
         portraitPaths = new String[3];
-        portraitPaths[0] = "/media/graphics/inmap/sprites/portrait.jpg";
-        portraitPaths[1] = "/media/graphics/inmap/sprites/clinton.jpg";
-        portraitPaths[2] = "/media/graphics/inmap/sprites/harambe.png";
+        portraitPaths[0] = "/media/graphics/inmap/portrait.jpg";
+        portraitPaths[1] = "/media/graphics/inmap/clinton.jpg";
+        portraitPaths[2] = "/media/graphics/inmap/harambe.png";
         portraits = new Image[3];
         for (int i = 0; i < portraitPaths.length; i++) {
             portraits[i] = new Image(portraitPaths[i], screenHeight/4, screenHeight/4, false, false);
         }
         
         sprite = new ImageView(sprites[0]);
-        sprite.relocate(screenWidth/4, screenHeight/3);
+        sprite.setFitWidth(screenHeight/4);
+        sprite.setFitHeight(screenHeight*3/8);
+        sprite.relocate(screenWidth/4, screenHeight*5/24);
         portrait = new ImageView(portraits[0]);
         portrait.relocate(screenWidth*3/4-screenHeight/4, screenHeight/3);
         
@@ -374,7 +372,9 @@ public class Main extends Application {
         sumGo.setFill(Paint.valueOf("BLACK"));
 
         sumSpr = new ImageView();
-        sumSpr.relocate(screenWidth/4 - screenHeight*9/32, screenHeight/4);
+        sumSpr.setFitWidth(screenHeight/4);
+        sumSpr.setFitHeight(screenHeight*3/8);
+        sumSpr.relocate(screenWidth/4 - screenHeight*9/32, screenHeight/8);
         sumPor = new ImageView();
         sumPor.relocate(screenWidth/4 + screenHeight/32, screenHeight/4);
         
@@ -418,14 +418,19 @@ public class Main extends Application {
             
             //special cases for name
             if (menuState.equals("name")) {
-                if (event.getCode() == KeyCode.ENTER)
-                    c = Control.SELECT;
-                else if (event.getCode() == KeyCode.ESCAPE)
-                    c = Control.BACK;
-                else if (event.getCode() == KeyCode.BACK_SPACE)
-                    nameField.deletePreviousChar();
-                else
-                    c = Control.NULL;
+                switch(event.getCode()) {
+                    case ENTER:
+                        c = Control.SELECT;
+                        break;
+                    case ESCAPE:
+                        c = Control.BACK;
+                        break;
+                    case BACK_SPACE:
+                        nameField.deletePreviousChar();
+                        break;
+                    default:
+                        c = Control.NULL;
+                }
             }
             
             switch (c) {
@@ -573,7 +578,7 @@ public class Main extends Application {
                         }
                     }
                     else if (menuState.equals("char")) {
-                        ngSprite = spritePaths[spriteSelect];
+                        ngSprite = spriteSelect;
                         ngPortrait = portraitPaths[portraitSelect];
                         menuState = "name";
                     }
@@ -614,7 +619,7 @@ public class Main extends Application {
                 case TOGGLE:
                     if (menuState.equals("main")) {
                         startInMapController(null);
-                        IMController.newLocation(new Point(-1, -1), "cave");
+                        IMController.newLocation(new Point(-1, -1), "random");
                         IMController.passControl(new Point(-1, -1));
                     }
                     break;
@@ -797,7 +802,7 @@ public class Main extends Application {
     
     //start new game
     private void startNewGame(int VIT, int INT, int STR, int WIS, int LUK, 
-            int CHA, String race, String name, String sprite, String portrait) {
+            int CHA, String race, String name, int sprite, String portrait) {
         startOverworldController(null);
         startInMapController(VIT, INT, STR, WIS, LUK, CHA, race, name, sprite, portrait);
 
@@ -807,9 +812,11 @@ public class Main extends Application {
     //load a game
     public void loadGame(int slot) {
         try {
+            Object[] models;
             if (listOfFiles[0].getName().equals(".DS_Store"))
-                slot++;
-            Object[] models = loadModel(listOfFiles[saveFileHM.get(slot)].getName().split("\\.")[0]);
+                models = loadModel(listOfFiles[saveFileHM.get(slot)+1].getName().split("\\.")[0]);
+            else
+                models = loadModel(listOfFiles[saveFileHM.get(slot)].getName().split("\\.")[0]);
             startOverworldController((OverworldModel) models[0]);
             startInMapController((InMapModel) models[1]);
         } catch (IOException | ClassNotFoundException e) {
@@ -832,7 +839,7 @@ public class Main extends Application {
     
     //start inmap controller for new game
     private void startInMapController(int VIT, int INT, int STR, int WIS, int LUK, 
-            int CHA, String race, String name, String sprite, String portrait) {
+            int CHA, String race, String name, int sprite, String portrait) {
         IMController = new InMapController(this, VIT, INT, STR, WIS, LUK, 
                 CHA, race, name, sprite, portrait);
         Thread inmapThread = new Thread(IMController);
@@ -861,7 +868,7 @@ public class Main extends Application {
         FSTObjectOutput out = new FSTObjectOutput(new FileOutputStream("src/saves/" 
                 + overworldController.getModelName() + ".sav"));
         out.writeObject(new SaveFile("src/saves/" + overworldController.getModelName() + ".sav", 
-                IMController.getModel().getParty()[0].getName(), "/media/graphics/inmap/sprites/trump.png",
+                IMController.getModel().getParty()[0].getName(), "/media/graphics/inmap/trump.png",
                 IMController.getModel().getParty()[0].getLVL(), 
                 (double)(System.currentTimeMillis() - overworldController.getModel().getStartTime()) / 3600000d, slot));
         out.writeObject(keybindings);
@@ -901,12 +908,12 @@ public class Main extends Application {
             if (s != null) {
                 saveInfo[s.slot][0].setText(s.name + " LVL " + s.level);
                 saveInfo[s.slot][1].setText("Playtime: " + String.format("%.2f", s.playtime) + " hours");
-                saveImages[s.slot].setImage(new Image(s.sprite, screenHeight/8, screenHeight/8, false, false));
+                saveImages[s.slot].setImage(new Image(s.sprite, screenHeight/8, screenHeight*3/16, false, false));
             }
             else {
                 saveInfo[i][0].setText("Save File Nonexistent");
-                saveImages[i].setImage(new Image("/media/graphics/inmap/sprites/trump.png",
-                        screenHeight / 8, screenHeight / 8, false, false));
+                saveImages[i].setImage(new Image("/media/graphics/inmap/trump.png",
+                        screenHeight/8, screenHeight*3/16, false, false));
             }
         }
     }
@@ -938,7 +945,9 @@ public class Main extends Application {
         return IMController.getMenuPane();
     }
 
-    public void toggleMenu(boolean on) {IMController.toggleMenu(on);}
+    public void toggleMenu(boolean on) {
+        IMController.toggleMenu(on);
+    }
     
     //process menu input from overworldController
     public boolean processMenuInput(Control c) {
