@@ -15,7 +15,6 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import main.Control;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -39,9 +38,6 @@ class Images {
     Image grass;
 
     Image banner;
-    Image attack;
-    Image enter;
-    Image diplomacy;
 
     Image waterAll;
     Image waterE;
@@ -68,9 +64,6 @@ class Images {
         grass = new Image("/media/graphics/overworld/Grass.png", width, height, true, false);
 
         banner = new Image("/media/graphics/overworld/banner/banner.png", width / 4, height / 4, true, false);
-        attack = new Image("/media/graphics/overworld/banner/attack.png", width / 5, height / 5, true, false);
-        enter = new Image("/media/graphics/overworld/banner/enter.png", width / 5, height / 5, true, false);
-        diplomacy = new Image("/media/graphics/overworld/banner/diplomacy.png", width / 5, height / 5, true, false);
 
         waterAll = new Image("/media/graphics/overworld/water/WaterAll.png", width, height, true, false);
         waterE = new Image("/media/graphics/overworld/water/WaterE.png", width, height, true, false);
@@ -88,7 +81,7 @@ class Images {
     }
 }
 
-@SuppressWarnings("ALL")
+
 class OverworldView {
 
     /*
@@ -97,36 +90,26 @@ class OverworldView {
         TODO: CHANGE ALL STATIC ARBITRARY VALUES IN LOWER CLASSES TO WORK ON ALL DISPLAYS EQUALLY
      */
 
-    Images images;
+    private static float zoomMultiplier = 2.2f;
 
     /*
         Vars to be used for moving animation
      */
-
-    final DoubleProperty speedX = new SimpleDoubleProperty(), speedY = new SimpleDoubleProperty();
-    private final LongProperty lastUpdateTime = new SimpleLongProperty();
-
-    private Pane overworldLayout, infoBox;
-
-    ImageView[][][] imageViews; // for controller to access and add click events
-    ImageView centerTile;
-    ImageView playerIV;
-    HashMap<Party, ImageView> pIVHashMap; // when party is eliminated, delete from hashmap
-
-    static float zoomMultiplier = 2.2f;
     static int zoom = (int) (6 * zoomMultiplier);
-
-    double xOffset = 0, yOffset = 0; // total offset from initial tile
-
-    private double screenWidth, screenHeight, padding = 15;
     static double mapTileSize;
-
-    Button manageCity = new Button("Manage"), diplomacy = new Button("Diplomacy"), trade = new Button("Trade"); // for info window, so controller can access it - will be imagebutton
+    private final LongProperty lastUpdateTime = new SimpleLongProperty();
+    private Images images;
+    ImageView[][][] imageViews; // for controller to access and add click events
+    private ImageView centerTile;
+    private ImageView playerIV;
+    private HashMap<Party, ImageView> pIVHashMap; // when party is eliminated, delete from hashmap
+    Button manageCity = new Button("Manage"); // for info window, so controller can access it - will be imagebutton
     Button enterDungeon = new Button("Enter");
-
     Stack<Pane> paneStack = new Stack<>(); // makes returning to previous window easier
+    private Pane overworldLayout, infoBox;
+    private double screenWidth, screenHeight, padding = 15;
 
-    OverworldView(int mapSize, double screenWidth, double screenHeight) {
+    OverworldView(double screenWidth, double screenHeight) {
         imageViews = new ImageView[zoom * 2 + 1][zoom * 2 + 1][2];
         pIVHashMap = new HashMap<>();
         this.screenWidth = screenWidth;
@@ -146,12 +129,12 @@ class OverworldView {
 
     // returns coordinate of player omn tile on the x axis
     float getPlayerXOffset() {
-        return (float)(centerTile.screenToLocal(playerIV.localToScreen(3, 3)).getX() - getMapTileSize() / 2);
+        return (float) (centerTile.screenToLocal(playerIV.localToScreen(3, 3)).getX() - getMapTileSize() / 2);
     }
 
     // returns coordinate of player on tile on the y axis
     float getPlayerYOffset() {
-        return (float)(-centerTile.screenToLocal(playerIV.localToScreen(3, 3)).getY() + getMapTileSize() * 3 / 4);
+        return (float) (-centerTile.screenToLocal(playerIV.localToScreen(3, 3)).getY() + getMapTileSize() * 3 / 4);
     }
 
     Scene initDisplay(Tile[][] tiles, Party player, ArrayList<Party> parties, double screenWidth, double screenHeight, double mapTileSize, int mapSize) {
@@ -174,7 +157,7 @@ class OverworldView {
             for (int x = -zoom; x <= zoom; x++) {
                 int xPos = (player.getTileX() + x < 0 ? (player.getTileX() + x >= mapSize ? mapSize - 1 : 0) : player.getTileX() + x);
                 int yPos = (player.getTileY() + y < 0 ? (player.getTileY() + y >= mapSize ? mapSize - 1 : 0) : player.getTileY() + y);
-                drawTile(tiles, player, parties, (float) (mapTileSize / 2), x + zoom, y + zoom, xPos, yPos,
+                drawTile(tiles, player, (float) (mapTileSize / 2), x + zoom, y + zoom, xPos, yPos,
                         0.5 * mapTileSize * (x - y) + (screenWidth / 2) - mapTileSize / 2,
                         0.25 * mapTileSize * (x + y) + (screenHeight / 2) - mapTileSize * 3 / 4
                 );
@@ -220,18 +203,12 @@ class OverworldView {
         System.out.println("RTopCorner coords " + screenWidth + ", 0");
         System.out.println("RTopCorner coords " + screenWidth + ", " + screenHeight);*/
 
-        for (int x = 0; x < parties.size(); x++) {
-            Party p = parties.get(x);
-            ImageView iv = pIVHashMap.get(p);
+        for (Party p : parties) {
+            ImageView iv;
 
             // if player is within FOV and no image view exists, create and draw, if goes out of FOV, remove
             if (pIVHashMap.get(p) == null && Math.abs(p.getTileX() - currX) < zoom && Math.abs(p.getTileY() - currY) < zoom) {
                 pIVHashMap.put(p, iv = new ImageView(genPartyImage()));
-                if (iv == null) {
-                    System.out.println("ImageView @ " + x + " is null");
-                    System.out.println("Party @ coords " + p.getTileX() + ", " + p.getTileY());
-                    continue;
-                }
                 iv.relocate(playerIV.getLayoutX() + (p.getTileX() - player.getTileX()) * (mapTileSize / 2) + p.getxOffset(), playerIV.getLayoutY() + ((p.getTileY() - player.getTileY()) * (mapTileSize / 4) + p.getyOffset()));
                 System.out.println(iv.getLayoutX() + ", " + iv.getLayoutY());
                 setMoveAnim(p, player);
@@ -266,9 +243,6 @@ class OverworldView {
 
         ImageView bannerL = new ImageView(images.banner);
         ImageView bannerR = new ImageView(images.banner);
-        ImageView attack = new ImageView(images.attack);
-        ImageView enter = new ImageView(images.enter);
-        ImageView diplomacy = new ImageView(images.diplomacy);
         Text name = new Text(tile.settlementTile.settlementName);
         name.setFont(new Font(10));
         Text relationship = new Text((tile.settlementTile.relationship >= 0 ? "+" : "-") + tile.settlementTile.relationship);
@@ -338,7 +312,7 @@ class OverworldView {
         return null;
     }
 
-    private void drawTile(Tile[][] tiles, Party player, ArrayList<Party> parties, float bannerSize, int imgX, int imgY, int xPos, int yPos, double pixelX, double pixelY) {
+    private void drawTile(Tile[][] tiles, Party player, float bannerSize, int imgX, int imgY, int xPos, int yPos, double pixelX, double pixelY) {
 
         /*
             Draws Image Views and tiles to screen for init load only
@@ -346,11 +320,10 @@ class OverworldView {
 
         // add tiles
 
-        System.out.print(".");
         imageViews[imgX][imgY][0] = new ImageView(genTile(xPos, yPos, tiles));
         imageViews[imgX][imgY][0].setLayoutX(pixelX);
         imageViews[imgX][imgY][0].setLayoutY(pixelY);
-        setMoveAnim(imageViews[imgX][imgY][0], player);
+        setMoveAnim(imageViews[imgX][imgY][0], player, tiles);
         overworldLayout.getChildren().add(imageViews[imgX][imgY][0]);
 
         // add settlement banners
@@ -369,7 +342,7 @@ class OverworldView {
         imageViews[imgX][imgY][1].setLayoutX(pixelX);
         imageViews[imgX][imgY][1].setLayoutY(pixelY);
         imageViews[imgX][imgY][1].setVisible(false);
-        setMoveAnim(imageViews[imgX][imgY][1], player);
+        setMoveAnim(imageViews[imgX][imgY][1], player, tiles);
         overworldLayout.getChildren().add(imageViews[imgX][imgY][1]);
     }
 
@@ -379,9 +352,6 @@ class OverworldView {
             Adds a row when a tile change on the y axis is detected
          */
 
-        long start = System.currentTimeMillis();
-
-        System.out.println("Adding row");
         if ((top && player.getTileY() + (zoom) + 1 < mapSize) || (!top && player.getTileY() + (zoom) - 1 > 0)) {
             for (int x = 0; x < zoom * 2 + 1; x++) {
                 if (!top)
@@ -399,8 +369,6 @@ class OverworldView {
             moveImageViews(top ? mapTileSize / 2 : -mapTileSize / 2, top ? -mapTileSize / 4 : mapTileSize / 4);
             drawEntities(player, parties);
         }
-
-        //System.out.println("Adding row took: " + (System.currentTimeMillis() - start) + "ms");
     }
 
     void addColumn(Tile[][] tiles, Party player, ArrayList<Party> parties, int mapSize, boolean right) {
@@ -409,7 +377,7 @@ class OverworldView {
             Adds a column when a tile change on the x axis is detected
          */
 
-        System.out.println("Adding column");
+        //System.out.println("Adding column");
         if ((right && player.getTileY() + (zoom) + 1 < mapSize) || (!right && player.getTileY() + (zoom) - 1 > 0)) {
             for (int y = 0; y < zoom * 2 + 1; y++) {
                 if (right)
@@ -429,7 +397,7 @@ class OverworldView {
         }
     }
 
-    private void setMoveAnim(ImageView imageView, Party player) {
+    private void setMoveAnim(ImageView imageView, Party player, Tile[][] tiles) {
 
         /*
             Sets the movement animation of a tile (imageview)
@@ -447,8 +415,12 @@ class OverworldView {
 
                     imageView.setLayoutX(imageView.getLayoutX() - player.getSpeedX());
                     imageView.setLayoutY(imageView.getLayoutY() + player.getSpeedY());
-                    //System.out.println(player.getSpeedX());
-                    //System.out.println(player.getSpeedY());
+
+                    if (imageView.equals(imageViews[imageViews.length - 1][imageViews.length - 1][0])) {
+                        // when last tile movement is done, determine player speed
+                        player.setSpeedX(player.getSpeedX(player.getDir(), tiles));
+                        player.setSpeedY(player.getSpeedY(player.getDir(), tiles));
+                    }
                 }
                 lastUpdateTime.set(timestamp);
             }
@@ -463,9 +435,6 @@ class OverworldView {
 
         new AnimationTimer() {
 
-            final double startX = pIVHashMap.get(p).getLayoutX();
-            final double startY = pIVHashMap.get(p).getLayoutY();
-
             @Override
             public void handle(long timestamp) {
                 if (lastUpdateTime.get() > 0) {
@@ -473,8 +442,8 @@ class OverworldView {
                         stop();
                         return;
                     }
-                    pIVHashMap.get(p).relocate((float) (playerIV.getLayoutX() + ((p.getTileX() - player.getTileX()) * (mapTileSize / 2) + (p.getTileY() - player.getTileY()) * (-mapTileSize / 2) + p.getxOffset())) - speedX.get(),
-                            (float) (playerIV.getLayoutY() - ((p.getTileY() - player.getTileY()) * (-mapTileSize / 4) + (p.getTileX() - player.getTileX()) * (-mapTileSize / 4) + p.getyOffset())) - speedY.get());
+                    pIVHashMap.get(p).relocate((float) (playerIV.getLayoutX() + ((p.getTileX() - player.getTileX()) * (mapTileSize / 2) + (p.getTileY() - player.getTileY()) * (-mapTileSize / 2) + p.getxOffset())) - player.getSpeedX(),
+                            (float) (playerIV.getLayoutY() - ((p.getTileY() - player.getTileY()) * (-mapTileSize / 4) + (p.getTileX() - player.getTileX()) * (-mapTileSize / 4) + p.getyOffset())) - player.getSpeedY());
                 }
                 lastUpdateTime.set(timestamp);
             }
@@ -495,21 +464,21 @@ class OverworldView {
                         stop();
                         return;
                     }
-                    pane.setLayoutX(pane.getLayoutX() + speedX.get());
-                    pane.setLayoutY(pane.getLayoutY() + speedY.get());
+                    pane.setLayoutX(pane.getLayoutX() + player.getSpeedX());
+                    pane.setLayoutY(pane.getLayoutY() + player.getSpeedY());
                 }
                 lastUpdateTime.set(timestamp);
             }
         }.start();
     }
 
-    void moveImageViews(double xOffset, double yOffset) {
+    private void moveImageViews(double xOffset, double yOffset) {
         for (int y = 0; y <= zoom * 2; y++)
             for (int x = 0; x <= zoom * 2; x++) {
-                imageViews[x][y][0].setLayoutX(imageViews[x][y][0].getLayoutX() - xOffset);
-                imageViews[x][y][0].setLayoutY(imageViews[x][y][0].getLayoutY() - yOffset);
-                imageViews[x][y][1].setLayoutX(imageViews[x][y][1].getLayoutX() - xOffset);
-                imageViews[x][y][1].setLayoutY(imageViews[x][y][1].getLayoutY() - yOffset);
+                imageViews[x][y][0].setLayoutX(imageViews[x][y][0].getLayoutX() + xOffset);
+                imageViews[x][y][0].setLayoutY(imageViews[x][y][0].getLayoutY() + yOffset);
+                imageViews[x][y][1].setLayoutX(imageViews[x][y][1].getLayoutX() + xOffset);
+                imageViews[x][y][1].setLayoutY(imageViews[x][y][1].getLayoutY() + yOffset);
             }
     }
 

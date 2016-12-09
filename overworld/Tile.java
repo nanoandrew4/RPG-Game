@@ -5,7 +5,7 @@ import javafx.scene.layout.Pane;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Tile implements java.io.Serializable {
+class Tile implements java.io.Serializable {
 
     boolean tresspassable;
     boolean accessible; // for entering cities
@@ -45,7 +45,7 @@ public class Tile implements java.io.Serializable {
     Tile(String type, String subType, char branch, String name, int relationship) {
         this.type = type;
         this.accessible = true;
-        this.tresspassable = false;
+        this.tresspassable = true;
         settlementTile = new SettlementTile(subType, branch, name, (byte)relationship);
     }
 

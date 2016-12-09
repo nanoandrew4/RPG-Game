@@ -1,9 +1,8 @@
 package overworld;
 
-import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Random;
 
 public class OverworldModel implements java.io.Serializable {
 
@@ -35,15 +34,17 @@ public class OverworldModel implements java.io.Serializable {
         startPartyAI();
     }
 
-    void setModelName(String name) {
-        this.modelName = name;
-    }
-
     String getModelName() {
         return modelName;
     }
 
-    public long getStartTime() {return startTime;}
+    void setModelName(String name) {
+        this.modelName = name;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
 
     // creates player party
     void createPlayer(float baseSpeed, String faction) {
@@ -59,7 +60,8 @@ public class OverworldModel implements java.io.Serializable {
             int x = rand.nextInt(getMapSize() - 1);
             int y = rand.nextInt(getMapSize() - 1);
             if (getTiles()[x][y].tresspassable) {
-                startPos[0] = x; startPos[1] = y;
+                startPos[0] = x;
+                startPos[1] = y;
                 return startPos;
             }
         } while (true);
@@ -127,81 +129,5 @@ public class OverworldModel implements java.io.Serializable {
     // generates new map
     private void newGame(int mapSize) throws SQLException {
         map = new Map(mapSize);
-    }
-}
-
-class PartyAI extends Thread implements java.io.Serializable {
-
-    private Map map;
-    private Party player;
-    private ArrayList<Party> parties;
-
-    private boolean running = true;
-
-    PartyAI() {
-        this.setDaemon(true);
-    }
-
-    void setMap(Map map) {
-        this.map = map;
-    }
-
-    void setPlayer(Party player) {
-        this.player = player;
-    }
-
-    void setParties(ArrayList<Party> parties) {
-        this.parties = parties;
-    }
-
-
-    @Override
-    public void run() {
-        while (running) {
-            long start = System.currentTimeMillis();
-            for (Party p : parties)
-                p.nextMove(map.getBooleanMap(), parties);
-            if (System.currentTimeMillis() - start < 33) // hard cap at 33 moves per frame
-                try {
-                    synchronized (this) {
-                        this.wait(33 - (System.currentTimeMillis() - start));
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-        }
-    }
-
-    void stopThread() {
-        running = false;
-    }
-}
-
-class Faction implements Serializable {
-
-    /*
-        Class contains all data related to factions
-     */
-
-    String kingdomName;
-    String capitalSettlement;
-    List<String> memberSettlements;
-
-    Faction() {
-        kingdomName = "";
-        capitalSettlement = "";
-        memberSettlements = new ArrayList<>();
-    }
-
-    public void addToKingdom(String name) {
-        memberSettlements.add(name);
-    }
-
-    public void removeFromKingdom(String name) {
-        memberSettlements.remove(name);
-    }
-
-    public boolean isInKingdom(String name) {
-        return memberSettlements.contains(name);
     }
 }

@@ -53,44 +53,64 @@ class Party implements java.io.Serializable {
         return tileX;
     }
 
-    int getTileY() {
-        return tileY;
-    }
-
     void setTileX(short tileX) {
         this.tileX = tileX;
+    }
+
+    int getTileY() {
+        return tileY;
     }
 
     void setTileY(short tileY) {
         this.tileY = tileY;
     }
 
-    void setxOffset(float xOffset) {this.xOffset = xOffset;}
-
-    void setyOffset(float yOffset) {this.yOffset = yOffset;}
-
     float getxOffset() {
         return xOffset;
+    }
+
+    void setxOffset(float xOffset) {
+        this.xOffset = xOffset;
     }
 
     float getyOffset() {
         return yOffset;
     }
 
-    float getSpeedX() {return speedX;}
+    void setyOffset(float yOffset) {
+        this.yOffset = yOffset;
+    }
 
-    float getSpeedY() {return speedY;}
+    float getSpeedX() {
+        return speedX;
+    }
 
-    void setSpeedX(float speed) {this.speedX = speed;}
+    void setSpeedX(float speed) {
+        this.speedX = speed;
+    }
 
-    void setSpeedY(float speed) {this.speedY = speed;}
+    float getSpeedY() {
+        return speedY;
+    }
+
+    void setSpeedY(float speed) {
+        this.speedY = speed;
+    }
 
     Control getDir() {
         return dir;
     }
 
+    void setDir(Control dir) {
+        this.dir = dir;
+    }
+
     Path getPath() {
         return path;
+    }
+
+    void setPath(Path path) {
+        this.path = path;
     }
 
     Point getStart() {
@@ -105,14 +125,6 @@ class Party implements java.io.Serializable {
         return maxSpeed;
     }
 
-    void setDir(Control dir) {
-        this.dir = dir;
-    }
-
-    void setPath(Path path) {
-        this.path = path;
-    }
-
     void setStart(int x, int y) {
         start = new Point(x, y);
     }
@@ -121,7 +133,7 @@ class Party implements java.io.Serializable {
         pixelStartPos = new Point(x, y);
     }
 
-    void nextMove(boolean[][] booleanMap, ArrayList<Party> parties) {
+    void nextMove(Tile[][] tiles, boolean[][] booleanMap, ArrayList<Party> parties) {
         // TODO: IF IN GROUPS FROM SAME FACTION (MULTIPLE PARTIES) LOWER TI FOR ALL MEMBERS
 
         // makes list with nearby parties
@@ -154,12 +166,14 @@ class Party implements java.io.Serializable {
                         && (int) pixelStartPos.getX() == (int) getxOffset() && (int) pixelStartPos.getY() == (int) getyOffset()) {
                     start = new Point(getTileX(), getTileY());
                     pixelStartPos = new Point((int) getxOffset(), (int) getyOffset());
-                    move(convertFromPath(dir = path.next()));
+                    move(convertFromPath(dir = path.next()), tiles);
+                    setDir(dir);
                 } else {
-                    move(convertFromPath(dir));
+                    move(convertFromPath(dir), tiles);
+                    setDir(dir);
                 }
             } else {
-                wander();
+                wander(tiles);
             }
         }
     }
@@ -199,7 +213,7 @@ class Party implements java.io.Serializable {
         return angles;
     }
 
-    boolean detectTileChange(double mapTileSize) {
+    boolean detectTileChange(double mapTileSize, boolean player) {
 
         /*
             Function to determine whether a change in tiles has occurred or not
@@ -209,48 +223,70 @@ class Party implements java.io.Serializable {
         double leftAngle = angles[0];
         double rightAngle = angles[1];
 
-        System.out.println("xPos: " + getTileX());
+        /*System.out.println("xPos: " + getTileX());
         System.out.println("yPos: " + getTileY());
         System.out.println("Langle: " + leftAngle);
         System.out.println("Rangle: " + rightAngle);
-        //System.out.println("xOffset: " + xOffset);
-        //System.out.println("yOffset: " + yOffset);
-        System.out.println();
+        System.out.println("xOffset: " + xOffset);
+        System.out.println("yOffset: " + yOffset);*/
+        //System.out.println();
 
         // changed tiles
-        if (Math.abs(leftAngle) > 22.5 || Math.abs(rightAngle) > 22.5) {
+        if (Math.abs(leftAngle) > 22.5 || Math.abs(rightAngle) > 22.5 || Math.abs(xOffset) > mapTileSize / 2) {
             if (rightAngle > 22.5) {
-                xOffset -= mapTileSize / 2;
-                yOffset -= mapTileSize / 4;
+                if (!player) {
+                    xOffset -= mapTileSize / 2;
+                    yOffset -= mapTileSize / 4;
+                }
                 tileY--;
             }
             if (rightAngle < -22.5) {
-                xOffset -= mapTileSize / 2;
-                yOffset += mapTileSize / 4;
+                if (!player) {
+                    xOffset -= mapTileSize / 2;
+                    yOffset += mapTileSize / 4;
+                }
                 tileX++;
             }
             if (leftAngle > 22.5) {
-                xOffset += mapTileSize / 2;
-                yOffset -= mapTileSize / 4;
+                if (!player) {
+                    xOffset += mapTileSize / 2;
+                    yOffset -= mapTileSize / 4;
+                }
                 tileX--;
             }
             if (leftAngle < -22.5) {
-                xOffset += mapTileSize / 2;
-                yOffset += mapTileSize / 4;
+                if (!player) {
+                    xOffset += mapTileSize / 2;
+                    yOffset += mapTileSize / 4;
+                }
                 tileY++;
             }
+            if (Math.abs(xOffset) >= OverworldView.mapTileSize / 2) {
+                if (xOffset > 0) {
+                    if (!player)
+                        xOffset -= mapTileSize;
+                    tileX++;
+                    tileY--;
+                } else {
+                    if (!player)
+                        xOffset += mapTileSize;
+                    tileX--;
+                    tileY++;
+                }
+            }
+
             return true;
         }
 
         return false;
     }
 
-    private void wander() { // wander around with no target
+    private void wander(Tile[][] tiles) { // wander around with no target
         if (Math.random() > 0.7d) { // 70% chance they'll move
-            move(getRandDir());
+            move(getRandDir(), tiles);
             System.out.println("wandering");
         } else
-            move(Control.NULL); // 30% chance they will stay stationary
+            move(Control.NULL, tiles); // 30% chance they will stay stationary
     }
 
     // returns a random direction for wandering AI
@@ -317,16 +353,16 @@ class Party implements java.io.Serializable {
     }
 
     // moves this party
-    private void move(Control direction) {
-        xOffset += getSpeedX(direction);
-        yOffset += getSpeedY(direction);
-        detectTileChange(OverworldView.mapTileSize);
+    private void move(Control direction, Tile[][] tiles) {
+        xOffset += getSpeedX(direction, tiles);
+        yOffset += getSpeedY(direction, tiles);
+        detectTileChange(OverworldView.mapTileSize, false);
     }
 
     private void move(float xOffset, float yOffset) {
         this.xOffset += xOffset;
         this.yOffset += yOffset;
-        detectTileChange(OverworldView.mapTileSize);
+        detectTileChange(OverworldView.mapTileSize, false);
     }
 
     // since path dir returns upright directions and map is angled at 45 degrees, converts direction returned by path to one used by entities on the map
@@ -354,41 +390,76 @@ class Party implements java.io.Serializable {
     }
 
     // returns the speed on the x axis of a given direction
-    float getSpeedX(Control dir) {
+    float getSpeedX(Control dir, Tile[][] tiles) {
+        float speed;
+
         if (dir == Control.UPRIGHT || dir == Control.DOWNRIGHT)
-            return 0.7f * maxSpeed;
+            speed = 0.7f * maxSpeed;
         else if (dir == Control.UPLEFT || dir == Control.DOWNLEFT)
-            return 0.7f * -maxSpeed;
+            speed = 0.7f * -maxSpeed;
         else if (dir == Control.RIGHT)
-            return maxSpeed;
+            speed = maxSpeed;
         else if (dir == Control.LEFT)
-            return -maxSpeed;
+            speed = -maxSpeed;
         else
-            return 0f;
+            speed = 0f;
+
+        double[] angles = calcAngles(xOffset + speed, yOffset + speed, OverworldView.mapTileSize);
+        if (Math.abs(angles[0]) > 22.5 || Math.abs(angles[1]) > 22.5) {
+            // if the tile the player would move onto is not trespassable, return 0 speed
+            if (!canMove(tiles, angles))
+                speed = 0;
+        } else if (!tiles[getTileX()][getTileY()].tresspassable)
+            speed = 0;
+
+        setDir(dir);
+
+        return speed;
     }
 
     // returns the speed on the y axis of a given direction
-    float getSpeedY(Control dir) {
+    float getSpeedY(Control dir, Tile[][] tiles) {
+        float speed;
         if (dir == Control.UPRIGHT || dir == Control.UPLEFT)
-            return (0.7f * maxSpeed / 2);
+            speed = (0.7f * maxSpeed / 2);
         else if (dir == Control.DOWNRIGHT || dir == Control.DOWNLEFT)
-            return 0.7f * (-maxSpeed / 2);
+            speed = 0.7f * (-maxSpeed / 2);
         else if (dir == Control.UP)
-            return maxSpeed / 2;
+            speed = maxSpeed / 2;
         else if (dir == Control.DOWN)
-            return -maxSpeed / 2;
+            speed = -maxSpeed / 2;
         else
-            return 0f;
+            speed = 0f;
+
+        double[] angles = calcAngles(xOffset + speed, yOffset + speed, OverworldView.mapTileSize);
+        if (Math.abs(angles[0]) > 22.5 || Math.abs(angles[1]) > 22.5) {
+            // if the tile the player would move onto is not trespassable, return 0 speed
+            if (!canMove(tiles, angles))
+                speed = 0;
+        } else if (!tiles[getTileX()][getTileY()].tresspassable)
+            speed = 0;
+
+        setDir(dir);
+
+        return speed;
+    }
+
+    private boolean canMove(Tile[][] tiles, double[] angles) {
+        return !(angles[0] > 22.5 && !tiles[getTileX() - 1][getTileY()].tresspassable ||
+                angles[0] < -22.5 && !tiles[getTileX()][getTileY() + 1].tresspassable ||
+                angles[1] > 22.5 && !tiles[getTileX()][getTileY() - 1].tresspassable ||
+                angles[1] < -22.5 && !tiles[getTileX() + 1][getTileY()].tresspassable);
     }
 
     // using a path and pathfinding, makes AI move towards a destination tile, as opposed ot wandering
-    void travelTo(boolean[][] booleanMap, int destinationTileX, int destinationTileY) { // travel to coords
+    void travelTo(Tile[][] tiles, boolean[][] booleanMap, int destinationTileX, int destinationTileY) { // travel to coords
         state = 't';
         start = new Point(getTileX(), getTileY());
         pixelStartPos = new Point((int) getxOffset(), (int) getyOffset()); // might need to use to only use until second decimal point if rounding errors occur
         path = new Path();
         path.pathFind(booleanMap, new Point(getTileX(), getTileY()), dest = new Point(destinationTileX, destinationTileY), true);
         dir = path.next();
-        move(convertFromPath(dir));
+        setDir(convertFromPath(dir));
+        move(convertFromPath(dir), tiles);
     }
 }

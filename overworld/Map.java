@@ -55,7 +55,7 @@ class Map implements java.io.Serializable {
         MIN_FOREST = (int) (2.5 * mapSize);
         MAX_FOREST = (int) (5.0 * mapSize);
         MIN_SETTLEMENT = (int) (0.8 * mapSize);
-        MAX_SETTLEMENT = (int)(1.2 * mapSize);
+        MAX_SETTLEMENT = (int) (1.2 * mapSize);
         MIN_DUNGEON = (int) (1.5 * mapSize);
         MAX_DUNGEON = (int) (2.5 * mapSize);
 

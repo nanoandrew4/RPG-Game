@@ -1,3 +1,14 @@
+------------------------09/12/2016------------------------
+
+++ City gen started
+++ Items drop from monsters
++ Inmap sprites and tiles converted to sheets
+++ Inmap overlay overhaul
+
+++ Party stops when non tresspassable tile will be reached next frame (partial)
++ Fixed multiple outstanding issues listed in OverworldController, such as click events not being set after moving tiles
++ Player movement processed 100% by the model 
+
 ------------------------20/11/2016------------------------
 
 +++ Added serialization, makes saving games MUCH easier

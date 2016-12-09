@@ -6,7 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class FileAccess implements java.io.Serializable{
+public class FileAccess implements java.io.Serializable {
 
     private List<String> overworldFile = null;
 
