@@ -4,6 +4,14 @@
 
 package inmap;
 
+import javafx.animation.Animation;
+import javafx.animation.Animation.Status;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.PathTransition;
+import javafx.animation.Timeline;
 import javafx.scene.Scene;
 import javafx.scene.effect.BoxBlur;
 import javafx.scene.image.ImageView;
@@ -11,11 +19,15 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.FontWeight;
+import javafx.util.Duration;
 
 class InMapView {
     //vars
@@ -54,6 +66,8 @@ class InMapView {
     private Rectangle menuFocus;
     private Rectangle menuCursor, tempCursor;
     
+    private final Timeline tUp, tLeft, tDown, tRight;
+    
     //constructor
     InMapView(double screenWidth, double screenHeight, String name, int sprite, String portrait) {
         //0: tiles
@@ -89,6 +103,64 @@ class InMapView {
         
         //initialize UI
         initDisplay();
+        
+        //timeline creation
+        tUp = new Timeline();
+        for(int x = 0; x < 24; x++) {
+            for(int y = 0; y < 16; y++) {
+                for(int i = 0; i < 7; i++) {
+                    tUp.getKeyFrames().addAll(
+                            new KeyFrame(Duration.ZERO, 
+                            new KeyValue(imageViews[x][y][i].translateYProperty(), 
+                                    imageViews[x][y][i].getTranslateY()-width)),
+                            new KeyFrame(Duration.millis(100),
+                            new KeyValue(imageViews[x][y][i].translateYProperty(),
+                                    imageViews[x][y][i].getTranslateY())));
+                }
+            }
+        }
+        tLeft = new Timeline();
+        for(int x = 0; x < 24; x++) {
+            for(int y = 0; y < 16; y++) {
+                for(int i = 0; i < 7; i++) {
+                    tLeft.getKeyFrames().addAll(
+                            new KeyFrame(Duration.ZERO, 
+                            new KeyValue(imageViews[x][y][i].translateXProperty(), 
+                                    imageViews[x][y][i].getTranslateX()-width)),
+                            new KeyFrame(Duration.millis(100),
+                            new KeyValue(imageViews[x][y][i].translateXProperty(),
+                                    imageViews[x][y][i].getTranslateX())));
+                }
+            }
+        }
+        tDown = new Timeline();
+        for(int x = 0; x < 24; x++) {
+            for(int y = 0; y < 16; y++) {
+                for(int i = 0; i < 7; i++) {
+                    tDown.getKeyFrames().addAll(
+                            new KeyFrame(Duration.ZERO, 
+                            new KeyValue(imageViews[x][y][i].translateYProperty(), 
+                                    imageViews[x][y][i].getTranslateY()+width)),
+                            new KeyFrame(Duration.millis(100),
+                            new KeyValue(imageViews[x][y][i].translateYProperty(),
+                                    imageViews[x][y][i].getTranslateY())));
+                }
+            }
+        }
+        tRight = new Timeline();
+        for(int x = 0; x < 24; x++) {
+            for(int y = 0; y < 16; y++) {
+                for(int i = 0; i < 7; i++) {
+                    tRight.getKeyFrames().addAll(
+                            new KeyFrame(Duration.ZERO, 
+                            new KeyValue(imageViews[x][y][i].translateXProperty(), 
+                                    imageViews[x][y][i].getTranslateX()+width)),
+                            new KeyFrame(Duration.millis(100),
+                            new KeyValue(imageViews[x][y][i].translateXProperty(),
+                                    imageViews[x][y][i].getTranslateX())));
+                }
+            }
+        }
         
         scene = new Scene(inmapLayout, screenWidth, screenHeight);
     }
@@ -176,8 +248,6 @@ class InMapView {
         UIPane.getChildren().addAll(qiPortrait, uiHealthR, uiHealth, 
                 uiHealthT, uiManaR, uiMana, uiManaT);
         
-        inmapLayout.getChildren().add(UIPane);
-        
         //menu
         Rectangle box4 = new Rectangle(screenWidth, screenHeight, Paint.valueOf("GREY"));
         box4.relocate(0, 0);
@@ -247,6 +317,7 @@ class InMapView {
                 imageViews[x][y][4].setVisible(false);
                 
                 //overlay
+                imageViews[x][y][5] = new ImageView();
                 
                 //fog
                 imageViews[x][y][6] = new ImageView(Images.black);
@@ -273,8 +344,6 @@ class InMapView {
         for(int x = 0; x < 24; x++)
             for(int y = 0; y < 16; y++)
                 floorPane.getChildren().add(imageViews[x][y][6]);
-        
-        inmapLayout.getChildren().add(0, floorPane);
         
         //invPane
         invText = new Text[64];
@@ -471,6 +540,9 @@ class InMapView {
         ripR.setOpacity(.3);
         ripPane.getChildren().addAll(ripR, ripT);
         
+        overlayPane.setOpacity(0);
+        menuPane.setOpacity(0);
+        inmapLayout.getChildren().addAll(floorPane, UIPane, overlayPane, menuPane);
         inmapLayout.setBackground(new Background(new BackgroundFill(Paint.valueOf("BLACK"), null, null)));
     }
     
@@ -478,12 +550,21 @@ class InMapView {
     public void update(InMapViewData vd) {
         if(vd.focus.equals("floor")) {
             //remove menu window
-            inmapLayout.getChildren().remove(menuPane);
+            if(menuPane.getOpacity() == 1) {
+                FadeTransition ft = new FadeTransition(Duration.millis(200), menuPane);
+                ft.setFromValue(1);
+                ft.setToValue(0);
+                ft.play();
+            }
             
             //quick info
             if(vd.qiVisible) {
-                if(!inmapLayout.getChildren().contains(overlayPane))
-                    inmapLayout.getChildren().add(overlayPane);
+                if(overlayPane.getOpacity() == 0) {
+                    FadeTransition ft = new FadeTransition(Duration.millis(200), overlayPane);
+                    ft.setFromValue(0);
+                    ft.setToValue(1);
+                    ft.play();
+                }
                 qiName.setText(vd.floor.location.name);
                 qiType.setText(vd.floor.location.type);
                 qiDiff.setText("Difficulty: " + vd.floor.location.difficulty);
@@ -492,15 +573,21 @@ class InMapView {
                 qiLevel.setText("Level " + vd.party[0].LVL);
                 qiGold.setText("Gold: " + String.valueOf(vd.gold));
             }
-            else if(!vd.qiVisible)
-                inmapLayout.getChildren().remove(overlayPane);
+            else if(!vd.qiVisible) {
+                if(overlayPane.getOpacity() == 1) {
+                    FadeTransition ft = new FadeTransition(Duration.millis(200), overlayPane);
+                    ft.setFromValue(1);
+                    ft.setToValue(0);
+                    ft.play();
+                }
+            }
             
-            //health and mana
+            //overlay health and mana
             uiHealthR.setWidth(((double)-10000/(vd.party[0].maxHP+11000)+1)*screenWidth);
             uiHealth.setFitWidth((double)vd.party[0].currentHP/vd.party[0].maxHP*uiHealthR.getWidth());
+            uiHealthT.setText(vd.party[0].currentHP + "/" + vd.party[0].maxHP);
             uiManaR.setWidth(((double)-10000/(vd.party[0].maxMP+11000)+1)*screenWidth);
             uiMana.setFitWidth((double)vd.party[0].currentMP/vd.party[0].maxMP*uiManaR.getWidth());
-            uiHealthT.setText(vd.party[0].currentHP + "/" + vd.party[0].maxHP);
             uiManaT.setText(vd.party[0].currentMP + "/" + vd.party[0].maxMP);
             
             //tiles
@@ -595,6 +682,28 @@ class InMapView {
                         imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][6].setOpacity(1);
                 }
             }
+            
+            //movement if not holding shift
+            if(!vd.shiftHeld) {
+                if(vd.returnCode >= 1000) {
+                    vd.returnCode = (int)Math.floor(vd.returnCode/1000);
+                }
+
+                if(vd.returnCode == 5) { //up
+                    tUp.play();
+                }
+                else if(vd.returnCode == 6) { //left
+                    tLeft.play();
+                }
+                else if(vd.returnCode == 7) { //down
+                    tDown.play();
+                }
+                else if(vd.returnCode == 8) { //right
+                    tRight.play();
+                }
+                //use up return code
+                vd.returnCode = -1;
+            }
 
             //floor text
             qiFloor.setText("Floor " + vd.floor.location.currentFloor);
@@ -606,12 +715,25 @@ class InMapView {
                 inmapLayout.getChildren().remove(ripPane);
         }
         else if(vd.focus.equals("menu")) {
-            //add menu window
-            if(vd.floor != null && !inmapLayout.getChildren().contains(menuPane))
+            //add menu window if not already added
+            if(vd.floor != null && !inmapLayout.getChildren().contains(menuPane)) {
                 inmapLayout.getChildren().add(menuPane);
+            }
+            //fade in
+            if(menuPane.getOpacity() == 0) {
+                FadeTransition ft = new FadeTransition(Duration.millis(200), menuPane);
+                ft.setFromValue(0);
+                ft.setToValue(1);
+                ft.play();
+            }
             
             //remove quick info boxes
-            inmapLayout.getChildren().remove(overlayPane);
+            if(overlayPane.getOpacity() != 0) {
+                FadeTransition ft = new FadeTransition(Duration.millis(200), overlayPane);
+                ft.setFromValue(overlayPane.getOpacity());
+                ft.setToValue(0);
+                ft.play();
+            }
             
             //toggle menu
             if(vd.menuToggle && invPane.getChildren().contains(invTextPane)) {
@@ -716,14 +838,30 @@ class InMapView {
     
     //toggle menu
     public void toggleMenu(InMapViewData vd) {
-        if(inmapLayout.getChildren().contains(menuPane)) {
-            inmapLayout.getChildren().remove(menuPane);
+        //remove
+        if(menuPane.getOpacity() == 1) {
+            FadeTransition ft = new FadeTransition(Duration.millis(200), menuPane);
+            ft.setFromValue(1);
+            ft.setToValue(0);
+            ft.play();
         }
-        else {
+        else if(menuPane.getOpacity() == 0) {
             changeMenu(vd);
-            if(vd.floor != null)
+            if(vd.floor != null && !inmapLayout.getChildren().contains(menuPane))
                 inmapLayout.getChildren().add(menuPane);
+            FadeTransition ft = new FadeTransition(Duration.millis(200), menuPane);
+            ft.setFromValue(0);
+            ft.setToValue(1);
+            ft.play();
         }
+//        if(inmapLayout.getChildren().contains(menuPane)) {
+//            inmapLayout.getChildren().remove(menuPane);
+//        }
+//        else {
+//            changeMenu(vd);
+//            if(vd.floor != null)
+//                inmapLayout.getChildren().add(menuPane);
+//        }
     }
     
     //change pages in menu and move menuFocus

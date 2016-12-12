@@ -119,6 +119,7 @@ public class Main extends Application {
         keybindings.put(KeyCode.TAB, Control.TOGGLE);
         keybindings.put(KeyCode.F, Control.SWITCH);
         //temporary keybindings
+        keybindings.put(KeyCode.SHIFT, Control.RUN);
         keybindings.put(KeyCode.ESCAPE, Control.ESC);
         keybindings.put(KeyCode.R, Control.R);
         keybindings.put(KeyCode.T, Control.T);
@@ -1013,7 +1014,7 @@ public class Main extends Application {
         char c;
         do {
             c = (char)(97 + rand.nextInt(26));
-        } while (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c =='u');
+        } while (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u');
         return c;
     }
 }

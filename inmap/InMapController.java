@@ -23,6 +23,7 @@ public class InMapController implements Runnable {
     private final InMapViewData viewdata;
     private int returnCode;
     boolean hasControl;
+    private long timer;
     
     //new game constructor
     public InMapController(Main main, int VIT, int INT, int STR, int WIS, int LUK, 
@@ -95,6 +96,7 @@ public class InMapController implements Runnable {
         viewdata.talkText = model.getTalkText();
         viewdata.talkState = model.getTalkState();
         viewdata.talkSelect = model.getTalkSelect();
+        viewdata.shiftHeld = model.getShiftHeld();
         viewdata.saveImages = main.saveImages;
         viewdata.saveInfo = main.saveInfo;
         viewdata.returnCode = returnCode;
@@ -135,14 +137,14 @@ public class InMapController implements Runnable {
             main.refreshSaveInfo();
             updateViewData();
             view.refreshMenu(viewdata);
+            view.update(viewdata);
         }
         //load game
         else if(model.loadGame != -1) {
             main.loadGame(model.loadGame);
         }
-        
         //update view
-        if(model.getFocus().equals("menu")) {
+        else if(model.getFocus().equals("menu")) {
             updateViewData();
             view.update(viewdata);
         }
@@ -163,7 +165,10 @@ public class InMapController implements Runnable {
 
         //key press events
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            
+            if(!model.getShiftHeld() && System.currentTimeMillis() - 50 < timer) {
+                return;
+            }
+            timer = System.currentTimeMillis();
             returnCode = model.process(main.getControl(event.getCode()));
             
             //save game
@@ -179,24 +184,17 @@ public class InMapController implements Runnable {
                 main.refreshSaveInfo();
                 updateViewData();
                 view.refreshMenu(viewdata);
+                view.update(viewdata);
             }
             //load game
             else if(model.loadGame != -1) {
                 main.loadGame(model.loadGame);
             }
-            
             //update view
-            if(model.hasControl) {
+            else if(model.hasControl) {
                 updateViewData();
                 view.update(viewdata);
             }
-            
-//            switch(main.getControl(event.getCode())) {
-//                case UP: view.speedY.set(view.speedYVal); break;
-//                case RIGHT: view.speedX.set(-view.speedXVal); break;
-//                case DOWN: view.speedY.set(-view.speedYVal); break;
-//                case LEFT: view.speedX.set(view.speedXVal); break;
-//            }
             
             if(!model.hasControl && hasControl) {
                 hasControl = false;
@@ -209,10 +207,11 @@ public class InMapController implements Runnable {
         //key release events
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
             
-            model.processRelease(main.getControl(event.getCode()));
-            if(model.hasControl) {
-                updateViewData();
-                view.update(viewdata);
+            if(model.processRelease(main.getControl(event.getCode()))) {
+                if(model.hasControl) {
+                    updateViewData();
+                    view.update(viewdata);
+                }
             }
             
             event.consume();

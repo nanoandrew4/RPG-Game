@@ -199,7 +199,15 @@ class Floor implements java.io.Serializable{
             short temp = items[ex][ey].id;
             items[ex][ey].reset();
             swap(sx, sy, ex, ey);
-            return 1000 + temp;
+            
+            if(ey < sy) //up
+                return 5000 + temp;
+            else if(ex < sx) //left
+                return 6000 + temp;
+            else if(ey > sy) //down
+                return 7000 + temp;
+            else if(ex > sx) //right
+                return 8000 + temp;
         }
         //moving normally
         else if(!tiles[ex][ey].isWall) {

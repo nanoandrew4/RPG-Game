@@ -16,7 +16,7 @@ public class InMapViewData {
             talkState, talkSelect, returnCode;
     Character[] party;
     Item[] inv;
-    boolean qiVisible, menuToggle;
+    boolean qiVisible, menuToggle, shiftHeld;
     Text[][] saveInfo;
     ImageView[] saveImages;
     

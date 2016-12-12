@@ -30,6 +30,7 @@ public class InMapModel implements java.io.Serializable{
     private int useP, usePmax, selectP; //selection pointer
     private boolean qiVisible; //quick info window
     private boolean menuToggle; //menu toggle
+    private boolean shiftHeld; //holding shift: mostly for movement
     private int talkState; //not talking, talking, selecting
     private int talkSelect; //selection pointer for talking
     private String talkText; //text in the talk box
@@ -214,6 +215,10 @@ public class InMapModel implements java.io.Serializable{
                     toggleMenu("options");
                     break;
                     
+                case RUN:
+                    shiftHeld = true;
+                    break;
+                    
                 default:
                     //process movement input
                     r = maps.get(currentMap).process(input);
@@ -224,10 +229,10 @@ public class InMapModel implements java.io.Serializable{
                     }
                     //pick up item
                     if(r >= 1000) {
-                        r -= 1000;
+                        short id = (short)(r % 1000);
                         for(int i = 0; i < 64; i++) {
                             if(!inv[i].exists) {
-                                inv[i] = new Item(Item.get((short)r), (byte)0, (byte)0);
+                                inv[i] = new Item(Item.get((short)id), (byte)0, (byte)0);
                                 break;
                             }
                         }
@@ -673,14 +678,23 @@ public class InMapModel implements java.io.Serializable{
         }
     }
     
-    //process release of input
-    public void processRelease(Control input) {
-        if(input == Control.TOGGLE) {
-            if(System.currentTimeMillis() - timer > 300) {
-                qiVisible = !qiVisible;
-            }
-            timer = -1;
+    //process release of input, return if needs view update
+    public boolean processRelease(Control input) {
+        switch(input) {
+            case TOGGLE:
+                if(System.currentTimeMillis() - timer > 200) {
+                    qiVisible = !qiVisible;
+                }
+                timer = -1;
+
+                return true;
+                
+            case RUN:
+                shiftHeld = false;
+                return false;
         }
+        
+        return false;
     }
     
     //switch menu focus, reset vars on close
@@ -806,4 +820,5 @@ public class InMapModel implements java.io.Serializable{
     int getTalkState() { return talkState; }
     int getTalkSelect() { return talkSelect; }
     String getTalkText() { return talkText; }
+    boolean getShiftHeld() { return shiftHeld; }
 }
