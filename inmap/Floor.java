@@ -793,9 +793,9 @@ class Floor implements java.io.Serializable{
         npcs[0].x = 2;
         npcs[0].y = 2;
         chars[2][2] = npcs[0];
-        npcs[1].x = 4;
-        npcs[1].y = 2;
-        chars[4][2] = npcs[1];
+        npcs[1].x = sizeX/2+1;
+        npcs[1].y = sizeY-1;
+        chars[sizeX/2+1][sizeY-1] = npcs[1];
         
         //temp all tiles visible
         for(int x = 0; x < sizeX; x++) {

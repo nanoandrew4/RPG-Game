@@ -4,14 +4,14 @@
 
 package inmap;
 
-import javafx.animation.Animation;
 import javafx.animation.Animation.Status;
+import main.TextType;
 import javafx.animation.FadeTransition;
-import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
-import javafx.animation.PathTransition;
 import javafx.animation.Timeline;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.Scene;
 import javafx.scene.effect.BoxBlur;
 import javafx.scene.image.ImageView;
@@ -19,9 +19,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Paint;
-import javafx.scene.shape.LineTo;
-import javafx.scene.shape.MoveTo;
-import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.Font;
@@ -62,6 +59,9 @@ class InMapView {
     private ImageView[] saveImages; //save information
     private Rectangle[] opRButtons; //button boxes
     private Rectangle[] opRSaves; //save boxes
+    //talking
+    private TextType talkTransition;
+    private Text talkT;
     
     private Rectangle menuFocus;
     private Rectangle menuCursor, tempCursor;
@@ -104,18 +104,20 @@ class InMapView {
         //initialize UI
         initDisplay();
         
-        //timeline creation
+        //movement animation creation
         tUp = new Timeline();
         for(int x = 0; x < 24; x++) {
             for(int y = 0; y < 16; y++) {
                 for(int i = 0; i < 7; i++) {
-                    tUp.getKeyFrames().addAll(
-                            new KeyFrame(Duration.ZERO, 
-                            new KeyValue(imageViews[x][y][i].translateYProperty(), 
-                                    imageViews[x][y][i].getTranslateY()-width)),
-                            new KeyFrame(Duration.millis(100),
-                            new KeyValue(imageViews[x][y][i].translateYProperty(),
-                                    imageViews[x][y][i].getTranslateY())));
+                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
+                        tUp.getKeyFrames().addAll(
+                                new KeyFrame(Duration.ZERO, 
+                                new KeyValue(imageViews[x][y][i].translateYProperty(), 
+                                        imageViews[x][y][i].getTranslateY()-width)),
+                                new KeyFrame(Duration.millis(100),
+                                new KeyValue(imageViews[x][y][i].translateYProperty(),
+                                        imageViews[x][y][i].getTranslateY())));
+                    }
                 }
             }
         }
@@ -123,13 +125,15 @@ class InMapView {
         for(int x = 0; x < 24; x++) {
             for(int y = 0; y < 16; y++) {
                 for(int i = 0; i < 7; i++) {
-                    tLeft.getKeyFrames().addAll(
-                            new KeyFrame(Duration.ZERO, 
-                            new KeyValue(imageViews[x][y][i].translateXProperty(), 
-                                    imageViews[x][y][i].getTranslateX()-width)),
-                            new KeyFrame(Duration.millis(100),
-                            new KeyValue(imageViews[x][y][i].translateXProperty(),
-                                    imageViews[x][y][i].getTranslateX())));
+                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
+                        tLeft.getKeyFrames().addAll(
+                                new KeyFrame(Duration.ZERO, 
+                                new KeyValue(imageViews[x][y][i].translateXProperty(), 
+                                        imageViews[x][y][i].getTranslateX()-width)),
+                                new KeyFrame(Duration.millis(100),
+                                new KeyValue(imageViews[x][y][i].translateXProperty(),
+                                        imageViews[x][y][i].getTranslateX())));
+                    }
                 }
             }
         }
@@ -137,13 +141,15 @@ class InMapView {
         for(int x = 0; x < 24; x++) {
             for(int y = 0; y < 16; y++) {
                 for(int i = 0; i < 7; i++) {
-                    tDown.getKeyFrames().addAll(
-                            new KeyFrame(Duration.ZERO, 
-                            new KeyValue(imageViews[x][y][i].translateYProperty(), 
-                                    imageViews[x][y][i].getTranslateY()+width)),
-                            new KeyFrame(Duration.millis(100),
-                            new KeyValue(imageViews[x][y][i].translateYProperty(),
-                                    imageViews[x][y][i].getTranslateY())));
+                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
+                        tDown.getKeyFrames().addAll(
+                                new KeyFrame(Duration.ZERO, 
+                                new KeyValue(imageViews[x][y][i].translateYProperty(), 
+                                        imageViews[x][y][i].getTranslateY()+width)),
+                                new KeyFrame(Duration.millis(100),
+                                new KeyValue(imageViews[x][y][i].translateYProperty(),
+                                        imageViews[x][y][i].getTranslateY())));
+                    }
                 }
             }
         }
@@ -151,13 +157,15 @@ class InMapView {
         for(int x = 0; x < 24; x++) {
             for(int y = 0; y < 16; y++) {
                 for(int i = 0; i < 7; i++) {
-                    tRight.getKeyFrames().addAll(
-                            new KeyFrame(Duration.ZERO, 
-                            new KeyValue(imageViews[x][y][i].translateXProperty(), 
-                                    imageViews[x][y][i].getTranslateX()+width)),
-                            new KeyFrame(Duration.millis(100),
-                            new KeyValue(imageViews[x][y][i].translateXProperty(),
-                                    imageViews[x][y][i].getTranslateX())));
+                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
+                        tRight.getKeyFrames().addAll(
+                                new KeyFrame(Duration.ZERO, 
+                                new KeyValue(imageViews[x][y][i].translateXProperty(), 
+                                        imageViews[x][y][i].getTranslateX()+width)),
+                                new KeyFrame(Duration.millis(100),
+                                new KeyValue(imageViews[x][y][i].translateXProperty(),
+                                        imageViews[x][y][i].getTranslateX())));
+                    }
                 }
             }
         }
@@ -529,6 +537,20 @@ class InMapView {
         opPane.getChildren().addAll(opRButtons);
         opPane.getChildren().addAll(opRSaves);
         opPane.getChildren().addAll(saveImages);
+        
+        //talkPane
+        Rectangle talkR = new Rectangle(screenWidth*17/32, screenHeight*11/40, Paint.valueOf("WHITE"));
+        talkR.relocate(screenWidth*5/16, screenHeight*2/3);
+        talkR.setOpacity(.7);
+                
+        talkT = new Text(screenWidth*21/64, screenHeight*67/96, "kek");
+        talkT.setWrappingWidth(screenWidth/2);
+        talkT.setFont(Font.font("Luminari", FontWeight.NORMAL, 18));
+        talkT.setFill(Paint.valueOf("BLACK"));
+        
+        talkTransition = new TextType(talkT, "");
+        
+        talkPane.getChildren().addAll(talkR, talkT);
 
         //ripPane
         Text ripT = new Text(0, screenHeight/2, ("YOU ARE DEAD"));
@@ -542,7 +564,7 @@ class InMapView {
         
         overlayPane.setOpacity(0);
         menuPane.setOpacity(0);
-        inmapLayout.getChildren().addAll(floorPane, UIPane, overlayPane, menuPane);
+        inmapLayout.getChildren().addAll(floorPane, UIPane, overlayPane, menuPane, talkPane);
         inmapLayout.setBackground(new Background(new BackgroundFill(Paint.valueOf("BLACK"), null, null)));
     }
     
@@ -683,14 +705,28 @@ class InMapView {
                 }
             }
             
-            //movement if not holding shift
+            //movement animation if not holding shift
             if(!vd.shiftHeld) {
                 if(vd.returnCode >= 1000) {
                     vd.returnCode = (int)Math.floor(vd.returnCode/1000);
                 }
 
                 if(vd.returnCode == 5) { //up
+                    if(floorPane.getChildren().indexOf(imageViews[11][7][3]) == 755) {
+                        floorPane.getChildren().remove(755);
+                        floorPane.getChildren().remove(731);
+                        floorPane.getChildren().remove(707);
+                        floorPane.getChildren().add(846, imageViews[11][7][1]);
+                        floorPane.getChildren().add(847, imageViews[11][7][2]);
+                        floorPane.getChildren().add(848, imageViews[11][7][3]);
+                    }
                     tUp.play();
+                    tUp.onFinishedProperty().set(e -> {
+                        floorPane.getChildren().remove(846, 849);
+                        floorPane.getChildren().add(707, imageViews[11][7][1]);
+                        floorPane.getChildren().add(731, imageViews[11][7][2]);
+                        floorPane.getChildren().add(755, imageViews[11][7][3]);
+                    });
                 }
                 else if(vd.returnCode == 6) { //left
                     tLeft.play();
@@ -704,7 +740,34 @@ class InMapView {
                 //use up return code
                 vd.returnCode = -1;
             }
-
+            
+            //talking
+            if(vd.talkState == 0) {
+                if(talkPane.getOpacity() != 0) {
+                    FadeTransition ft = new FadeTransition(Duration.millis(100), talkPane);
+                    ft.setFromValue(talkPane.getOpacity());
+                    ft.setToValue(0);
+                    ft.play();
+                }
+                if(talkTransition.getStatus() == Status.RUNNING) {
+                    talkTransition.stop();
+                }
+            }
+            else if(vd.talkState == 1) {
+                if(talkPane.getOpacity() != 1) {
+                    FadeTransition ft = new FadeTransition(Duration.millis(100), talkPane);
+                    ft.setFromValue(talkPane.getOpacity());
+                    ft.setToValue(1);
+                    ft.play();
+                    talkTransition.setStrings(vd.talkText);
+                    talkTransition.play();
+                }
+                if(vd.talkIndex > talkTransition.getIndex()) {
+                    talkTransition.next();
+                    talkTransition.play();
+                }
+            }
+            
             //floor text
             qiFloor.setText("Floor " + vd.floor.location.currentFloor);
 
@@ -720,9 +783,9 @@ class InMapView {
                 inmapLayout.getChildren().add(menuPane);
             }
             //fade in
-            if(menuPane.getOpacity() == 0) {
+            if(menuPane.getOpacity() != 1) {
                 FadeTransition ft = new FadeTransition(Duration.millis(200), menuPane);
-                ft.setFromValue(0);
+                ft.setFromValue(menuPane.getOpacity());
                 ft.setToValue(1);
                 ft.play();
             }
@@ -854,14 +917,6 @@ class InMapView {
             ft.setToValue(1);
             ft.play();
         }
-//        if(inmapLayout.getChildren().contains(menuPane)) {
-//            inmapLayout.getChildren().remove(menuPane);
-//        }
-//        else {
-//            changeMenu(vd);
-//            if(vd.floor != null)
-//                inmapLayout.getChildren().add(menuPane);
-//        }
     }
     
     //change pages in menu and move menuFocus

@@ -33,7 +33,8 @@ public class InMapModel implements java.io.Serializable{
     private boolean shiftHeld; //holding shift: mostly for movement
     private int talkState; //not talking, talking, selecting
     private int talkSelect; //selection pointer for talking
-    private String talkText; //text in the talk box
+    private String[] talkText; //text in the talk box
+    private int talkIndex; //index of talk
     private long timer;
     
     boolean hasControl;
@@ -42,8 +43,6 @@ public class InMapModel implements java.io.Serializable{
     //new game constructor
     InMapModel(int VIT, int INT, int STR, int WIS, int LUK, int CHA, 
             String race, String name, int sprite, String portrait) {
-        DBManager dbManager = new DBManager("IMDATA");
-        
         //init arrays
         party = new Character[5];
         maps = new HashMap();
@@ -63,6 +62,7 @@ public class InMapModel implements java.io.Serializable{
         
         //load item data
         try {
+            DBManager dbManager = new DBManager("IMDATA");
             load(dbManager);
         }
         catch(SQLException e) {
@@ -163,66 +163,81 @@ public class InMapModel implements java.io.Serializable{
         }
     }
     
-    //process input
+    //general input process
     int process(Control input) {
         //floor input
         if(focus.equals("floor")) {
-            int r = -1;
+            return processFloorInput(input);
+        }
+        //menu input
+        else if(focus.equals("menu")) {
+            return processMenuInput(input);
+        }
+        else {
+            System.out.println("Failed focus.");
+            return -1;
+        }
+    }
+    
+    //process floor input
+    int processFloorInput(Control input) {
+        int r = -1;
+        if(talkState == 0) {
             switch (input) {
                 case BACK:
                     //default open menu
                     toggleMenu(true);
                     break;
-                    
+
                 case TOGGLE:
                     if(timer == -1) {
                         timer = System.currentTimeMillis();
                         qiVisible = !qiVisible;
                     }
                     break;
-                    
+
                 case R:
                     //reset location: testing only
                     reset();
                     break;
-                    
+
                 case T:
                     //cheat
                     party[0].gainEXP(10000);
                     break;
-                    
+
                 case MENU:
                     toggleMenu(true);
                     break;
-                    
+
                 case OPENINV:
                     toggleMenu("inv");
                     break;
-                    
+
                 case OPENCHAR:
                     toggleMenu("char");
                     break;
-                    
+
                 case OPENPARTY:
                     toggleMenu("party");
                     break;
-                    
+
                 case OPENNOTES:
                     toggleMenu("notes");
                     break;
-                    
+
                 case OPENOPTIONS:
                     toggleMenu("options");
                     break;
-                    
+
                 case RUN:
                     shiftHeld = true;
                     break;
-                    
+
                 default:
                     //process movement input
                     r = maps.get(currentMap).process(input);
-                    
+
                     //process ai if haven't left location
                     if(r != 1 && r != 3 && hasControl) {
                         maps.get(currentMap).getCurrentFloor().processAI();
@@ -240,442 +255,478 @@ public class InMapModel implements java.io.Serializable{
                     //start talking to npc
                     else if(r == 3) {
                         talkState = 1;
-                        talkText = "top kek dood";
                     }
                     break;
             }
-            return r;
         }
-        //menu input
-        else if(focus.equals("menu")) {
-            switch(input) {
-                case LEFT:
-                    //shift menu page left
-                    if(menuP.y == -1) {
-                        if(menuWindow.equals("inv")) 
-                            menuWindow = "options";
-                        else if(menuWindow.equals("char")) 
-                            menuWindow = "inv";
-                        else if(menuWindow.equals("party")) 
-                            menuWindow = "char";
-                        else if(menuWindow.equals("notes")) 
-                            menuWindow = "party";
-                        else if(menuWindow.equals("options")) 
-                            menuWindow = "notes";
-                    }
-                    //temporary pointer
-                    else if(tempP.x != -1) {
-                        tempP.x--;
-
-                        if(tempP.x < 0)
-                            tempP.x = 3;
-
-                        invText = inv[tempP.x*16+tempP.y].des;
-                    }
-                    //use pointer
-                    else if(useP != -1) {
+        //talking to npcs
+        if(talkState != 0) {
+            if(talkState == 1) {
+                if(talkText == null) {
+                    talkText = Dialogue.getCitizenDialogue(null);
+                    talkIndex = 0;
+                }
+//                talkText = "The most merciful thing in the world, I think, "
+//                        + "is the inability of the human mind to correlate "
+//                        + "all its contents. We live on a placid island of "
+//                        + "ignorance in the midst of black seas of infinity, "
+//                        + "and it was not meant that we should voyage far. The "
+//                        + "sciences, each straining in its own direction, have "
+//                        + "hitherto harmed us little; but some day the piecing "
+//                        + "together of dissociated knowledge will open up such "
+//                        + "terrifying vistas of reality, and of our frightful "
+//                        + "position therein, that we shall either go mad from "
+//                        + "the revelation or flee from the deadly light into "
+//                        + "the peace and safety of a new dark age.";
+                switch(input) {
+                    case SELECT:
+                        if(talkIndex < talkText.length - 1) {
+                            talkIndex++;
+                            break;
+                        }
+                    case BACK:
+                        talkText = null;
+                        talkIndex = 0;
+                        talkState = 0;
                         break;
-                    }
-                    //selection
-                    else if(selectP != -1) {
-                        if(menuWindow.equals("options")) {
-                            selectP += selectP % 2 == 0 ? 1 : -1;
-                        }
-                    }
-                    //scroll around menu
-                    else {
-                        menuP.x--;
-
-                        if(menuWindow.equals("inv")) {
-                            if(menuP.x < 0)
-                                menuP.x = 3;
-                            invText = inv[menuP.x*16+menuP.y].des;
-                        }
-                        else if(menuWindow.equals("options")) {
-                            menuP.x = 0;
-                        }
-                    }
-                    break;
-                    
-                case RIGHT:
-                    //shift page right
-                    if(menuP.y == -1) {
-                        if(menuWindow.equals("inv")) menuWindow = "char";
-                        else if(menuWindow.equals("char")) menuWindow = "party";
-                        else if(menuWindow.equals("party")) menuWindow = "notes";
-                        else if(menuWindow.equals("notes")) menuWindow = "options";
-                        else if(menuWindow.equals("options")) menuWindow = "inv";
-                    }
-                    //temporary pointer
-                    else if(tempP.x != -1) {
-                        tempP.x++;
-
-                        if(tempP.x > 3)
-                            tempP.x = 0;
-                        
-                        invText = inv[tempP.x*16+tempP.y].des;
-                    }
-                    //use pointer
-                    else if(useP != -1) {
+                    default:
                         break;
-                    }
-                    //selection
-                    else if(selectP != -1) {
-                        if(menuWindow.equals("options")) {
-                            selectP += selectP % 2 == 0 ? 1 : -1;
-                        }
-                    }
-                    //scroll around menu
-                    else {
-                        menuP.x++;
+                }
+            }
+        }
+        else {
+            talkText = null;
+            talkIndex = 0;
+        }
+        
+        return r;
+    }
+    
+    //process menu input
+    int processMenuInput(Control input) {
+        switch(input) {
+            case LEFT:
+                //shift menu page left
+                if(menuP.y == -1) {
+                    if(menuWindow.equals("inv")) 
+                        menuWindow = "options";
+                    else if(menuWindow.equals("char")) 
+                        menuWindow = "inv";
+                    else if(menuWindow.equals("party")) 
+                        menuWindow = "char";
+                    else if(menuWindow.equals("notes")) 
+                        menuWindow = "party";
+                    else if(menuWindow.equals("options")) 
+                        menuWindow = "notes";
+                }
+                //temporary pointer
+                else if(tempP.x != -1) {
+                    tempP.x--;
 
-                        if(menuWindow.equals("inv")) {
-                            if(menuP.x > 3)
-                                menuP.x = 0;
-                            invText = inv[menuP.x*16+menuP.y].des;
-                        }
-                        else if(menuWindow.equals("options")) {
-                            menuP.x = 0;
-                        }
-                    }
-                    break;
-                    
-                case UP:
-                    //cannot move up in menu page select
-                    if(menuP.y == -1) {
-                        break;
-                    }
-                    //temp pointer
-                    else if(tempP.x != -1) {
-                        tempP.y--;
-                        
-                        if(tempP.y < 0)
-                            tempP.y = 15;
-                        
-                        invText = inv[tempP.x*16+tempP.y].des;
-                    }
-                    //use pointer
-                    else if(useP != -1) {
-                        useP--;
-                        
-                        if(useP < 0) {
-                            useP = usePmax;
-                        }
-                    }
-                    //selection movement
-                    else if(selectP != -1) {
-                        selectP--;
-                        
-                        if(menuWindow.equals("inv") && selectP < 0) {
-                            selectP = 3;
-                        }
-                        else if(menuWindow.equals("options")) {
-                            selectP--;
-                            
-                            if (selectP < 0)
-                                selectP += 6;
-                        }
-                    }
-                    //scroll around menu
-                    else {
-                        menuP.y--;
-                        
-                        //OOB
-                        if(menuWindow.equals("inv")) {
-                            if(menuP.y < 0)
-                                menuP.y = 15;
-                            invText = inv[menuP.x*16+menuP.y].des;
-                        }
-                        else if(menuWindow.equals("char")) {
-                            menuP.y = -1;
-                        }
-                        else if(menuWindow.equals("options") && menuP.y < 0) {
-                            menuP.y = 2;
-                        }
-                    }
-                    break;
-                    
-                case DOWN:
-                    //nothing
-                    if(menuP.y == -1) {
-                        break;
-                    }
-                    //temp pointer
-                    else if(tempP.x != -1) {
-                        tempP.y++;
-                        
-                        if(tempP.y > 15)
-                            tempP.y = 0;
-                        
-                        invText = inv[tempP.x*16+tempP.y].des;
-                    }
-                    //use pointer
-                    else if(useP != -1) {
-                        useP++;
-                        
-                        if(useP > usePmax) {
-                            useP = 0;
-                        }
-                    }
-                    //selection movement
-                    else if(selectP != -1) {
-                        selectP++;
-                        
-                        if(menuWindow.equals("inv") && selectP > 3) {
-                            selectP = 0;
-                        }
-                        else if(menuWindow.equals("options")) {
-                            selectP++;
-                            
-                            if (selectP > 5)
-                                selectP -= 6;
-                        }
-                    }
-                    //scroll around menu
-                    else {
-                        menuP.y++;
+                    if(tempP.x < 0)
+                        tempP.x = 3;
 
-                        if(menuWindow.equals("inv")) {
-                            if(menuP.y > 15)
-                                menuP.y = 0;
-                            invText = inv[menuP.x*16+menuP.y].des;
-                        }
-                        else if(menuWindow.equals("char")) {
-                            menuP.y = -1;
-                        }
-                        else if(menuWindow.equals("options") && menuP.y > 2) {
-                            menuP.y = 0;
-                        }
+                    invText = inv[tempP.x*16+tempP.y].des;
+                }
+                //use pointer
+                else if(useP != -1) {
+                    break;
+                }
+                //selection
+                else if(selectP != -1) {
+                    if(menuWindow.equals("options")) {
+                        selectP += selectP % 2 == 0 ? 1 : -1;
                     }
-                    break;
-                    
-                case MENU:
-                    //close menu
-                    toggleMenu(false);
-                    break;
-                    
-                case SELECT:
-                    //inventory
+                }
+                //scroll around menu
+                else {
+                    menuP.x--;
+
                     if(menuWindow.equals("inv")) {
-                        //enter menu
-                        if(menuP.y == -1) {
-                            menuP.move(0, 0);
-                            invText = inv[0].des;
-                        }
-                        //button selection
-                        else if(selectP != -1) {
-                            //use or equip
-                            if(selectP == 0) {
-                                if(useP != -1) {
-                                    //use on selected entity
-                                }
-                                else if(inv[menuP.x*16+menuP.y].type == ItemType.CONSUMABLE) {
-                                    //open use menu
-                                    //if(useP == -1) {
-                                    //    useP = 0;
-                                    //}
-                                    //else {
-                                        //use on self: default
-                                        party[0].currentHP += inv[menuP.x*16+menuP.y].CHP;
-                                        if(party[0].currentHP > party[0].maxHP)
-                                            party[0].currentHP = party[0].maxHP;
-
-                                        party[0].currentMP += inv[menuP.x*16+menuP.y].CMP;
-                                        if(party[0].currentMP > party[0].maxMP)
-                                            party[0].currentMP = party[0].maxMP;
-
-                                        invText = Item.idname.get(inv[menuP.x*16+menuP.y].id) + " used.";
-                                        inv[menuP.x*16+menuP.y].reset();
-                                    //}
-                                }
-                                else if(inv[menuP.x*16+menuP.y].type == ItemType.WEAPON) {
-                                    //swap items
-                                    Item temp = inv[menuP.x*16+menuP.y];
-                                    inv[menuP.x*16+menuP.y] = party[0].weapon;
-                                    party[0].weapon = temp;
-                                    party[0].calculateStats();
-                                    invText = Item.idname.get(party[0].weapon.id) + " equipped.";
-                                }
-                                else if(inv[menuP.x*16+menuP.y].type == ItemType.ARMOR) {
-                                    //swap items
-                                    Item temp = inv[menuP.x*16+menuP.y];
-                                    inv[menuP.x*16+menuP.y] = party[0].armor;
-                                    party[0].armor = temp;
-                                    party[0].calculateStats();
-                                    invText = Item.idname.get(party[0].armor.id) + " equipped.";
-                                }
-                                else if(inv[menuP.x*16+menuP.y].type == ItemType.ACCESSORY) {
-                                    //insert in first
-                                    if(!party[0].acc1.exists) {
-                                        party[0].acc1 = inv[menuP.x*16+menuP.y];
-                                        inv[menuP.x*16+menuP.y] = new Item();
-                                        party[0].calculateStats();
-                                        invText = Item.idname.get(party[0].acc1.id) + " equipped.";
-                                    }
-                                    //second
-                                    else if(!party[0].acc2.exists) {
-                                        party[0].acc2 = inv[menuP.x*16+menuP.y];
-                                        inv[menuP.x*16+menuP.y] = new Item();
-                                        party[0].calculateStats();
-                                        invText = Item.idname.get(party[0].acc2.id) + " equipped.";
-                                    }
-                                    //third
-                                    else if(!party[0].acc3.exists) {
-                                        party[0].acc3 = inv[menuP.x*16+menuP.y];
-                                        inv[menuP.x*16+menuP.y] = new Item();
-                                        party[0].calculateStats();
-                                        invText = Item.idname.get(party[0].acc3.id) + " equipped.";
-                                    }
-                                    //swap with first
-                                    else {
-                                        Item temp = inv[menuP.x*16+menuP.y];
-                                        inv[menuP.x*16+menuP.y] = party[0].acc1;
-                                        party[0].acc1 = temp;
-                                        party[0].calculateStats();
-                                        invText = Item.idname.get(party[0].acc1.id) + " equipped.";
-                                    }
-                                }
-                                //using a material...
-                                else if(inv[menuP.x*16+menuP.y].type == ItemType.MATERIAL) {
-                                    invText = "You can't use or equip" + 
-                                            Item.idname.get(inv[menuP.x*16+menuP.y].id) + ".";
-                                }
-                                
-                                selectP = -1;
-                            }
-                            //move
-                            else if(selectP == 1) {
-                                //selected swap item
-                                if(tempP.x != -1) {
-                                    //swap
-                                    Item temp = inv[tempP.x*16+tempP.y];
-                                    inv[tempP.x*16+tempP.y] = inv[menuP.x*16+menuP.y];
-                                    inv[menuP.x*16+menuP.y] = temp;
-                                    tempP.move(-1, -1);
-                                    selectP = -1;
-                                }
-                                else {
-                                    tempP.move(0, 0);
-                                }
-                            }
-                            //discard
-                            else if(selectP == 2) {
-                                invText = Item.idname.get(inv[menuP.x*16+menuP.y].id) + " dropped.";
-                                inv[menuP.x*16+menuP.y].reset();
-                                selectP = -1;
-                            }
-                            //cancel
-                            else if(selectP == 3) {
-                                selectP = -1;
-                            }
-                        }
-                        else {
-                            selectP = 0;
-                        }
+                        if(menuP.x < 0)
+                            menuP.x = 3;
+                        invText = inv[menuP.x*16+menuP.y].des;
                     }
                     else if(menuWindow.equals("options")) {
-                        //enter menu
-                        if(menuP.y == -1) {
-                            menuP.move(0, 0);
-                        }
-                        //save selection
-                        else if(selectP != -1) {
-                            //save game
-                            if(menuP.y == 0) {
-                                saveGame = selectP;
-                                selectP = -1;
-                            }
-                            //load game
-                            else if(menuP.y == 1) {
-                                loadGame = selectP;
-                                selectP = -1;
-                            }
-                        }
-                        //enter save selection
-                        else if(menuP.y == 0 || menuP.y == 1) {
-                            selectP = 0;
-                        }
+                        menuP.x = 0;
                     }
+                }
+                break;
+
+            case RIGHT:
+                //shift page right
+                if(menuP.y == -1) {
+                    if(menuWindow.equals("inv")) menuWindow = "char";
+                    else if(menuWindow.equals("char")) menuWindow = "party";
+                    else if(menuWindow.equals("party")) menuWindow = "notes";
+                    else if(menuWindow.equals("notes")) menuWindow = "options";
+                    else if(menuWindow.equals("options")) menuWindow = "inv";
+                }
+                //temporary pointer
+                else if(tempP.x != -1) {
+                    tempP.x++;
+
+                    if(tempP.x > 3)
+                        tempP.x = 0;
+
+                    invText = inv[tempP.x*16+tempP.y].des;
+                }
+                //use pointer
+                else if(useP != -1) {
                     break;
-                    
-                case BACK:
-                    //menu pages
-                    if(menuP.y == -1) {
-                        toggleMenu(false);
+                }
+                //selection
+                else if(selectP != -1) {
+                    if(menuWindow.equals("options")) {
+                        selectP += selectP % 2 == 0 ? 1 : -1;
                     }
-                    //temp pointer exists
-                    else if(tempP.x != -1) {
-                        tempP.move(-1, -1);
-                        selectP = -1;
+                }
+                //scroll around menu
+                else {
+                    menuP.x++;
+
+                    if(menuWindow.equals("inv")) {
+                        if(menuP.x > 3)
+                            menuP.x = 0;
+                        invText = inv[menuP.x*16+menuP.y].des;
+                    }
+                    else if(menuWindow.equals("options")) {
+                        menuP.x = 0;
+                    }
+                }
+                break;
+
+            case UP:
+                //cannot move up in menu page select
+                if(menuP.y == -1) {
+                    break;
+                }
+                //temp pointer
+                else if(tempP.x != -1) {
+                    tempP.y--;
+
+                    if(tempP.y < 0)
+                        tempP.y = 15;
+
+                    invText = inv[tempP.x*16+tempP.y].des;
+                }
+                //use pointer
+                else if(useP != -1) {
+                    useP--;
+
+                    if(useP < 0) {
+                        useP = usePmax;
+                    }
+                }
+                //selection movement
+                else if(selectP != -1) {
+                    selectP--;
+
+                    if(menuWindow.equals("inv") && selectP < 0) {
+                        selectP = 3;
+                    }
+                    else if(menuWindow.equals("options")) {
+                        selectP--;
+
+                        if (selectP < 0)
+                            selectP += 6;
+                    }
+                }
+                //scroll around menu
+                else {
+                    menuP.y--;
+
+                    //OOB
+                    if(menuWindow.equals("inv")) {
+                        if(menuP.y < 0)
+                            menuP.y = 15;
+                        invText = inv[menuP.x*16+menuP.y].des;
+                    }
+                    else if(menuWindow.equals("char")) {
+                        menuP.y = -1;
+                    }
+                    else if(menuWindow.equals("options") && menuP.y < 0) {
+                        menuP.y = 2;
+                    }
+                }
+                break;
+
+            case DOWN:
+                //nothing
+                if(menuP.y == -1) {
+                    break;
+                }
+                //temp pointer
+                else if(tempP.x != -1) {
+                    tempP.y++;
+
+                    if(tempP.y > 15)
+                        tempP.y = 0;
+
+                    invText = inv[tempP.x*16+tempP.y].des;
+                }
+                //use pointer
+                else if(useP != -1) {
+                    useP++;
+
+                    if(useP > usePmax) {
+                        useP = 0;
+                    }
+                }
+                //selection movement
+                else if(selectP != -1) {
+                    selectP++;
+
+                    if(menuWindow.equals("inv") && selectP > 3) {
+                        selectP = 0;
+                    }
+                    else if(menuWindow.equals("options")) {
+                        selectP++;
+
+                        if (selectP > 5)
+                            selectP -= 6;
+                    }
+                }
+                //scroll around menu
+                else {
+                    menuP.y++;
+
+                    if(menuWindow.equals("inv")) {
+                        if(menuP.y > 15)
+                            menuP.y = 0;
+                        invText = inv[menuP.x*16+menuP.y].des;
+                    }
+                    else if(menuWindow.equals("char")) {
+                        menuP.y = -1;
+                    }
+                    else if(menuWindow.equals("options") && menuP.y > 2) {
+                        menuP.y = 0;
+                    }
+                }
+                break;
+
+            case MENU:
+                //close menu
+                toggleMenu(false);
+                break;
+
+            case SELECT:
+                //inventory
+                if(menuWindow.equals("inv")) {
+                    //enter menu
+                    if(menuP.y == -1) {
+                        menuP.move(0, 0);
+                        invText = inv[0].des;
                     }
                     //button selection
                     else if(selectP != -1) {
-                        selectP = -1;
+                        //use or equip
+                        if(selectP == 0) {
+                            if(useP != -1) {
+                                //use on selected entity
+                            }
+                            else if(inv[menuP.x*16+menuP.y].type == ItemType.CONSUMABLE) {
+                                //open use menu
+                                //if(useP == -1) {
+                                //    useP = 0;
+                                //}
+                                //else {
+                                    //use on self: default
+                                    party[0].currentHP += inv[menuP.x*16+menuP.y].CHP;
+                                    if(party[0].currentHP > party[0].maxHP)
+                                        party[0].currentHP = party[0].maxHP;
+
+                                    party[0].currentMP += inv[menuP.x*16+menuP.y].CMP;
+                                    if(party[0].currentMP > party[0].maxMP)
+                                        party[0].currentMP = party[0].maxMP;
+
+                                    invText = Item.idname.get(inv[menuP.x*16+menuP.y].id) + " used.";
+                                    inv[menuP.x*16+menuP.y].reset();
+                                //}
+                            }
+                            else if(inv[menuP.x*16+menuP.y].type == ItemType.WEAPON) {
+                                //swap items
+                                Item temp = inv[menuP.x*16+menuP.y];
+                                inv[menuP.x*16+menuP.y] = party[0].weapon;
+                                party[0].weapon = temp;
+                                party[0].calculateStats();
+                                invText = Item.idname.get(party[0].weapon.id) + " equipped.";
+                            }
+                            else if(inv[menuP.x*16+menuP.y].type == ItemType.ARMOR) {
+                                //swap items
+                                Item temp = inv[menuP.x*16+menuP.y];
+                                inv[menuP.x*16+menuP.y] = party[0].armor;
+                                party[0].armor = temp;
+                                party[0].calculateStats();
+                                invText = Item.idname.get(party[0].armor.id) + " equipped.";
+                            }
+                            else if(inv[menuP.x*16+menuP.y].type == ItemType.ACCESSORY) {
+                                //insert in first
+                                if(!party[0].acc1.exists) {
+                                    party[0].acc1 = inv[menuP.x*16+menuP.y];
+                                    inv[menuP.x*16+menuP.y] = new Item();
+                                    party[0].calculateStats();
+                                    invText = Item.idname.get(party[0].acc1.id) + " equipped.";
+                                }
+                                //second
+                                else if(!party[0].acc2.exists) {
+                                    party[0].acc2 = inv[menuP.x*16+menuP.y];
+                                    inv[menuP.x*16+menuP.y] = new Item();
+                                    party[0].calculateStats();
+                                    invText = Item.idname.get(party[0].acc2.id) + " equipped.";
+                                }
+                                //third
+                                else if(!party[0].acc3.exists) {
+                                    party[0].acc3 = inv[menuP.x*16+menuP.y];
+                                    inv[menuP.x*16+menuP.y] = new Item();
+                                    party[0].calculateStats();
+                                    invText = Item.idname.get(party[0].acc3.id) + " equipped.";
+                                }
+                                //swap with first
+                                else {
+                                    Item temp = inv[menuP.x*16+menuP.y];
+                                    inv[menuP.x*16+menuP.y] = party[0].acc1;
+                                    party[0].acc1 = temp;
+                                    party[0].calculateStats();
+                                    invText = Item.idname.get(party[0].acc1.id) + " equipped.";
+                                }
+                            }
+                            //using a material...
+                            else if(inv[menuP.x*16+menuP.y].type == ItemType.MATERIAL) {
+                                invText = "You can't use or equip" + 
+                                        Item.idname.get(inv[menuP.x*16+menuP.y].id) + ".";
+                            }
+
+                            selectP = -1;
+                        }
+                        //move
+                        else if(selectP == 1) {
+                            //selected swap item
+                            if(tempP.x != -1) {
+                                //swap
+                                Item temp = inv[tempP.x*16+tempP.y];
+                                inv[tempP.x*16+tempP.y] = inv[menuP.x*16+menuP.y];
+                                inv[menuP.x*16+menuP.y] = temp;
+                                tempP.move(-1, -1);
+                                selectP = -1;
+                            }
+                            else {
+                                tempP.move(0, 0);
+                            }
+                        }
+                        //discard
+                        else if(selectP == 2) {
+                            invText = Item.idname.get(inv[menuP.x*16+menuP.y].id) + " dropped.";
+                            inv[menuP.x*16+menuP.y].reset();
+                            selectP = -1;
+                        }
+                        //cancel
+                        else if(selectP == 3) {
+                            selectP = -1;
+                        }
                     }
-                    //scrolling around
                     else {
-                        menuP.move(0, -1);
-                        menuToggle = false;
+                        selectP = 0;
                     }
-                    break;
-                    
-                case SWITCH:
-                    if(menuWindow.equals("inv") && selectP == -1) {
-                        sortInventory();
-                        if(menuP.y != -1)
-                            invText = inv[menuP.x*16+menuP.y].des;
+                }
+                else if(menuWindow.equals("options")) {
+                    //enter menu
+                    if(menuP.y == -1) {
+                        menuP.move(0, 0);
                     }
-                    break;
-                    
-                case TOGGLE:
-                    if(menuWindow.equals("inv") && menuP.y != -1)
-                        menuToggle = !menuToggle;
-                    break;
-                    
-                case OPENINV:
+                    //save selection
+                    else if(selectP != -1) {
+                        //save game
+                        if(menuP.y == 0) {
+                            saveGame = selectP;
+                            selectP = -1;
+                        }
+                        //load game
+                        else if(menuP.y == 1) {
+                            loadGame = selectP;
+                            selectP = -1;
+                        }
+                    }
+                    //enter save selection
+                    else if(menuP.y == 0 || menuP.y == 1) {
+                        selectP = 0;
+                    }
+                }
+                break;
+
+            case BACK:
+                //menu pages
+                if(menuP.y == -1) {
                     toggleMenu(false);
-                    if(!menuWindow.equals("inv")) {
-                        toggleMenu("inv");
-                    }
-                    break;
-                    
-                case OPENCHAR:
-                    toggleMenu(false);
-                    if(!menuWindow.equals("char")) {
-                        toggleMenu("char");
-                    }
-                    break;
-                    
-                case OPENPARTY:
-                    toggleMenu(false);
-                    if(!menuWindow.equals("party")) {
-                        toggleMenu("party");
-                    }
-                    break;
-                    
-                case OPENNOTES:
-                    toggleMenu(false);
-                    if(!menuWindow.equals("notes")) {
-                        toggleMenu("notes");
-                    }
-                    break;
-                    
-                case OPENOPTIONS:
-                    toggleMenu(false);
-                    if(!menuWindow.equals("options")) {
-                        toggleMenu("options");
-                    }
-                    break;
-                    
-                default:
-                    break;
-            }
-            return 100;
+                }
+                //temp pointer exists
+                else if(tempP.x != -1) {
+                    tempP.move(-1, -1);
+                    selectP = -1;
+                }
+                //button selection
+                else if(selectP != -1) {
+                    selectP = -1;
+                }
+                //scrolling around
+                else {
+                    menuP.move(0, -1);
+                    menuToggle = false;
+                }
+                break;
+
+            case SWITCH:
+                if(menuWindow.equals("inv") && selectP == -1) {
+                    sortInventory();
+                    if(menuP.y != -1)
+                        invText = inv[menuP.x*16+menuP.y].des;
+                }
+                break;
+
+            case TOGGLE:
+                if(menuWindow.equals("inv") && menuP.y != -1)
+                    menuToggle = !menuToggle;
+                break;
+
+            case OPENINV:
+                toggleMenu(false);
+                if(!menuWindow.equals("inv")) {
+                    toggleMenu("inv");
+                }
+                break;
+
+            case OPENCHAR:
+                toggleMenu(false);
+                if(!menuWindow.equals("char")) {
+                    toggleMenu("char");
+                }
+                break;
+
+            case OPENPARTY:
+                toggleMenu(false);
+                if(!menuWindow.equals("party")) {
+                    toggleMenu("party");
+                }
+                break;
+
+            case OPENNOTES:
+                toggleMenu(false);
+                if(!menuWindow.equals("notes")) {
+                    toggleMenu("notes");
+                }
+                break;
+
+            case OPENOPTIONS:
+                toggleMenu(false);
+                if(!menuWindow.equals("options")) {
+                    toggleMenu("options");
+                }
+                break;
+
+            default:
+                break;
         }
-        else {
-            System.out.println("Failed focus.");
-            return -1;
-        }
+        return 100;
     }
     
     //process release of input, return if needs view update
@@ -784,7 +835,7 @@ public class InMapModel implements java.io.Serializable{
             if(!type.equals("random"))
                 maps.put(p, new Location(this, type, (int)(Math.random()*3+1), party));
             else {
-                maps.put(p, new Location(this, "city", 1, party));
+                maps.put(p, new Location(this, "city", 3, party));
 //                switch((int)(Math.random()*3)) {
 //                    case 0: maps.put(p, new Location(this, "tower", 
 //                            (int)(Math.random()*3+1), party)); break;
@@ -819,6 +870,7 @@ public class InMapModel implements java.io.Serializable{
     boolean getMenuToggle() { return menuToggle; }
     int getTalkState() { return talkState; }
     int getTalkSelect() { return talkSelect; }
-    String getTalkText() { return talkText; }
+    String[] getTalkText() { return talkText; }
+    int getTalkIndex() { return talkIndex; }
     boolean getShiftHeld() { return shiftHeld; }
 }

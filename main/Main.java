@@ -39,6 +39,7 @@ import org.nustaq.serialization.FSTObjectOutput;
 import inmap.InMapModel;
 import inmap.Character;
 import inmap.InMapController;
+import javafx.scene.paint.Color;
 import overworld.OverworldController;
 import overworld.OverworldModel;
 
@@ -153,11 +154,16 @@ public class Main extends Application {
         //load fonts
         Font.loadFont(Main.class.getResourceAsStream("/fonts/Trattatello.ttf"), 10);
         Font.loadFont(Main.class.getResourceAsStream("/fonts/Bradley Hand Bold.ttf"), 10);
+        Font.loadFont(Main.class.getResourceAsStream("/fonts/Papyrus.ttc"), 10);
+        Font.loadFont(Main.class.getResourceAsStream("/fonts/Zapfino.ttf"), 10);
+        Font.loadFont(Main.class.getResourceAsStream("/fonts/Hanzipen.ttc"), 10);
+        Font.loadFont(Main.class.getResourceAsStream("/fonts/Libian.ttc"), 10);
+        Font.loadFont(Main.class.getResourceAsStream("/fonts/Luminari.ttf"), 10);
 
         //mainPane
-        Text title = new Text(0, screenHeight * 2 / 5, "RISING LEGEND");
-        title.setFont(Font.font("Bradley Hand", FontWeight.BOLD, 104));
-        title.setFill(Paint.valueOf("SADDLEBROWN"));
+        Text title = new Text(0, screenHeight * 7/20, "Rising Legend");
+        title.setFont(Font.font("Zapfino", FontWeight.BOLD, 104));
+        title.setFill(Color.rgb(84, 58, 26));
         title.setWrappingWidth(screenWidth);
         title.setTextAlignment(TextAlignment.CENTER);
         

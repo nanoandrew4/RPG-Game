@@ -24,6 +24,7 @@ public class InMapController implements Runnable {
     private int returnCode;
     boolean hasControl;
     private long timer;
+    private Control lastControl;
     
     //new game constructor
     public InMapController(Main main, int VIT, int INT, int STR, int WIS, int LUK, 
@@ -34,6 +35,7 @@ public class InMapController implements Runnable {
         view = new InMapView(main.screenWidth, main.screenHeight, name, sprite, portrait);
         viewdata = new InMapViewData();
         hasControl = false;
+        lastControl = Control.NULL;
     }
     
     //quick constructor
@@ -44,6 +46,7 @@ public class InMapController implements Runnable {
                 model.getName(), model.getSprite(), model.getPortrait());
         viewdata = new InMapViewData();
         hasControl = false;
+        lastControl = Control.NULL;
     }
 
     //constructor with loaded model
@@ -54,6 +57,7 @@ public class InMapController implements Runnable {
                 model.getName(), model.getSprite(), model.getPortrait());
         viewdata = new InMapViewData();
         hasControl = false;
+        lastControl = Control.NULL;
     }
     
     @Override
@@ -96,6 +100,7 @@ public class InMapController implements Runnable {
         viewdata.talkText = model.getTalkText();
         viewdata.talkState = model.getTalkState();
         viewdata.talkSelect = model.getTalkSelect();
+        viewdata.talkIndex = model.getTalkIndex();
         viewdata.shiftHeld = model.getShiftHeld();
         viewdata.saveImages = main.saveImages;
         viewdata.saveInfo = main.saveInfo;
@@ -165,18 +170,20 @@ public class InMapController implements Runnable {
 
         //key press events
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if(!model.getShiftHeld() && System.currentTimeMillis() - 50 < timer) {
+            Control c = main.getControl(event.getCode());
+            //if same key and some time hasn't passed, return
+            if(c == lastControl && !model.getShiftHeld() && System.currentTimeMillis() - 105 <= timer) {
                 return;
             }
-            timer = System.currentTimeMillis();
-            returnCode = model.process(main.getControl(event.getCode()));
+            lastControl = c;
+            returnCode = model.process(c);
             
             //save game
             if(model.saveGame != -1) {
                 try {
                     main.saveModel(model.saveGame);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("Failed to save model.");
                 }
                 
                 model.saveGame = -1;
@@ -200,6 +207,9 @@ public class InMapController implements Runnable {
                 hasControl = false;
                 main.passControl(null);
             }
+            
+            //reset timer
+            timer = System.currentTimeMillis();
             
             event.consume();
         });
