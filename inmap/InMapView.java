@@ -4,13 +4,12 @@
 
 package inmap;
 
+import java.util.ArrayList;
 import javafx.animation.Animation.Status;
-import main.TextType;
 import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.Scene;
 import javafx.scene.effect.BoxBlur;
@@ -25,6 +24,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
+
+import main.TextType;
 
 class InMapView {
     //vars
@@ -41,9 +42,14 @@ class InMapView {
     //quickinfo
     private Text qiChar, qiLevel, qiGold;
     private Text qiDiff, qiFloor, qiName, qiType;
-    private ImageView qiPortrait, uiHealth, uiMana;
+    //permanent ui
+    private ImageView uiPortrait, uiHealth, uiMana;
     private Rectangle uiHealthR, uiManaR;
     private Text uiHealthT, uiManaT;
+    private Text[] uiLogT;
+    private SimpleIntegerProperty uiLogSize;
+    private FadeTransition[] uiLogFade;
+    private ArrayList<String> log;
     //inventory
     private Text[] invText; //item names
     private Text invName, invDes, invType;
@@ -228,9 +234,6 @@ class InMapView {
         overlayPane.getChildren().addAll(qiInfoBox, qiPartyBox, qiCharBox, qiName, 
                 qiType, qiDiff, qiFloor, qiChar, qiLevel, qiGold);
         
-        qiPortrait = new ImageView(Images.portrait);
-        qiPortrait.relocate(0, screenHeight-Images.portrait.getHeight()*1.5);
-        
         //ui
         uiHealth = new ImageView(Images.health);
         uiHealth.relocate(0, screenHeight*46/50);
@@ -253,8 +256,34 @@ class InMapView {
         uiManaT.setFill(Paint.valueOf("WHITE"));
         uiManaT.setFont(Font.font(null, FontWeight.NORMAL, screenHeight/50));
         
-        UIPane.getChildren().addAll(qiPortrait, uiHealthR, uiHealth, 
+        uiPortrait = new ImageView(Images.portrait);
+        uiPortrait.relocate(0, screenHeight-Images.portrait.getHeight()*1.5);
+        
+        uiLogT = new Text[30];
+        for(int i = 0; i < 30; i++) {
+            uiLogT[i] = new Text(screenWidth*3/4, screenHeight - (i+2)*20, "");
+            uiLogT[i].setFill(Paint.valueOf("WHITE"));
+            uiLogT[i].setFont(Font.font("Bradley Hand", FontWeight.NORMAL, 18));
+            uiLogT[i].setOpacity((((double)30-i)/30));
+        }
+        
+        uiLogSize = new SimpleIntegerProperty();
+        uiLogSize.set(0);
+        uiLogFade = new FadeTransition[30];
+        for(int i = 0; i < 30; i++) {
+            uiLogFade[i] = new FadeTransition(Duration.millis(2000), uiLogT[i]);
+            uiLogFade[i].setToValue(0);
+            uiLogFade[i].onFinishedProperty().setValue(e -> {
+                if(log.size() > 0) {
+                    log.remove(log.size()-1);
+                    uiLogSize.set(uiLogSize.get() - 1);
+                }
+            });
+        }
+        
+        UIPane.getChildren().addAll(uiPortrait, uiHealthR, uiHealth, 
                 uiHealthT, uiManaR, uiMana, uiManaT);
+        UIPane.getChildren().addAll(uiLogT);
         
         //menu
         Rectangle box4 = new Rectangle(screenWidth, screenHeight, Paint.valueOf("GREY"));
@@ -539,12 +568,12 @@ class InMapView {
         opPane.getChildren().addAll(saveImages);
         
         //talkPane
-        Rectangle talkR = new Rectangle(screenWidth*17/32, screenHeight*11/40, Paint.valueOf("WHITE"));
+        Rectangle talkR = new Rectangle(screenWidth*7/16, screenHeight*11/40, Paint.valueOf("WHITE"));
         talkR.relocate(screenWidth*5/16, screenHeight*2/3);
         talkR.setOpacity(.7);
                 
         talkT = new Text(screenWidth*21/64, screenHeight*67/96, "kek");
-        talkT.setWrappingWidth(screenWidth/2);
+        talkT.setWrappingWidth(screenWidth*13/32);
         talkT.setFont(Font.font("Luminari", FontWeight.NORMAL, 18));
         talkT.setFill(Paint.valueOf("BLACK"));
         
@@ -705,8 +734,8 @@ class InMapView {
                 }
             }
             
-            //movement animation if not holding shift
-            if(!vd.shiftHeld) {
+            //movement animation if not running
+            if(!vd.running) {
                 if(vd.returnCode >= 1000) {
                     vd.returnCode = (int)Math.floor(vd.returnCode/1000);
                 }
@@ -760,11 +789,36 @@ class InMapView {
                     ft.setToValue(1);
                     ft.play();
                     talkTransition.setStrings(vd.talkText);
-                    talkTransition.play();
+                    talkTransition.playFromStart();
                 }
-                if(vd.talkIndex > talkTransition.getIndex()) {
+                if(vd.talkSelect == -2) {
+                    talkTransition.finish();
+                }
+                else if(vd.talkIndex > talkTransition.getIndex()) {
                     talkTransition.next();
-                    talkTransition.play();
+                    talkTransition.playFromStart();
+                }
+            }
+            
+            //new entry in log
+            if(log.size() > uiLogSize.get()) {
+                for(int i = log.size(); i > 0; i--) {
+                    uiLogT[i].setOpacity(uiLogT[i-1].getOpacity());
+                }
+                uiLogT[0].setOpacity(1);
+                uiLogSize.set(uiLogSize.get() + 1);
+                for(int i = 0; i < 30; i++) {
+                    if(i < log.size()) {
+                        uiLogT[i].setText(log.get(i));
+                        SimpleIntegerProperty integer = new SimpleIntegerProperty();
+                        integer.set(i);
+                        uiLogFade[i].setFromValue(uiLogT[i].getOpacity());
+                        uiLogFade[i].setDuration(Duration.millis(uiLogT[i].getOpacity()*2000.0));
+                        uiLogFade[i].playFromStart();
+                    }
+                    else {
+                        uiLogT[i].setText("");
+                    }
                 }
             }
             
@@ -1042,5 +1096,10 @@ class InMapView {
     //return scene
     Scene getScene() {
         return scene;
+    }
+    
+    //set log
+    void setLog(ArrayList<String> log) {
+        this.log = log;
     }
 }

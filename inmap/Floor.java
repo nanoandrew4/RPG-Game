@@ -171,7 +171,7 @@ class Floor implements java.io.Serializable{
                     chars[sx][sy].gainEXP(chars[ex][ey]);
                     
                     //drop items
-                    if(chars[ex][ey].race.name.equals("Monster") && Math.random() < .3) {
+                    if(chars[ex][ey].race.name.equals("Monster") && Math.random() < 1) {
                         items[ex][ey] = Item.randomMonsterDrop();
                     }
                     

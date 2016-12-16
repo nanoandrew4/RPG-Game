@@ -33,17 +33,7 @@ public class InMapController implements Runnable {
         model = new InMapModel(VIT, INT, STR, WIS, 
                 LUK, CHA, race, name, sprite, portrait);
         view = new InMapView(main.screenWidth, main.screenHeight, name, sprite, portrait);
-        viewdata = new InMapViewData();
-        hasControl = false;
-        lastControl = Control.NULL;
-    }
-    
-    //quick constructor
-    public InMapController(Main main) {
-        this.main = main;
-        model = new InMapModel();
-        view = new InMapView(main.screenWidth, main.screenHeight, 
-                model.getName(), model.getSprite(), model.getPortrait());
+        view.setLog(model.getLog());
         viewdata = new InMapViewData();
         hasControl = false;
         lastControl = Control.NULL;
@@ -55,6 +45,19 @@ public class InMapController implements Runnable {
         this.model = model;
         view = new InMapView(main.screenWidth, main.screenHeight, 
                 model.getName(), model.getSprite(), model.getPortrait());
+        view.setLog(model.getLog());
+        viewdata = new InMapViewData();
+        hasControl = false;
+        lastControl = Control.NULL;
+    }
+    
+    //quick constructor
+    public InMapController(Main main) {
+        this.main = main;
+        model = new InMapModel();
+        view = new InMapView(main.screenWidth, main.screenHeight, 
+                model.getName(), model.getSprite(), model.getPortrait());
+        view.setLog(model.getLog());
         viewdata = new InMapViewData();
         hasControl = false;
         lastControl = Control.NULL;
@@ -101,7 +104,7 @@ public class InMapController implements Runnable {
         viewdata.talkState = model.getTalkState();
         viewdata.talkSelect = model.getTalkSelect();
         viewdata.talkIndex = model.getTalkIndex();
-        viewdata.shiftHeld = model.getShiftHeld();
+        viewdata.running = model.getRunning();
         viewdata.saveImages = main.saveImages;
         viewdata.saveInfo = main.saveInfo;
         viewdata.returnCode = returnCode;
@@ -172,7 +175,7 @@ public class InMapController implements Runnable {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             Control c = main.getControl(event.getCode());
             //if same key and some time hasn't passed, return
-            if(c == lastControl && !model.getShiftHeld() && System.currentTimeMillis() - 105 <= timer) {
+            if(c == lastControl && !model.getRunning() && System.currentTimeMillis() - 110 <= timer) {
                 return;
             }
             lastControl = c;

@@ -12,8 +12,13 @@ import javafx.util.Duration;
 public class TextType extends Transition {
     private final Text text; //pointer to text object
     private String[] strings; //destination text
-    private int charDuration, //milliseconds per char
-            index; //current string
+    private static int charDuration; //milliseconds per char
+    private int index; //current string
+    
+    //return millis per character
+    public static int getCharDuration() {
+        return charDuration;
+    }
     
     //default duration using string length
     public TextType(Text text, String s) {
@@ -75,12 +80,18 @@ public class TextType extends Transition {
         }
     }
     
-    //get talking index
+    //instantly finish text
+    public void finish() {
+        text.setText(strings[index]);
+        stop();
+    }
+    
+    //get talk index
     public int getIndex() {
         return index;
     }
     
-    //linear interpolate
+    //interpolate
     @Override
     protected void interpolate(double k) {
         text.setText(strings[index].substring(0, 

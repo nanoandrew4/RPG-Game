@@ -9,6 +9,7 @@ import java.awt.Point;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.Collator;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -30,12 +31,13 @@ public class InMapModel implements java.io.Serializable{
     private int useP, usePmax, selectP; //selection pointer
     private boolean qiVisible; //quick info window
     private boolean menuToggle; //menu toggle
-    private boolean shiftHeld; //holding shift: mostly for movement
+    private boolean running; //holding shift: mostly for movement
     private int talkState; //not talking, talking, selecting
     private int talkSelect; //selection pointer for talking
     private String[] talkText; //text in the talk box
     private int talkIndex; //index of talk
-    private long timer;
+    private long timer, talkTimer; //timers
+    private ArrayList<String> log; //console log
     
     boolean hasControl;
     int saveGame, loadGame;
@@ -88,12 +90,11 @@ public class InMapModel implements java.io.Serializable{
         saveGame = -1;
         loadGame = -1;
         timer = -1;
+        log = new ArrayList();
     }
     
     //quick start game
     InMapModel() {
-        DBManager dbManager = new DBManager("IMDATA");
-        
         //init arrays
         party = new Character[5];
         maps = new HashMap();
@@ -113,6 +114,7 @@ public class InMapModel implements java.io.Serializable{
         
         //load item data
         try {
+            DBManager dbManager = new DBManager("IMDATA");
             load(dbManager);
         }
         catch(SQLException e) {
@@ -137,6 +139,7 @@ public class InMapModel implements java.io.Serializable{
         saveGame = -1;
         loadGame = -1;
         timer = -1;
+        log = new ArrayList();
     }
     
     //load game data
@@ -167,7 +170,19 @@ public class InMapModel implements java.io.Serializable{
     int process(Control input) {
         //floor input
         if(focus.equals("floor")) {
-            return processFloorInput(input);
+            int r = -1;
+            //general floor process
+            if(talkState == 0) {
+                r = processFloorInput(input);
+            }
+            //talking process
+            if(talkState != 0) {
+                processTalkInput(input);
+            }
+            else {
+                talkText = null;
+            }
+            return r;
         }
         //menu input
         else if(focus.equals("menu")) {
@@ -180,130 +195,146 @@ public class InMapModel implements java.io.Serializable{
     }
     
     //process floor input
-    int processFloorInput(Control input) {
+    private int processFloorInput(Control input) {
         int r = -1;
-        if(talkState == 0) {
-            switch (input) {
-                case BACK:
-                    //default open menu
-                    toggleMenu(true);
-                    break;
+        
+        switch (input) {
+            case BACK:
+                //default open menu
+                toggleMenu(true);
+                break;
 
-                case TOGGLE:
-                    if(timer == -1) {
-                        timer = System.currentTimeMillis();
-                        qiVisible = !qiVisible;
-                    }
-                    break;
-
-                case R:
-                    //reset location: testing only
-                    reset();
-                    break;
-
-                case T:
-                    //cheat
-                    party[0].gainEXP(10000);
-                    break;
-
-                case MENU:
-                    toggleMenu(true);
-                    break;
-
-                case OPENINV:
-                    toggleMenu("inv");
-                    break;
-
-                case OPENCHAR:
-                    toggleMenu("char");
-                    break;
-
-                case OPENPARTY:
-                    toggleMenu("party");
-                    break;
-
-                case OPENNOTES:
-                    toggleMenu("notes");
-                    break;
-
-                case OPENOPTIONS:
-                    toggleMenu("options");
-                    break;
-
-                case RUN:
-                    shiftHeld = true;
-                    break;
-
-                default:
-                    //process movement input
-                    r = maps.get(currentMap).process(input);
-
-                    //process ai if haven't left location
-                    if(r != 1 && r != 3 && hasControl) {
-                        maps.get(currentMap).getCurrentFloor().processAI();
-                    }
-                    //pick up item
-                    if(r >= 1000) {
-                        short id = (short)(r % 1000);
-                        for(int i = 0; i < 64; i++) {
-                            if(!inv[i].exists) {
-                                inv[i] = new Item(Item.get((short)id), (byte)0, (byte)0);
-                                break;
-                            }
-                        }
-                    }
-                    //start talking to npc
-                    else if(r == 3) {
-                        talkState = 1;
-                    }
-                    break;
-            }
-        }
-        //talking to npcs
-        if(talkState != 0) {
-            if(talkState == 1) {
-                if(talkText == null) {
-                    talkText = Dialogue.getCitizenDialogue(null);
-                    talkIndex = 0;
+            case TOGGLE:
+                if(timer == -1) {
+                    timer = System.currentTimeMillis();
+                    qiVisible = !qiVisible;
                 }
-//                talkText = "The most merciful thing in the world, I think, "
-//                        + "is the inability of the human mind to correlate "
-//                        + "all its contents. We live on a placid island of "
-//                        + "ignorance in the midst of black seas of infinity, "
-//                        + "and it was not meant that we should voyage far. The "
-//                        + "sciences, each straining in its own direction, have "
-//                        + "hitherto harmed us little; but some day the piecing "
-//                        + "together of dissociated knowledge will open up such "
-//                        + "terrifying vistas of reality, and of our frightful "
-//                        + "position therein, that we shall either go mad from "
-//                        + "the revelation or flee from the deadly light into "
-//                        + "the peace and safety of a new dark age.";
-                switch(input) {
-                    case SELECT:
-                        if(talkIndex < talkText.length - 1) {
-                            talkIndex++;
+                break;
+
+            case R:
+                //reset location: testing only
+                reset();
+                break;
+
+            case T:
+                //cheat
+                party[0].gainEXP(10000);
+                break;
+
+            case MENU:
+                toggleMenu(true);
+                break;
+
+            case OPENINV:
+                toggleMenu("inv");
+                break;
+
+            case OPENCHAR:
+                toggleMenu("char");
+                break;
+
+            case OPENPARTY:
+                toggleMenu("party");
+                break;
+
+            case OPENNOTES:
+                toggleMenu("notes");
+                break;
+
+            case OPENOPTIONS:
+                toggleMenu("options");
+                break;
+
+            case RUN:
+                running = true;
+                break;
+
+            default:
+                //process movement input
+                r = maps.get(currentMap).process(input);
+
+                //process ai if haven't left location
+                if(r != 1 && r != 3 && hasControl) {
+                    maps.get(currentMap).getCurrentFloor().processAI();
+                }
+                //pick up item
+                if(r >= 1000) {
+                    short id = (short)(r % 1000);
+                    for(int i = 0; i < 64; i++) {
+                        if(!inv[i].exists) {
+                            inv[i] = new Item(Item.get((short)id), (byte)0, (byte)0);
+                            log.add(0, "Picked up " + Item.idname.get((short)id) + ".");
                             break;
                         }
-                    case BACK:
-                        talkText = null;
-                        talkIndex = 0;
-                        talkState = 0;
-                        break;
-                    default:
-                        break;
+                        //no space
+                        else if(i == 63) {
+                            getCurrentLocation().getCurrentFloor().items[party[0].x][party[0].y] 
+                                    = new Item(Item.get((short)id), (byte)0, (byte)0);
+                            log.add(0, "Inventory full.");
+                            break;
+                        }
+                    }
                 }
-            }
+                //start talking to npc
+                else if(r == 3) {
+                    talkState = 1;
+                }
+                break;
         }
-        else {
-            talkText = null;
-            talkIndex = 0;
+        
+        //reduce log size
+        while(log.size() > 30) {
+            log.remove(log.size());
         }
         
         return r;
     }
     
+    //process conversation input
+    private void processTalkInput(Control input) {
+        if(talkState == 1) {
+            if(talkText == null) {
+                talkText = Dialogue.getCitizenDialogue(null);
+                talkIndex = 0;
+                talkTimer = System.currentTimeMillis();
+            }
+            switch(input) {
+                case SELECT:
+                    //select option
+                    if(talkSelect >= 0) {
+                        
+                    }
+                    //SELECT and BACK have some of the same processing
+                case BACK:
+                    //skip to end of text
+                    if(System.currentTimeMillis() - talkTimer < 
+                            talkText[talkIndex].length() * TextType.getCharDuration()
+                            && talkSelect != -2) {
+                        talkSelect = -2;
+                        break;
+                    }
+                    //advance to next line
+                    if(talkIndex < talkText.length - 1) {
+                        talkSelect = -1;
+                        talkIndex++;
+                        talkTimer = System.currentTimeMillis();
+                        break;
+                    }
+                    //finish conversation
+                    talkText = null;
+                    talkIndex = 0;
+                    talkState = 0;
+                    talkSelect = -1;
+                    break;
+                    
+                default:
+                    break;
+            }
+        }
+    }
+    
     //process menu input
-    int processMenuInput(Control input) {
+    private int processMenuInput(Control input) {
         switch(input) {
             case LEFT:
                 //shift menu page left
@@ -741,7 +772,7 @@ public class InMapModel implements java.io.Serializable{
                 return true;
                 
             case RUN:
-                shiftHeld = false;
+                running = false;
                 return false;
         }
         
@@ -872,5 +903,6 @@ public class InMapModel implements java.io.Serializable{
     int getTalkSelect() { return talkSelect; }
     String[] getTalkText() { return talkText; }
     int getTalkIndex() { return talkIndex; }
-    boolean getShiftHeld() { return shiftHeld; }
+    boolean getRunning() { return running; }
+    ArrayList<String> getLog() { return log; } 
 }

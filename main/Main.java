@@ -87,7 +87,7 @@ public class Main extends Application {
     
     //saved vars for new game
     private int ngVIT, ngINT, ngSTR, ngWIS, ngLUK, ngCHA, ngSprite;
-    private String ngRace, ngName, /*ngSprite,*/ ngPortrait;
+    private String ngRace, ngName, ngPortrait;
 
     public static void main(String[] args) {
         launch(args);
@@ -154,10 +154,7 @@ public class Main extends Application {
         //load fonts
         Font.loadFont(Main.class.getResourceAsStream("/fonts/Trattatello.ttf"), 10);
         Font.loadFont(Main.class.getResourceAsStream("/fonts/Bradley Hand Bold.ttf"), 10);
-        Font.loadFont(Main.class.getResourceAsStream("/fonts/Papyrus.ttc"), 10);
         Font.loadFont(Main.class.getResourceAsStream("/fonts/Zapfino.ttf"), 10);
-        Font.loadFont(Main.class.getResourceAsStream("/fonts/Hanzipen.ttc"), 10);
-        Font.loadFont(Main.class.getResourceAsStream("/fonts/Libian.ttc"), 10);
         Font.loadFont(Main.class.getResourceAsStream("/fonts/Luminari.ttf"), 10);
 
         //mainPane
@@ -973,10 +970,7 @@ public class Main extends Application {
 
     //returns control value of keycode with keybindings hashmap
     public Control getControl(KeyCode k) {
-        if (keybindings.get(k) == null)
-            return Control.NULL;
-        else
-            return keybindings.get(k);
+        return keybindings.getOrDefault(k, Control.NULL);
     }
 
     public static String genRandName(int length) {

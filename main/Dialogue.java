@@ -6,69 +6,67 @@ package main;
 
 public class Dialogue {
     
+    //merchant dialogue
     public static String[] getMerchantDialogue(String state) {
-        String[] s;
-        
+        //start of conversation
         if(state == null) {
             switch((int)(Math.random()*3)) {
                 case 0:
-                    s = new String[1];
-                    s[0] = "Hello! Feel free to take a look at my wares!";
-                    break;
+                    return make("Hello! Feel free to take a look at my wares!");
                 case 1:
-                    s = new String[1];
-                    s[0] = "Welcome to my store! Take a look around.";
-                    break;
+                    return make("Welcome to my store! Take a look around.");
                 case 2:
-                    s = new String[3];
-                    s[0] = "Good day! Browse through my goods!";
-                    break;
+                    return make("Good day! Browse through my goods!");
                 default:
-                    s = new String[0];
+                    return null;
             }
         }
         else {
-            s = new String[0];
+            return null;
         }
-        
-        return s;
     }
     
     public static String[] getCitizenDialogue(String state) {
-        String[] s;
-        
         if(state == null) {
-            switch((int)(Math.random()*4)) {
+            switch((int)(Math.random()*5)) {
                 case 0:
-                    s = new String[3];
-                    s[0] = "Good day, weird stranger.";
-                    s[1] = "Get out of my face.";
-                    s[2] = "Ph'nglui mglw'nafh Cthulhu Rl'yeh wgah'nagl fhtagn.";
-                    break;
+                    return make("Good day, weird stranger.",
+                                "Get out of my face.",
+                                "Ph'nglui mglw'nafh Cthulhu Rl'yeh wgah'nagl fhtagn.");
                 case 1:
-                    s = new String[1];
-                    s[0] = "Nice weather today.";
-                    break;
+                    return make("Nice weather today.");
                 case 2:
-                    s = new String[3];
-                    s[0] = "I used to be an adventurer like you.";
-                    s[1] = "...";
-                    s[2] = "Then I took an arrow in the knee.";
-                    break;
+                    return make("I used to be an adventurer like you.",
+                                "..................................",
+                                "Then I took an arrow in the knee.");
                 case 3:
-                    s = new String[3];
-                    s[0] = "Sorry, could you come back another time?";
-                    s[1] = "Like, never?";
-                    s[2] = "Thanks.";
-                    break;
+                    return make("Sorry, could you come back another time?",
+                                "Like, never?",
+                                "Thanks.");
+                case 4:
+                    return make("The most merciful thing in the world, I think, "
+                        + "is the inability of the human mind to correlate "
+                        + "all its contents. We live on a placid island of "
+                        + "ignorance in the midst of black seas of infinity, "
+                        + "and it was not meant that we should voyage far.",
+                            "The sciences, each straining in its own direction, have "
+                        + "hitherto harmed us little; but some day the piecing "
+                        + "together of dissociated knowledge will open up such "
+                        + "terrifying vistas of reality, and of our frightful "
+                        + "position therein, that we shall either go mad from "
+                        + "the revelation or flee from the deadly light into "
+                        + "the peace and safety of a new dark age.");
                 default:
-                    s = new String[0];
+                    return null;
             }
         }
         else {
-            s = new String[0];
+            return null;
         }
-        
-        return s;
+    }
+    
+    //condense strings into array
+    private static String[] make(String... strings) {
+        return strings;
     }
 }
