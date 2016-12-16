@@ -407,12 +407,14 @@ class Party implements java.io.Serializable {
         double[] angles = calcAngles(xOffset + speed, yOffset + speed, OverworldView.mapTileSize);
         if (Math.abs(angles[0]) > 22.5 || Math.abs(angles[1]) > 22.5) {
             // if the tile the player would move onto is not trespassable, return 0 speed
-            if (!canMove(tiles, angles))
+            if (!canMove(tiles, angles)) {
                 speed = 0;
+                System.out.println("Non-tresspassable tile reached");
+            }
         } else if (!tiles[getTileX()][getTileY()].tresspassable)
             speed = 0;
 
-        setDir(dir);
+        //setDir(dir);
 
         return speed;
     }
@@ -434,12 +436,14 @@ class Party implements java.io.Serializable {
         double[] angles = calcAngles(xOffset + speed, yOffset + speed, OverworldView.mapTileSize);
         if (Math.abs(angles[0]) > 22.5 || Math.abs(angles[1]) > 22.5) {
             // if the tile the player would move onto is not trespassable, return 0 speed
-            if (!canMove(tiles, angles))
+            if (!canMove(tiles, angles)) {
                 speed = 0;
+                System.out.println("Non-tresspassable tile reached");
+            }
         } else if (!tiles[getTileX()][getTileY()].tresspassable)
             speed = 0;
 
-        setDir(dir);
+        //setDir(yDir);
 
         return speed;
     }

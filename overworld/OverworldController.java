@@ -6,9 +6,9 @@
     Fix mouse events not being set properly - Dec 7 2016
     Player movement processed by the model completely - Nov 28 2016
     Player moves when tile is clicked on - Partial Nov 30 2016
-    Player movement independent of AI's movement
     Fix Settlement banners
-    Can't move on to non tresspasable tiles - Nov 30 2016 - Needs fixing
+    Fix tile change detection
+    Can't move on to non tresspasable tiles - Nov 30 2016 - Needs fixing - Depends on detectTileChange() being fixed to work
     Fix world gen pls... Coastline gen, outOfBounds
 
     Design and implement Economy
@@ -16,7 +16,7 @@
     Design, implement and improve UI
 
     Improve design and implement improvements for Party AI's
-    Improve tile change detection
+    Player movement independent of AI's movement
 
     Implement lake drawing
     Design and implement factions
@@ -77,7 +77,6 @@ public class OverworldController implements Runnable {
 
         this.model = model;
         view = new OverworldView(main.screenWidth, main.screenHeight);
-        model.createPlayer(getBaseSpeed(), "none");
 
         System.out.println("Overworld init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
 
@@ -213,8 +212,24 @@ public class OverworldController implements Runnable {
                 else
                     horizontalDir = key;
 
-                model.getPlayer().setSpeedY(model.getPlayer().getSpeedY(verticalDir, model.getTiles()));
-                model.getPlayer().setSpeedX(model.getPlayer().getSpeedX(horizontalDir, model.getTiles()));
+                Control dir = Control.NULL;
+                if (verticalDir == Control.UP && horizontalDir == Control.RIGHT)
+                    dir = Control.UPRIGHT;
+                else if (verticalDir == Control.UP && horizontalDir == Control.LEFT)
+                    dir = Control.UPLEFT;
+                else if (verticalDir == Control.DOWN && horizontalDir == Control.RIGHT)
+                    dir = Control.DOWNRIGHT;
+                else if (verticalDir == Control.DOWN && horizontalDir == Control.LEFT)
+                    dir = Control.DOWNLEFT;
+                else if (verticalDir == Control.UP || verticalDir == Control.DOWN)
+                    dir = verticalDir;
+                else if (horizontalDir == Control.LEFT || horizontalDir == Control.RIGHT)
+                    dir = horizontalDir;
+                else
+                    dir = Control.NULL;
+
+                model.getPlayer().setSpeedY(model.getPlayer().getSpeedY(dir, model.getTiles()));
+                model.getPlayer().setSpeedX(model.getPlayer().getSpeedX(dir, model.getTiles()));
 
                 // detect if player has moved tiles, and if so, add and remove rows appropriately
                 if (model.getPlayer().detectTileChange(view.getMapTileSize(), true)) {

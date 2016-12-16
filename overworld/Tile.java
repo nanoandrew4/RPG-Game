@@ -72,7 +72,7 @@ class SettlementTile extends Tile implements java.io.Serializable {
 
     float capital;
     int population;
-    int[] resources;
+    int[] resources; // wood, stone, gold, iron
     float avgHappiness;
 
     SettlementTile(String subType, char branch, String name, byte relationship) {
