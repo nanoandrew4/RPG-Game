@@ -15,7 +15,7 @@ class Tile implements java.io.Serializable{
     boolean isWall, openable;
     int id; 
     int floorMovement; //for stairs and other movement tiles
-    byte vis; //visibility/opacity: 0-10
+    byte vis; //visibility/opacity: 0-64
     
         //static methods
     //static initializer

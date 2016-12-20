@@ -11,6 +11,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.effect.BoxBlur;
 import javafx.scene.image.ImageView;
@@ -30,14 +31,17 @@ import main.TextType;
 class InMapView {
     //vars
     ImageView[][][] imageViews;
+    ImageView playerView;
     public double screenWidth, screenHeight;
     private final Scene scene;
     private final Pane inmapLayout, floorPane, overlayPane, UIPane,
             menuPane, menubgPane, invPane, invTextPane, invStatPane, 
-            charPane, partyPane, notePane, opPane, talkPane, ripPane;
+            charPane, partyPane, notePane, opPane, talkPane, talkSelectPane,
+            ripPane;
     double width, height;
     final double zoom;
     String name;
+    private boolean walkState;
     
     //quickinfo
     private Text qiChar, qiLevel, qiGold;
@@ -68,11 +72,14 @@ class InMapView {
     //talking
     private TextType talkTransition;
     private Text talkT;
+    private Rectangle talkSelectR;
+    private Text talkYes, talkNo;
     
     private Rectangle menuFocus;
     private Rectangle menuCursor, tempCursor;
     
-    private final Timeline tUp, tLeft, tDown, tRight;
+    private Timeline tUp, tLeft, tDown, tRight;
+    private Sprite cUp, cLeft, cDown, cRight, cUp2, cLeft2, cRight2, cDown2;
     
     //constructor
     InMapView(double screenWidth, double screenHeight, String name, int sprite, String portrait) {
@@ -105,76 +112,13 @@ class InMapView {
         notePane = new Pane();
         opPane = new Pane();
         talkPane = new Pane();
+        talkSelectPane = new Pane();
         ripPane = new Pane();
         
         //initialize UI
         initDisplay();
         
-        //movement animation creation
-        tUp = new Timeline();
-        for(int x = 0; x < 24; x++) {
-            for(int y = 0; y < 16; y++) {
-                for(int i = 0; i < 7; i++) {
-                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
-                        tUp.getKeyFrames().addAll(
-                                new KeyFrame(Duration.ZERO, 
-                                new KeyValue(imageViews[x][y][i].translateYProperty(), 
-                                        imageViews[x][y][i].getTranslateY()-width)),
-                                new KeyFrame(Duration.millis(100),
-                                new KeyValue(imageViews[x][y][i].translateYProperty(),
-                                        imageViews[x][y][i].getTranslateY())));
-                    }
-                }
-            }
-        }
-        tLeft = new Timeline();
-        for(int x = 0; x < 24; x++) {
-            for(int y = 0; y < 16; y++) {
-                for(int i = 0; i < 7; i++) {
-                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
-                        tLeft.getKeyFrames().addAll(
-                                new KeyFrame(Duration.ZERO, 
-                                new KeyValue(imageViews[x][y][i].translateXProperty(), 
-                                        imageViews[x][y][i].getTranslateX()-width)),
-                                new KeyFrame(Duration.millis(100),
-                                new KeyValue(imageViews[x][y][i].translateXProperty(),
-                                        imageViews[x][y][i].getTranslateX())));
-                    }
-                }
-            }
-        }
-        tDown = new Timeline();
-        for(int x = 0; x < 24; x++) {
-            for(int y = 0; y < 16; y++) {
-                for(int i = 0; i < 7; i++) {
-                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
-                        tDown.getKeyFrames().addAll(
-                                new KeyFrame(Duration.ZERO, 
-                                new KeyValue(imageViews[x][y][i].translateYProperty(), 
-                                        imageViews[x][y][i].getTranslateY()+width)),
-                                new KeyFrame(Duration.millis(100),
-                                new KeyValue(imageViews[x][y][i].translateYProperty(),
-                                        imageViews[x][y][i].getTranslateY())));
-                    }
-                }
-            }
-        }
-        tRight = new Timeline();
-        for(int x = 0; x < 24; x++) {
-            for(int y = 0; y < 16; y++) {
-                for(int i = 0; i < 7; i++) {
-                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
-                        tRight.getKeyFrames().addAll(
-                                new KeyFrame(Duration.ZERO, 
-                                new KeyValue(imageViews[x][y][i].translateXProperty(), 
-                                        imageViews[x][y][i].getTranslateX()+width)),
-                                new KeyFrame(Duration.millis(100),
-                                new KeyValue(imageViews[x][y][i].translateXProperty(),
-                                        imageViews[x][y][i].getTranslateX())));
-                    }
-                }
-            }
-        }
+        initAnimation();
         
         scene = new Scene(inmapLayout, screenWidth, screenHeight);
     }
@@ -271,9 +215,9 @@ class InMapView {
         uiLogSize.set(0);
         uiLogFade = new FadeTransition[30];
         for(int i = 0; i < 30; i++) {
-            uiLogFade[i] = new FadeTransition(Duration.millis(2000), uiLogT[i]);
+            uiLogFade[i] = new FadeTransition(Duration.millis(10000), uiLogT[i]);
             uiLogFade[i].setToValue(0);
-            uiLogFade[i].onFinishedProperty().setValue(e -> {
+            uiLogFade[i].setOnFinished(e -> {
                 if(log.size() > 0) {
                     log.remove(log.size()-1);
                     uiLogSize.set(uiLogSize.get() - 1);
@@ -381,6 +325,8 @@ class InMapView {
         for(int x = 0; x < 24; x++)
             for(int y = 0; y < 16; y++)
                 floorPane.getChildren().add(imageViews[x][y][6]);
+        
+        playerView = imageViews[11][7][3];
         
         //invPane
         invText = new Text[64];
@@ -577,129 +523,283 @@ class InMapView {
         talkT.setFont(Font.font("Luminari", FontWeight.NORMAL, 18));
         talkT.setFill(Paint.valueOf("BLACK"));
         
+        Rectangle talkSelectBox = new Rectangle(screenWidth*3/20, screenHeight*11/40, Paint.valueOf("WHITE"));
+        talkSelectBox.relocate(screenWidth*4/5, screenHeight*2/3);
+        talkSelectBox.setOpacity(.7);
+        
+        talkYes = new Text(screenWidth*4/5, screenHeight*2/3+screenHeight*11/40/3, "YES");
+        talkYes.setWrappingWidth(screenWidth*3/20);
+        talkYes.setTextAlignment(TextAlignment.CENTER);
+        talkYes.setFont(Font.font("Luminari", FontWeight.NORMAL, 24));
+        talkYes.setFill(Paint.valueOf("BLACK"));
+        
+        talkNo = new Text(screenWidth*4/5, screenHeight*2/3+screenHeight*11/40/3*2, "NO");
+        talkNo.setWrappingWidth(screenWidth*3/20);
+        talkNo.setTextAlignment(TextAlignment.CENTER);
+        talkNo.setFont(Font.font("Luminari", FontWeight.NORMAL, 24));
+        talkNo.setFill(Paint.valueOf("BLACK"));
+        
+        talkSelectR = new Rectangle(screenWidth/10, screenHeight/24, Paint.valueOf("WHITE"));
+        talkSelectR.relocate(screenWidth*19/20, screenHeight*4/5);
+        talkSelectR.setEffect(new BoxBlur(3, 3, 3));
+        talkSelectR.setOpacity(.7);
+        
         talkTransition = new TextType(talkT, "");
         
-        talkPane.getChildren().addAll(talkR, talkT);
+        talkSelectPane.getChildren().addAll(talkSelectBox, talkSelectR, talkYes, talkNo);
+        
+        talkPane.getChildren().addAll(talkR, talkT, talkSelectPane);
 
         //ripPane
         Text ripT = new Text(0, screenHeight/2, ("YOU ARE DEAD"));
         ripT.setWrappingWidth(screenWidth);
         ripT.setTextAlignment(TextAlignment.CENTER);
-        ripT.setFont(Font.font("Bradley Hand", FontWeight.BOLD, 80));
+        ripT.setFont(Font.font("Luminari", FontWeight.BOLD, 80));
         ripT.setFill(Paint.valueOf("MAROON"));
-        Rectangle ripR = new Rectangle(screenWidth, screenHeight, Paint.valueOf("RED"));
-        ripR.setOpacity(.3);
+        Rectangle ripR = new Rectangle(screenWidth, screenHeight, Paint.valueOf("BLACK"));
+        ripR.setOpacity(.5);
         ripPane.getChildren().addAll(ripR, ripT);
         
         overlayPane.setOpacity(0);
         menuPane.setOpacity(0);
-        inmapLayout.getChildren().addAll(floorPane, UIPane, overlayPane, menuPane, talkPane);
+        ripPane.setOpacity(0);
+        talkSelectPane.setOpacity(0);
+        inmapLayout.getChildren().addAll(floorPane, UIPane, overlayPane, menuPane, talkPane, ripPane);
         inmapLayout.setBackground(new Background(new BackgroundFill(Paint.valueOf("BLACK"), null, null)));
     }
     
-    //update
+    //initialize animation
+    public final void initAnimation() {
+        //movement animation creation
+        tUp = new Timeline();
+        for(int x = 0; x < 24; x++) {
+            for(int y = 0; y < 16; y++) {
+                for(int i = 0; i < 7; i++) {
+                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
+                        tUp.getKeyFrames().addAll(
+                                new KeyFrame(Duration.ZERO, 
+                                new KeyValue(imageViews[x][y][i].translateYProperty(), 
+                                        imageViews[x][y][i].getTranslateY()-width)),
+                                new KeyFrame(Duration.millis(100),
+                                new KeyValue(imageViews[x][y][i].translateYProperty(),
+                                        imageViews[x][y][i].getTranslateY())));
+                    }
+                }
+            }
+        }
+        tLeft = new Timeline();
+        for(int x = 0; x < 24; x++) {
+            for(int y = 0; y < 16; y++) {
+                for(int i = 0; i < 7; i++) {
+                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
+                        tLeft.getKeyFrames().addAll(
+                                new KeyFrame(Duration.ZERO, 
+                                new KeyValue(imageViews[x][y][i].translateXProperty(), 
+                                        imageViews[x][y][i].getTranslateX()-width)),
+                                new KeyFrame(Duration.millis(100),
+                                new KeyValue(imageViews[x][y][i].translateXProperty(),
+                                        imageViews[x][y][i].getTranslateX())));
+                    }
+                }
+            }
+        }
+        tDown = new Timeline();
+        for(int x = 0; x < 24; x++) {
+            for(int y = 0; y < 16; y++) {
+                for(int i = 0; i < 7; i++) {
+                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
+                        tDown.getKeyFrames().addAll(
+                                new KeyFrame(Duration.ZERO, 
+                                new KeyValue(imageViews[x][y][i].translateYProperty(), 
+                                        imageViews[x][y][i].getTranslateY()+width)),
+                                new KeyFrame(Duration.millis(100),
+                                new KeyValue(imageViews[x][y][i].translateYProperty(),
+                                        imageViews[x][y][i].getTranslateY())));
+                    }
+                }
+            }
+        }
+        tRight = new Timeline();
+        for(int x = 0; x < 24; x++) {
+            for(int y = 0; y < 16; y++) {
+                for(int i = 0; i < 7; i++) {
+                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
+                        tRight.getKeyFrames().addAll(
+                                new KeyFrame(Duration.ZERO, 
+                                new KeyValue(imageViews[x][y][i].translateXProperty(), 
+                                        imageViews[x][y][i].getTranslateX()+width)),
+                                new KeyFrame(Duration.millis(100),
+                                new KeyValue(imageViews[x][y][i].translateXProperty(),
+                                        imageViews[x][y][i].getTranslateX())));
+                    }
+                }
+            }
+        }
+        
+        //sprite animation
+        cDown = new Sprite(playerView, Duration.millis(100), 2, 0, 0, 64, 96, Images.playerAnimation);
+        cLeft = new Sprite(playerView, Duration.millis(100), 2, 1, 0, 64, 96, Images.playerAnimation);
+        cRight = new Sprite(playerView, Duration.millis(100), 2, 2, 0, 64, 96, Images.playerAnimation);
+        cUp = new Sprite(playerView, Duration.millis(100), 2, 3, 0, 64, 96, Images.playerAnimation);
+        cDown2 = new Sprite(playerView, Duration.millis(100), 2, 0, 2, 64, 96, Images.playerAnimation);
+        cLeft2 = new Sprite(playerView, Duration.millis(100), 2, 1, 2, 64, 96, Images.playerAnimation);
+        cRight2 = new Sprite(playerView, Duration.millis(100), 2, 2, 2, 64, 96, Images.playerAnimation);
+        cUp2 = new Sprite(playerView, Duration.millis(100), 2, 3, 2, 64, 96, Images.playerAnimation);
+    }
+    
+    //general update
     public void update(InMapViewData vd) {
-        if(vd.focus.equals("floor")) {
-            //remove menu window
-            if(menuPane.getOpacity() == 1) {
-                FadeTransition ft = new FadeTransition(Duration.millis(200), menuPane);
+        switch (vd.focus) {
+            case "floor":
+                updateFloor(vd);
+                break;
+            case "talk":
+                updateTalk(vd);
+                break;
+            case "menu":
+                updateMenu(vd);
+                break;
+            case "rip":
+                //update overlay health and mana
+                uiHealth.setVisible(false);
+                uiHealthT.setText("0/" + vd.party[0].maxHP);
+                uiMana.setFitWidth((double)vd.party[0].currentMP/vd.party[0].maxMP*uiManaR.getWidth());
+                uiManaT.setText(vd.party[0].currentMP + "/" + vd.party[0].maxMP);
+                //remove shadow, health, and player image
+                imageViews[11][7][1].setVisible(false);
+                imageViews[11][7][4].setVisible(false);
+                playerView.setVisible(false);
+                
+                if(ripPane.getOpacity() != 1) {
+                    FadeTransition ft = new FadeTransition(Duration.millis(500), ripPane);
+                    ft.setFromValue(ripPane.getOpacity());
+                    ft.setToValue(1);
+                    ft.play();
+                }
+                break;
+            default:
+                System.out.println("Failed focus.");
+                break;
+        }
+    }
+    
+    //update floor: tiles, characters, items, etc
+    private void updateFloor(InMapViewData vd) {
+        //remove menu window
+        if(menuPane.getOpacity() == 1) {
+            FadeTransition ft = new FadeTransition(Duration.millis(200), menuPane);
+            ft.setFromValue(1);
+            ft.setToValue(0);
+            ft.play();
+        }
+
+        //remove talk window
+        if(talkPane.getOpacity() != 0) {
+            FadeTransition ft = new FadeTransition(Duration.millis(100), talkPane);
+            ft.setFromValue(talkPane.getOpacity());
+            ft.setToValue(0);
+            ft.play();
+            ft.setOnFinished(e -> {
+                talkSelectPane.setOpacity(0);
+            });
+        }
+        if(talkTransition.getStatus() == Status.RUNNING) {
+            talkTransition.stop();
+        }
+
+        //quick info
+        if(vd.qiVisible) {
+            if(overlayPane.getOpacity() == 0) {
+                FadeTransition ft = new FadeTransition(Duration.millis(200), overlayPane);
+                ft.setFromValue(0);
+                ft.setToValue(1);
+                ft.play();
+            }
+            qiName.setText(vd.floor.location.name);
+            qiType.setText(vd.floor.location.type);
+            qiDiff.setText("Difficulty: " + vd.floor.location.difficulty);
+            qiFloor.setText("Floor " + vd.floor.location.currentFloor);
+            qiChar.setText(vd.party[0].name);
+            qiLevel.setText("Level " + vd.party[0].LVL);
+            qiGold.setText("Gold: " + String.valueOf(vd.gold));
+        }
+        else if(!vd.qiVisible) {
+            if(overlayPane.getOpacity() == 1) {
+                FadeTransition ft = new FadeTransition(Duration.millis(200), overlayPane);
                 ft.setFromValue(1);
                 ft.setToValue(0);
                 ft.play();
             }
-            
-            //quick info
-            if(vd.qiVisible) {
-                if(overlayPane.getOpacity() == 0) {
-                    FadeTransition ft = new FadeTransition(Duration.millis(200), overlayPane);
-                    ft.setFromValue(0);
-                    ft.setToValue(1);
-                    ft.play();
-                }
-                qiName.setText(vd.floor.location.name);
-                qiType.setText(vd.floor.location.type);
-                qiDiff.setText("Difficulty: " + vd.floor.location.difficulty);
-                qiFloor.setText("Floor " + vd.floor.location.currentFloor);
-                qiChar.setText(vd.party[0].name);
-                qiLevel.setText("Level " + vd.party[0].LVL);
-                qiGold.setText("Gold: " + String.valueOf(vd.gold));
-            }
-            else if(!vd.qiVisible) {
-                if(overlayPane.getOpacity() == 1) {
-                    FadeTransition ft = new FadeTransition(Duration.millis(200), overlayPane);
-                    ft.setFromValue(1);
-                    ft.setToValue(0);
-                    ft.play();
-                }
-            }
-            
-            //overlay health and mana
-            uiHealthR.setWidth(((double)-10000/(vd.party[0].maxHP+11000)+1)*screenWidth);
-            uiHealth.setFitWidth((double)vd.party[0].currentHP/vd.party[0].maxHP*uiHealthR.getWidth());
-            uiHealthT.setText(vd.party[0].currentHP + "/" + vd.party[0].maxHP);
-            uiManaR.setWidth(((double)-10000/(vd.party[0].maxMP+11000)+1)*screenWidth);
-            uiMana.setFitWidth((double)vd.party[0].currentMP/vd.party[0].maxMP*uiManaR.getWidth());
-            uiManaT.setText(vd.party[0].currentMP + "/" + vd.party[0].maxMP);
-            
-            //tiles
-            for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
-                for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
-                    if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.tiles[x][y].id != -1) {
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0]
-                                .setImage(Images.tiles[vd.floor.tiles[x][y].id]);
-                    }
-                    else
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0].setImage(null);
-                }
-            }
-            
-            //shadows
-            for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
-                for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
-                    if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY 
-                            && (vd.floor.chars[x][y].exists || vd.floor.items[x][y].exists))
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][1].setVisible(true);
-                    else
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][1].setVisible(false);
-                }
-            }
-            
-            //items
-            for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
-                for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
-                    if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.items[x][y].exists) {
-                        switch(vd.floor.items[x][y].type) {
-                            case WEAPON:
-                                imageViews[x-vd.floor.party[0].x+11]
-                                        [y-vd.floor.party[0].y+7][2].setImage(Images.weapon);
-                                break;
-                            case ARMOR:
-                                imageViews[x-vd.floor.party[0].x+11]
-                                        [y-vd.floor.party[0].y+7][2].setImage(Images.armor);
-                                break;
-                            case ACCESSORY:
-                                imageViews[x-vd.floor.party[0].x+11]
-                                        [y-vd.floor.party[0].y+7][2].setImage(Images.accessory);
-                                break;
-                            case MATERIAL:
-                                imageViews[x-vd.floor.party[0].x+11]
-                                        [y-vd.floor.party[0].y+7][2].setImage(Images.material);
-                                break;
-                            case CONSUMABLE:
-                                imageViews[x-vd.floor.party[0].x+11]
-                                        [y-vd.floor.party[0].y+7][2].setImage(Images.consumable);
-                                break;
-                        }
-                    }
-                    else {
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][2].setImage(null);
-                    }
-                }
-            }
+        }
 
-            //characters
-            for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
-                for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+        //overlay health and mana
+        uiHealthR.setWidth(((double)-10000/(vd.party[0].maxHP+11000)+1)*screenWidth);
+        uiHealth.setFitWidth((double)vd.party[0].currentHP/vd.party[0].maxHP*uiHealthR.getWidth());
+        uiHealthT.setText(vd.party[0].currentHP + "/" + vd.party[0].maxHP);
+        uiManaR.setWidth(((double)-10000/(vd.party[0].maxMP+11000)+1)*screenWidth);
+        uiMana.setFitWidth((double)vd.party[0].currentMP/vd.party[0].maxMP*uiManaR.getWidth());
+        uiManaT.setText(vd.party[0].currentMP + "/" + vd.party[0].maxMP);
+
+        //tiles
+        for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
+            for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+                if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.tiles[x][y].id != -1) {
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0]
+                            .setImage(Images.tiles[vd.floor.tiles[x][y].id]);
+                }
+                else
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0].setImage(null);
+            }
+        }
+
+        //shadows
+        for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
+            for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+                if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY 
+                        && (vd.floor.chars[x][y].exists || vd.floor.items[x][y].exists))
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][1].setVisible(true);
+                else
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][1].setVisible(false);
+            }
+        }
+
+        //items
+        for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
+            for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+                if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.items[x][y].exists) {
+                    switch(vd.floor.items[x][y].type) {
+                        case WEAPON:
+                            imageViews[x-vd.floor.party[0].x+11]
+                                    [y-vd.floor.party[0].y+7][2].setImage(Images.weapon);
+                            break;
+                        case ARMOR:
+                            imageViews[x-vd.floor.party[0].x+11]
+                                    [y-vd.floor.party[0].y+7][2].setImage(Images.armor);
+                            break;
+                        case ACCESSORY:
+                            imageViews[x-vd.floor.party[0].x+11]
+                                    [y-vd.floor.party[0].y+7][2].setImage(Images.accessory);
+                            break;
+                        case MATERIAL:
+                            imageViews[x-vd.floor.party[0].x+11]
+                                    [y-vd.floor.party[0].y+7][2].setImage(Images.material);
+                            break;
+                        case CONSUMABLE:
+                            imageViews[x-vd.floor.party[0].x+11]
+                                    [y-vd.floor.party[0].y+7][2].setImage(Images.consumable);
+                            break;
+                    }
+                }
+                else {
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][2].setImage(null);
+                }
+            }
+        }
+
+        //characters
+        for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
+            for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+                if(x != 11 || y != 7) {
                     if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.chars[x][y].exists) {
                         imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][3]
                                 .setImage(Images.getSprite(vd.floor.chars[x][y].id));
@@ -708,247 +808,342 @@ class InMapView {
                         imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][3].setImage(null);
                 }
             }
-
-            //health
-            for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
-                for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
-                    if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.chars[x][y].exists) {
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][4].setVisible(true);
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][4].setFitWidth(64 * 
-                                (double)vd.floor.chars[x][y].currentHP / vd.floor.chars[x][y].maxHP);
-                    }
-                    else
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][4].setVisible(false);
-                }
-            }
-            
-            //fog
-            for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
-                for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
-                    if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY) {
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][6]
-                                .setOpacity(1-(double)vd.floor.tiles[x][y].vis/10);
-                    }
-                    else
-                        imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][6].setOpacity(1);
-                }
-            }
-            
-            //movement animation if not running
-            if(!vd.running) {
-                if(vd.returnCode >= 1000) {
-                    vd.returnCode = (int)Math.floor(vd.returnCode/1000);
-                }
-
-                if(vd.returnCode == 5) { //up
-                    if(floorPane.getChildren().indexOf(imageViews[11][7][3]) == 755) {
-                        floorPane.getChildren().remove(755);
-                        floorPane.getChildren().remove(731);
-                        floorPane.getChildren().remove(707);
-                        floorPane.getChildren().add(846, imageViews[11][7][1]);
-                        floorPane.getChildren().add(847, imageViews[11][7][2]);
-                        floorPane.getChildren().add(848, imageViews[11][7][3]);
-                    }
-                    tUp.play();
-                    tUp.onFinishedProperty().set(e -> {
-                        floorPane.getChildren().remove(846, 849);
-                        floorPane.getChildren().add(707, imageViews[11][7][1]);
-                        floorPane.getChildren().add(731, imageViews[11][7][2]);
-                        floorPane.getChildren().add(755, imageViews[11][7][3]);
-                    });
-                }
-                else if(vd.returnCode == 6) { //left
-                    tLeft.play();
-                }
-                else if(vd.returnCode == 7) { //down
-                    tDown.play();
-                }
-                else if(vd.returnCode == 8) { //right
-                    tRight.play();
-                }
-                //use up return code
-                vd.returnCode = -1;
-            }
-            
-            //talking
-            if(vd.talkState == 0) {
-                if(talkPane.getOpacity() != 0) {
-                    FadeTransition ft = new FadeTransition(Duration.millis(100), talkPane);
-                    ft.setFromValue(talkPane.getOpacity());
-                    ft.setToValue(0);
-                    ft.play();
-                }
-                if(talkTransition.getStatus() == Status.RUNNING) {
-                    talkTransition.stop();
-                }
-            }
-            else if(vd.talkState == 1) {
-                if(talkPane.getOpacity() != 1) {
-                    FadeTransition ft = new FadeTransition(Duration.millis(100), talkPane);
-                    ft.setFromValue(talkPane.getOpacity());
-                    ft.setToValue(1);
-                    ft.play();
-                    talkTransition.setStrings(vd.talkText);
-                    talkTransition.playFromStart();
-                }
-                if(vd.talkSelect == -2) {
-                    talkTransition.finish();
-                }
-                else if(vd.talkIndex > talkTransition.getIndex()) {
-                    talkTransition.next();
-                    talkTransition.playFromStart();
-                }
-            }
-            
-            //new entry in log
-            if(log.size() > uiLogSize.get()) {
-                for(int i = log.size(); i > 0; i--) {
-                    uiLogT[i].setOpacity(uiLogT[i-1].getOpacity());
-                }
-                uiLogT[0].setOpacity(1);
-                uiLogSize.set(uiLogSize.get() + 1);
-                for(int i = 0; i < 30; i++) {
-                    if(i < log.size()) {
-                        uiLogT[i].setText(log.get(i));
-                        SimpleIntegerProperty integer = new SimpleIntegerProperty();
-                        integer.set(i);
-                        uiLogFade[i].setFromValue(uiLogT[i].getOpacity());
-                        uiLogFade[i].setDuration(Duration.millis(uiLogT[i].getOpacity()*2000.0));
-                        uiLogFade[i].playFromStart();
-                    }
-                    else {
-                        uiLogT[i].setText("");
-                    }
-                }
-            }
-            
-            //floor text
-            qiFloor.setText("Floor " + vd.floor.location.currentFloor);
-
-            //rip
-            if(!vd.floor.party[0].exists && !inmapLayout.getChildren().contains(ripPane))
-                inmapLayout.getChildren().add(ripPane);
-            else if(vd.floor.party[0].exists)
-                inmapLayout.getChildren().remove(ripPane);
         }
-        else if(vd.focus.equals("menu")) {
-            //add menu window if not already added
-            if(vd.floor != null && !inmapLayout.getChildren().contains(menuPane)) {
-                inmapLayout.getChildren().add(menuPane);
+
+        //player
+        switch(vd.facing) {
+            case UP:
+                playerView.setImage(Images.playerAnimation);
+                playerView.setViewport(new Rectangle2D(0, 288, 64, 96));
+                break;
+            case LEFT:
+                playerView.setImage(Images.playerAnimation);
+                playerView.setViewport(new Rectangle2D(0, 96, 64, 96));
+                break;
+            case RIGHT:
+                playerView.setImage(Images.playerAnimation);
+                playerView.setViewport(new Rectangle2D(0, 192, 64, 96));
+                break;
+            case DOWN:
+                playerView.setImage(Images.playerAnimation);
+                playerView.setViewport(new Rectangle2D(0, 0, 64, 96));
+                break;
+        }
+
+        //health
+        for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
+            for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+                if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY && vd.floor.chars[x][y].exists) {
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][4].setVisible(true);
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][4].setFitWidth(64 * 
+                            (double)vd.floor.chars[x][y].currentHP / vd.floor.chars[x][y].maxHP);
+                }
+                else
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][4].setVisible(false);
             }
-            //fade in
-            if(menuPane.getOpacity() != 1) {
-                FadeTransition ft = new FadeTransition(Duration.millis(200), menuPane);
-                ft.setFromValue(menuPane.getOpacity());
+        }
+
+        //fog
+        for(int x = vd.floor.party[0].x - 11; x < vd.floor.party[0].x + 13; x++) {
+            for(int y = vd.floor.party[0].y - 7; y < vd.floor.party[0].y + 9; y++) {
+                if(x >= 0 && x < vd.floor.sizeX && y >= 0 && y < vd.floor.sizeY) {
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][6]
+                            .setOpacity(1-(double)vd.floor.tiles[x][y].vis/64);
+                }
+                else
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][6].setOpacity(1);
+            }
+        }
+
+        //movement animation if not running
+        if(!vd.running) {
+            if(vd.returnCode >= 1000) {
+                vd.returnCode = (int)Math.floor(vd.returnCode/1000);
+            }
+
+            if(vd.returnCode == 5) { //up
+                if(floorPane.getChildren().indexOf(imageViews[11][7][3]) == 755) {
+                    floorPane.getChildren().remove(755);
+                    floorPane.getChildren().remove(731);
+                    floorPane.getChildren().remove(707);
+                    floorPane.getChildren().add(846, imageViews[11][7][1]);
+                    floorPane.getChildren().add(847, imageViews[11][7][2]);
+                    floorPane.getChildren().add(848, imageViews[11][7][3]);
+                }
+                tUp.play();
+                tUp.setOnFinished(e -> {
+                    floorPane.getChildren().remove(846, 849);
+                    floorPane.getChildren().add(707, imageViews[11][7][1]);
+                    floorPane.getChildren().add(731, imageViews[11][7][2]);
+                    floorPane.getChildren().add(755, imageViews[11][7][3]);
+                });
+
+                if(walkState)
+                    cUp.start();
+                else
+                    cUp2.start();
+
+                walkState = !walkState;
+            }
+            else if(vd.returnCode == 6) { //left
+                tLeft.play();
+
+                if(walkState)
+                    cLeft.start();
+                else
+                    cLeft2.start();
+
+                walkState = !walkState;
+            }
+            else if(vd.returnCode == 7) { //down
+                tDown.play();
+
+                if(walkState)
+                    cDown.start();
+                else
+                    cDown2.start();
+
+                walkState = !walkState;
+            }
+            else if(vd.returnCode == 8) { //right
+                tRight.play();
+
+                if(walkState)
+                    cRight.start();
+                else
+                    cRight2.start();
+
+                walkState = !walkState;
+            }
+            //use up return code
+            vd.returnCode = -1;
+        }
+
+        //new entry in log
+        if(log.size() > uiLogSize.get()) {
+            for(int i = log.size(); i > 0; i--) {
+                uiLogT[i].setOpacity(uiLogT[i-1].getOpacity());
+            }
+            uiLogT[0].setOpacity(1);
+            uiLogSize.set(uiLogSize.get() + 1);
+            for(int i = 0; i < 30; i++) {
+                if(i < log.size()) {
+                    uiLogT[i].setText(log.get(i));
+                    SimpleIntegerProperty integer = new SimpleIntegerProperty();
+                    integer.set(i);
+                    uiLogFade[i].setFromValue(uiLogT[i].getOpacity());
+                    uiLogFade[i].setDuration(Duration.millis(uiLogT[i].getOpacity()*10000.0));
+                    uiLogFade[i].playFromStart();
+                }
+                else {
+                    uiLogT[i].setText("");
+                }
+            }
+        }
+
+        //floor text
+        qiFloor.setText("Floor " + vd.floor.location.currentFloor);
+        
+    }
+    
+    //update talk box and selection
+    private void updateTalk(InMapViewData vd) {
+        //only update player
+        switch(vd.facing) {
+            case UP:
+                playerView.setImage(Images.playerAnimation);
+                playerView.setViewport(new Rectangle2D(0, 288, 64, 96));
+                break;
+            case LEFT:
+                playerView.setImage(Images.playerAnimation);
+                playerView.setViewport(new Rectangle2D(0, 96, 64, 96));
+                break;
+            case RIGHT:
+                playerView.setImage(Images.playerAnimation);
+                playerView.setViewport(new Rectangle2D(0, 192, 64, 96));
+                break;
+            case DOWN:
+                playerView.setImage(Images.playerAnimation);
+                playerView.setViewport(new Rectangle2D(0, 0, 64, 96));
+                break;
+        }
+
+        //open talk box
+        if(talkPane.getOpacity() != 1) {
+            FadeTransition ft = new FadeTransition(Duration.millis(100), talkPane);
+            ft.setFromValue(talkPane.getOpacity());
+            ft.setToValue(1);
+            ft.play();
+            talkTransition.setStrings(vd.talkText);
+            talkTransition.playFromStart();
+        }
+        //selecting
+        if(vd.talkSelect >= 0) {
+            //open select box
+            if(talkSelectPane.getOpacity() != 1) {
+                FadeTransition ft = new FadeTransition(Duration.millis(200), talkSelectPane);
+                ft.setFromValue(talkSelectPane.getOpacity());
                 ft.setToValue(1);
                 ft.play();
             }
             
-            //remove quick info boxes
-            if(overlayPane.getOpacity() != 0) {
-                FadeTransition ft = new FadeTransition(Duration.millis(200), overlayPane);
-                ft.setFromValue(overlayPane.getOpacity());
-                ft.setToValue(0);
-                ft.play();
-            }
-            
-            //toggle menu
-            if(vd.menuToggle && invPane.getChildren().contains(invTextPane)) {
-                invPane.getChildren().remove(invTextPane);
-                invPane.getChildren().add(invStatPane);
-            }
-            else if(!vd.menuToggle && invPane.getChildren().contains(invStatPane)) {
-                invPane.getChildren().remove(invStatPane);
-                invPane.getChildren().add(invTextPane);
-            }
-            
-            //change menus
-            if(vd.menuP.y == -1) {
-                menuFocus.setOpacity(.5);
-                tempCursor.setOpacity(0);
-                menuCursor.setOpacity(0);
-                invName.setText("");
-                invType.setText("");
-                invDes.setText("");
-                changeMenu(vd);
-            }
-            else {
-                menuFocus.setOpacity(0.25);
-                switch(vd.menuWindow) {
-                    case "inv":
-                        for(int i = 0; i < 4; i++)
-                            invRButtons[i].setOpacity(.2);
-                        //temporary pointer
-                        if(vd.tempP.x != -1) {
-                            tempCursor.setOpacity(.3);
-                            tempCursor.relocate(screenWidth*2/15+screenWidth/7*vd.tempP.x, 
-                                    screenHeight*4/15+screenHeight/28*vd.tempP.y);
-                            if(vd.inv[vd.tempP.x*16+vd.tempP.y].exists) {
-                                invName.setText(vd.inv[vd.tempP.x*16+vd.tempP.y].displayName);
-                                invType.setText(vd.inv[vd.tempP.x*16+vd.tempP.y].type.toString());
-                                invDes.setText(vd.invDes);
-                                updateInvStats(vd.inv[vd.tempP.x*16+vd.tempP.y]);
-                            }
-                            else {
-                                invName.setText("");
-                                invType.setText("");
-                                invDes.setText("There's nothing here.");
-                                updateInvStats(new Item());
-                            }
+            talkSelectR.relocate(screenWidth*4/5+screenHeight/25, screenHeight*2/3+screenHeight*11/40/3*(vd.talkSelect+1)-screenHeight/32);
+        }
+        //close select window
+        else if(talkSelectPane.getOpacity() != 0) {
+            FadeTransition ft = new FadeTransition(Duration.millis(200), talkSelectPane);
+            ft.setFromValue(talkSelectPane.getOpacity());
+            ft.setToValue(0);
+            ft.play();
+        }
+        //finish typing
+        if(vd.talkSelect == -2) {
+            talkTransition.finish();
+        }
+        //update text
+        else if(vd.talkSelect == -3) {
+            talkTransition.setStrings(vd.talkText);
+            talkTransition.playFromStart();
+        }
+        //advance to next lines
+        else if(vd.talkSelect < 0 && vd.talkIndex > talkTransition.getIndex()) {
+            talkTransition.next();
+            talkTransition.playFromStart();
+        }
+    }
+    
+    //update menu pages
+    private void updateMenu(InMapViewData vd) {
+        //add menu window if not already added
+        if(vd.floor != null && !inmapLayout.getChildren().contains(menuPane)) {
+            inmapLayout.getChildren().add(menuPane);
+        }
+        //fade in
+        if(menuPane.getOpacity() != 1) {
+            FadeTransition ft = new FadeTransition(Duration.millis(200), menuPane);
+            ft.setFromValue(menuPane.getOpacity());
+            ft.setToValue(1);
+            ft.play();
+        }
+
+        //remove quick info boxes
+        if(overlayPane.getOpacity() != 0) {
+            FadeTransition ft = new FadeTransition(Duration.millis(200), overlayPane);
+            ft.setFromValue(overlayPane.getOpacity());
+            ft.setToValue(0);
+            ft.play();
+        }
+
+        //remove talk window
+        if(talkPane.getOpacity() != 0) {
+            FadeTransition ft = new FadeTransition(Duration.millis(100), talkPane);
+            ft.setFromValue(talkPane.getOpacity());
+            ft.setToValue(0);
+            ft.play();
+            ft.setOnFinished(e -> {
+                talkSelectPane.setOpacity(0);
+            });
+        }
+        if(talkTransition.getStatus() == Status.RUNNING) {
+            talkTransition.stop();
+        }
+
+        //toggle menu
+        if(vd.menuToggle && invPane.getChildren().contains(invTextPane)) {
+            invPane.getChildren().remove(invTextPane);
+            invPane.getChildren().add(invStatPane);
+        }
+        else if(!vd.menuToggle && invPane.getChildren().contains(invStatPane)) {
+            invPane.getChildren().remove(invStatPane);
+            invPane.getChildren().add(invTextPane);
+        }
+
+        //change menus
+        if(vd.menuP.y == -1) {
+            menuFocus.setOpacity(.5);
+            tempCursor.setOpacity(0);
+            menuCursor.setOpacity(0);
+            invName.setText("");
+            invType.setText("");
+            invDes.setText("");
+            changeMenu(vd);
+        }
+        else {
+            menuFocus.setOpacity(0.25);
+            switch(vd.menuWindow) {
+                case "inv":
+                    for(int i = 0; i < 4; i++)
+                        invRButtons[i].setOpacity(.2);
+                    //temporary pointer
+                    if(vd.tempP.x != -1) {
+                        tempCursor.setOpacity(.3);
+                        tempCursor.relocate(screenWidth*2/15+screenWidth/7*vd.tempP.x, 
+                                screenHeight*4/15+screenHeight/28*vd.tempP.y);
+                        if(vd.inv[vd.tempP.x*16+vd.tempP.y].exists) {
+                            invName.setText(vd.inv[vd.tempP.x*16+vd.tempP.y].displayName);
+                            invType.setText(vd.inv[vd.tempP.x*16+vd.tempP.y].type.toString());
+                            invDes.setText(vd.invDes);
+                            updateInvStats(vd.inv[vd.tempP.x*16+vd.tempP.y]);
                         }
-                        //selection
-                        else if(vd.selectP != -1) {
-                            menuCursor.setOpacity(.2);
-                            invRButtons[vd.selectP].setOpacity(.5);
-                        }
-                        //moving around menu
                         else {
-                            refreshMenu(vd);
-                            tempCursor.setOpacity(0);
-                            menuCursor.setOpacity(.3);
-                            menuCursor.relocate(screenWidth*2/15+screenWidth/7*vd.menuP.x, 
-                                    screenHeight*4/15+screenHeight/28*vd.menuP.y);
-                            if(vd.inv[vd.menuP.x*16+vd.menuP.y].exists) {
-                                invName.setText(vd.inv[vd.menuP.x*16+vd.menuP.y].displayName);
-                                invType.setText(vd.inv[vd.menuP.x*16+vd.menuP.y].type.toString());
-                                invDes.setText(vd.invDes);
-                                updateInvStats(vd.inv[vd.menuP.x*16+vd.menuP.y]);
-                            }
-                            else {
-                                invName.setText("");
-                                invType.setText("");
-                                invDes.setText(vd.invDes);
-                                updateInvStats(new Item());
-                            }
+                            invName.setText("");
+                            invType.setText("");
+                            invDes.setText("There's nothing here.");
+                            updateInvStats(new Item());
                         }
-                        break;
-                        
-                    case "char":
-                        break;
-                        
-                    case "party":
-                        break;
-                        
-                    case "notes":
-                        break;
-                        
-                    case "options":
-                        for(Rectangle r: opRButtons)
-                            r.setOpacity(.2);
-                        for(Rectangle r: opRSaves)
-                            r.setOpacity(.2);
-                        //selectP
-                        if(vd.selectP != -1) {
-                            opRSaves[vd.selectP].setOpacity(.5);
+                    }
+                    //selection
+                    else if(vd.selectP != -1) {
+                        menuCursor.setOpacity(.2);
+                        invRButtons[vd.selectP].setOpacity(.5);
+                    }
+                    //moving around menu
+                    else {
+                        refreshMenu(vd);
+                        tempCursor.setOpacity(0);
+                        menuCursor.setOpacity(.3);
+                        menuCursor.relocate(screenWidth*2/15+screenWidth/7*vd.menuP.x, 
+                                screenHeight*4/15+screenHeight/28*vd.menuP.y);
+                        if(vd.inv[vd.menuP.x*16+vd.menuP.y].exists) {
+                            invName.setText(vd.inv[vd.menuP.x*16+vd.menuP.y].displayName);
+                            invType.setText(vd.inv[vd.menuP.x*16+vd.menuP.y].type.toString());
+                            invDes.setText(vd.invDes);
+                            updateInvStats(vd.inv[vd.menuP.x*16+vd.menuP.y]);
                         }
-                        else if(vd.menuP.y != -1) {
-                            opRButtons[vd.menuP.y].setOpacity(.5);
+                        else {
+                            invName.setText("");
+                            invType.setText("");
+                            invDes.setText(vd.invDes);
+                            updateInvStats(new Item());
                         }
-                        break;
-                        
-                    default:
-                        break;
-                }
+                    }
+                    break;
+
+                case "char":
+                    break;
+
+                case "party":
+                    break;
+
+                case "notes":
+                    break;
+
+                case "options":
+                    for(Rectangle r: opRButtons)
+                        r.setOpacity(.2);
+                    for(Rectangle r: opRSaves)
+                        r.setOpacity(.2);
+                    //selectP
+                    if(vd.selectP != -1) {
+                        opRSaves[vd.selectP].setOpacity(.5);
+                    }
+                    else if(vd.menuP.y != -1) {
+                        opRButtons[vd.menuP.y].setOpacity(.5);
+                    }
+                    break;
+
+                default:
+                    break;
             }
         }
     }

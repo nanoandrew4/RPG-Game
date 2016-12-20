@@ -8,6 +8,8 @@ import java.awt.Point;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
 
+import main.Control;
+
 public class InMapViewData {
     String focus, menuWindow, invDes;
     String[] talkText;
@@ -15,6 +17,7 @@ public class InMapViewData {
     Point tempP, menuP;
     int useP, selectP, gold, talkIndex,
             talkState, talkSelect, returnCode;
+    Control facing;
     Character[] party;
     Item[] inv;
     boolean qiVisible, menuToggle, running;

@@ -14,6 +14,7 @@ public class Images {
     public static Image[] playerSprites;
     
     static Image hero;
+    static Image playerAnimation;
     static Image portrait;
     
     static Image health;
@@ -49,6 +50,7 @@ public class Images {
         mana = new Image("/media/graphics/inmap/mana.jpg", 64, 64, true, false);
         black = new Image("/media/graphics/inmap/black.jpg", 64, 64, true, false);
         blackcircle = new Image("/media/graphics/inmap/blackcircle.png", 64, 64, true, false);
+        playerAnimation = new Image("/media/graphics/inmap/TrumpSprites.png");
         
         //get playersprites from images
         playerSprites = new Image[5];

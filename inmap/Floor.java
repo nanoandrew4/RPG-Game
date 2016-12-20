@@ -42,13 +42,11 @@ class Floor implements java.io.Serializable{
             case UP:
                 party[0].x = enterX;
                 party[0].y = enterY;
-                chars[enterX][enterY].kill();
                 chars[enterX][enterY] = party[0];
                 break;
             case DOWN:
                 party[0].x = endX;
                 party[0].y = endY;
-                chars[endX][endY].kill();
                 chars[endX][endY] = party[0];
                 break;
         }
@@ -168,6 +166,7 @@ class Floor implements java.io.Serializable{
                 
                 //if killed
                 if(chars[ex][ey].currentHP <= 0) {
+                    chars[ex][ey].currentHP = 0;
                     chars[sx][sy].gainEXP(chars[ex][ey]);
                     
                     //drop items
@@ -292,10 +291,12 @@ class Floor implements java.io.Serializable{
                     //set 3x3 area around visible tile
                     for(int x2 = x-1; x2 < x+2; x2++) {
                         for(int y2 = y-1; y2 < y+2; y2++) {
-                            //bounds
+                            //bounds and check for higher visibility
                             if(x2 >= 0 && x2 < sizeX && y2 >= 0 && y2 < sizeY &&
-                                    tiles[x2][y2].vis < 10-map[x][y]) {
-                                tiles[x2][y2].vis = (byte)(10-map[x][y]);
+                                    tiles[x2][y2].vis < 64 / model.getVisDist() * 
+                                    (model.getVisDist() - map[x][y])) {
+                                tiles[x2][y2].vis = (byte)(64 / model.getVisDist() * 
+                                        (model.getVisDist() - map[x][y]));
                             }
                         }
                     }
@@ -306,7 +307,7 @@ class Floor implements java.io.Serializable{
     
     //recursive breadth-first pathing
     private void tileVis(byte[][] map, int x, int y) {
-        if(map[x][y] == 10)
+        if(map[x][y] == model.getVisDist())
             return;
         
         if(x > 0 && (map[x-1][y] > map[x][y]+1 || map[x-1][y] == -1) 
@@ -797,10 +798,10 @@ class Floor implements java.io.Serializable{
         npcs[1].y = sizeY-1;
         chars[sizeX/2+1][sizeY-1] = npcs[1];
         
-        //temp all tiles visible
+        //temp: all tiles visible
         for(int x = 0; x < sizeX; x++) {
             for(int y = 0; y < sizeY; y++) {
-                tiles[x][y].vis = 10;
+                tiles[x][y].vis = 64;
             }
         }
     }

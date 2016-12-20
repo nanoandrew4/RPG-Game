@@ -4,18 +4,21 @@
 
 package main;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
+import javafx.scene.effect.BoxBlur;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.Pane;
-import javafx.scene.effect.BoxBlur;
-import javafx.geometry.Pos;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -24,6 +27,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.awt.Point;
 import java.io.File;
@@ -39,7 +43,6 @@ import org.nustaq.serialization.FSTObjectOutput;
 import inmap.InMapModel;
 import inmap.Character;
 import inmap.InMapController;
-import javafx.scene.paint.Color;
 import overworld.OverworldController;
 import overworld.OverworldModel;
 
@@ -60,6 +63,8 @@ public class Main extends Application {
     private Scene scene;
     private Pane pane, mainPane, loadPane, racePane, 
             statPane, charPane, namePane, sumPane, waitPane; //all panes
+    private Text title;
+    private Text[] mainT;
     private Rectangle selectR; //selection box
     private int select = 0;
     private String menuState = "main";
@@ -158,13 +163,13 @@ public class Main extends Application {
         Font.loadFont(Main.class.getResourceAsStream("/fonts/Luminari.ttf"), 10);
 
         //mainPane
-        Text title = new Text(0, screenHeight * 7/20, "Rising Legend");
+        title = new Text(0, screenHeight * 7/20, "Rising Legend");
         title.setFont(Font.font("Zapfino", FontWeight.BOLD, 104));
         title.setFill(Color.rgb(84, 58, 26));
         title.setWrappingWidth(screenWidth);
         title.setTextAlignment(TextAlignment.CENTER);
         
-        Text[] mainT = new Text[3];
+        mainT = new Text[3];
         for(int i = 0; i < 3; i++) {
             mainT[i] = new Text(0, screenHeight*2/3 + i*screenHeight/12, "");
             mainT[i].setFont(Font.font("Trattatello", FontWeight.NORMAL, 36));
@@ -416,6 +421,8 @@ public class Main extends Application {
         
         stage.setScene(scene);
         stage.show();
+        
+        playOpening();
 
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             Control c = getControl(event.getCode());
@@ -650,6 +657,62 @@ public class Main extends Application {
             updateView();
 
             event.consume();
+        });
+    }
+    
+    //opening animation
+    private void playOpening() {
+        //set opacities to 0
+        title.setOpacity(0);
+        for(Text t: mainT)
+            t.setOpacity(0);
+        selectR.setOpacity(0);
+        
+        //create rectangle to fade out
+        Rectangle r = new Rectangle(screenWidth, screenHeight, Paint.valueOf("BLACK"));
+        pane.getChildren().add(r);
+        //create fade transitions
+        FadeTransition ft = new FadeTransition(Duration.millis(2000), r);
+        ft.setFromValue(1);
+        ft.setToValue(0);
+        ft.setInterpolator(Interpolator.EASE_BOTH);
+        FadeTransition ft2 = new FadeTransition(Duration.millis(1000), title);
+        ft2.setFromValue(0);
+        ft2.setToValue(1);
+        FadeTransition[] ft3 = new FadeTransition[3];
+        ft3[0] = new FadeTransition(Duration.millis(1000), mainT[0]);
+        ft3[1] = new FadeTransition(Duration.millis(1000), mainT[1]);
+        ft3[2] = new FadeTransition(Duration.millis(1000), mainT[2]);
+        for(FadeTransition ftx: ft3) {
+            ftx.setFromValue(0);
+            ftx.setToValue(1);
+        }
+        FadeTransition ft4 = new FadeTransition(Duration.millis(1000), selectR);
+        ft4.setFromValue(0);
+        ft4.setToValue(.5);
+        
+        //play transitions
+        FadeTransition initial = new FadeTransition(Duration.millis(1000), new Text());
+        initial.play();
+        initial.setOnFinished(e -> {
+            ft.play();
+        });
+        ft.setOnFinished(e -> {
+            FadeTransition pause = new FadeTransition(Duration.millis(500), new Text());
+            pause.play();
+            pause.setOnFinished(f -> {
+                ft2.play();
+                pane.getChildren().remove(r);
+            });
+        });
+        ft2.setOnFinished(e -> {
+            FadeTransition pause = new FadeTransition(Duration.millis(500), new Text());
+            pause.play();
+            pause.setOnFinished(f -> {
+                for(FadeTransition ftx: ft3)
+                    ftx.play();
+                ft4.play();
+            });
         });
     }
     
@@ -927,6 +990,7 @@ public class Main extends Application {
         IMController.newLocation(p, type);
     }
 
+    //pass control between inmap and overworld
     public void passControl(Point p) {
         if (p != null)
             IMController.passControl(p);
@@ -934,23 +998,19 @@ public class Main extends Application {
             overworldController.passControl();
     }
 
-    //get name of current location
+    //get name of current inmap location
     public String getLocationName(Point p) {
         return IMController.getLocationName(p);
     }
 
-    //get difficulty of current location
+    //get difficulty of current inmap location
     public String getDifficulty(Point p){
         return IMController.getDifficulty(p);
     }
     
-    //get menu pane
+    //get menu pane from inmap
     public Pane getMenuPane() {
         return IMController.getMenuPane();
-    }
-
-    public void toggleMenu(boolean on) {
-        IMController.toggleMenu(on);
     }
     
     //process menu input from overworldController
@@ -959,8 +1019,12 @@ public class Main extends Application {
     }
 
     public void setStage(Scene scene) {
-        stage.setScene(scene);
-        stage.show();
+        if(scene != null)
+            stage.setScene(scene);
+        else {
+            stage.setScene(this.scene);
+            playOpening();
+        }
     }
 
     private void getScreenSize() {

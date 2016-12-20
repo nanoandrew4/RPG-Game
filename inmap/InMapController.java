@@ -69,6 +69,7 @@ public class InMapController implements Runnable {
         setInput(scene);
     }
 
+    //return model
     public InMapModel getModel() {
         return model;
     }
@@ -83,6 +84,7 @@ public class InMapController implements Runnable {
         Platform.runLater(() -> main.setStage(scene));
     }
     
+    //update data to give to view
     private void updateViewData() {
         if (model.getCurrentLocation() == null)
             viewdata.floor = null;
@@ -105,6 +107,7 @@ public class InMapController implements Runnable {
         viewdata.talkSelect = model.getTalkSelect();
         viewdata.talkIndex = model.getTalkIndex();
         viewdata.running = model.getRunning();
+        viewdata.facing = model.getFacing();
         viewdata.saveImages = main.saveImages;
         viewdata.saveInfo = main.saveInfo;
         viewdata.returnCode = returnCode;
@@ -125,10 +128,12 @@ public class InMapController implements Runnable {
         return "Easy peasy"; // temp
     }
     
+    //return menu
     public Pane getMenuPane() {
         return view.getMenuPane();
     }
     
+    //menu input from overworld
     public boolean menuInput(Control input) {
         returnCode = model.process(input);
 
@@ -158,14 +163,6 @@ public class InMapController implements Runnable {
         }
         
         return !model.getFocus().equals("menu");
-    }
-    
-    public void toggleMenu(boolean on) {
-        model.toggleMenu(on);
-    }
-    
-    public void toggleMenu(String window) {
-        model.toggleMenu(window);
     }
     
     //keyboard input
@@ -199,6 +196,10 @@ public class InMapController implements Runnable {
             //load game
             else if(model.loadGame != -1) {
                 main.loadGame(model.loadGame);
+            }
+            //return to menu
+            else if(model.rip) {
+                main.setStage(null);
             }
             //update view
             else if(model.hasControl) {

@@ -17,13 +17,14 @@ import main.*;
 
 public class InMapModel implements java.io.Serializable{
     //saved variables
-    private final HashMap<Point, Location> maps;
-    private Point currentMap;
-    private Character[] party;
-    private Item[] inv;
+    private final HashMap<Point, Location> maps; //all maps
+    private Point currentMap; //current map location
+    private Character[] party; //[0] is player
+    private int visDist; //visibility distance
+    private Item[] inv; //inventory: 64
     private int gold;
-    private String name, portrait;
-    private int sprite;
+    private String name, portrait; //filepath of portrait
+    private int sprite; //sprite number in Images.playerSprites
     
     //temporary variables
     private String focus, menuWindow, invText;
@@ -34,13 +35,16 @@ public class InMapModel implements java.io.Serializable{
     private boolean running; //holding shift: mostly for movement
     private int talkState; //not talking, talking, selecting
     private int talkSelect; //selection pointer for talking
+    private Dialogue dialogue; //current dialogue;
     private String[] talkText; //text in the talk box
     private int talkIndex; //index of talk
     private long timer, talkTimer; //timers
     private ArrayList<String> log; //console log
+    private Control facing; //player facing direction
     
     boolean hasControl;
     int saveGame, loadGame;
+    boolean rip;
     
     //new game constructor
     InMapModel(int VIT, int INT, int STR, int WIS, int LUK, int CHA, 
@@ -51,6 +55,7 @@ public class InMapModel implements java.io.Serializable{
         inv = new Item[64];
         Arrays.fill(party, new Character());
         Arrays.fill(inv, new Item());
+        visDist = 7;
         
         //create character
         party[0] = new Character(1, VIT, INT, 90, STR, WIS, LUK, CHA, 
@@ -91,6 +96,8 @@ public class InMapModel implements java.io.Serializable{
         loadGame = -1;
         timer = -1;
         log = new ArrayList();
+        facing = Control.DOWN;
+        talkSelect = -1;
     }
     
     //quick start game
@@ -101,6 +108,7 @@ public class InMapModel implements java.io.Serializable{
         inv = new Item[64];
         Arrays.fill(party, new Character());
         Arrays.fill(inv, new Item());
+        visDist = 7;
         
         //create temp hero
         party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, 
@@ -140,6 +148,8 @@ public class InMapModel implements java.io.Serializable{
         loadGame = -1;
         timer = -1;
         log = new ArrayList();
+        facing = Control.DOWN;
+        talkSelect = -1;
     }
     
     //load game data
@@ -168,29 +178,33 @@ public class InMapModel implements java.io.Serializable{
     
     //general input process
     int process(Control input) {
+        int r = -1;
+        
         //floor input
-        if(focus.equals("floor")) {
-            int r = -1;
-            //general floor process
-            if(talkState == 0) {
-                r = processFloorInput(input);
-            }
-            //talking process
-            if(talkState != 0) {
+        switch(focus) {
+            case "floor":
+                //general floor process
+                if(talkState == 0) {
+                    r = processFloorInput(input);
+                }
+                //if talking, continue to next
+                if(!focus.equals("talk")) {
+                    talkText = null;
+                    return r;
+                }
+            case "talk":
                 processTalkInput(input);
-            }
-            else {
-                talkText = null;
-            }
-            return r;
-        }
-        //menu input
-        else if(focus.equals("menu")) {
-            return processMenuInput(input);
-        }
-        else {
-            System.out.println("Failed focus.");
-            return -1;
+                return r;
+            case "menu":
+                return processMenuInput(input);
+            case "rip":
+                if(input == Control.SELECT) {
+                    rip = true;
+                }
+                return -1;
+            default:
+                System.out.println("Failed focus.");
+                return -1;
         }
     }
     
@@ -252,6 +266,9 @@ public class InMapModel implements java.io.Serializable{
             default:
                 //process movement input
                 r = maps.get(currentMap).process(input);
+                if(input == Control.UP || input == Control.LEFT 
+                        || input == Control.RIGHT || input == Control.DOWN)
+                    facing = input;
 
                 //process ai if haven't left location
                 if(r != 1 && r != 3 && hasControl) {
@@ -277,14 +294,20 @@ public class InMapModel implements java.io.Serializable{
                 }
                 //start talking to npc
                 else if(r == 3) {
+                    focus = "talk";
                     talkState = 1;
+                }
+                
+                //player died
+                if(party[0].currentHP <= 0) {
+                    focus = "rip";
                 }
                 break;
         }
         
         //reduce log size
-        while(log.size() > 30) {
-            log.remove(log.size());
+        while(log.size() >= 30) {
+            log.remove(log.size()-1);
         }
         
         return r;
@@ -293,41 +316,83 @@ public class InMapModel implements java.io.Serializable{
     //process conversation input
     private void processTalkInput(Control input) {
         if(talkState == 1) {
-            if(talkText == null) {
-                talkText = Dialogue.getCitizenDialogue(null);
+            //get text if none exists
+            if(dialogue == null) {
+                dialogue = Dialogue.getMerchantDialogue();
+                talkText = dialogue.getText();
                 talkIndex = 0;
                 talkTimer = System.currentTimeMillis();
             }
+            //input
             switch(input) {
                 case SELECT:
                     //select option
                     if(talkSelect >= 0) {
-                        
+                        dialogue.nextState(talkSelect);
+                        talkSelect = -3;
+                        talkText = dialogue.getText();
+                        talkIndex = 0;
+                        talkTimer = System.currentTimeMillis();
+                        break;
                     }
                     //SELECT and BACK have some of the same processing
                 case BACK:
+                    if(talkSelect == -3) {
+                        talkSelect = -1;
+                    }
+                    //nothing if selecting
+                    if(talkSelect >= 0) {
+                        break;
+                    }
                     //skip to end of text
-                    if(System.currentTimeMillis() - talkTimer < 
-                            talkText[talkIndex].length() * TextType.getCharDuration()
-                            && talkSelect != -2) {
+                    else if(talkSelect == -1 && System.currentTimeMillis() - talkTimer < 
+                            talkText[talkIndex].length() * TextType.getCharDuration()) {
                         talkSelect = -2;
                         break;
                     }
                     //advance to next line
-                    if(talkIndex < talkText.length - 1) {
+                    else if(talkIndex < talkText.length - 1) {
                         talkSelect = -1;
                         talkIndex++;
                         talkTimer = System.currentTimeMillis();
+                        
+                        //start talkSelect if prompted
+                        if(talkText[talkIndex].equals("$")) {
+                            talkSelect = 0;
+                        }
+                        
                         break;
                     }
+                    
                     //finish conversation
+                    dialogue = null;
                     talkText = null;
                     talkIndex = 0;
                     talkState = 0;
                     talkSelect = -1;
+                    focus = "floor";
                     break;
                     
+                case UP:
+                    if(talkSelect >= 0) {
+                        talkSelect--;
+                        if(talkSelect < 0)
+                            talkSelect = 1;
+                        break;
+                    }
+                    
+                case DOWN:
+                    if(talkSelect >= 0) {
+                        talkSelect++;
+                        if(talkSelect > 1)
+                            talkSelect = 0;
+                        break;
+                    }
+                    
                 default:
+                    if(talkSelect == -3) {
+                        talkSelect = -1;
+                    }
                     break;
             }
         }
@@ -760,7 +825,7 @@ public class InMapModel implements java.io.Serializable{
         return 100;
     }
     
-    //process release of input, return if needs view update
+    //process release of input, return if view update required
     public boolean processRelease(Control input) {
         switch(input) {
             case TOGGLE:
@@ -905,4 +970,6 @@ public class InMapModel implements java.io.Serializable{
     int getTalkIndex() { return talkIndex; }
     boolean getRunning() { return running; }
     ArrayList<String> getLog() { return log; } 
+    Control getFacing() { return facing; }
+    int getVisDist() { return visDist; }
 }
