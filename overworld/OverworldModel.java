@@ -1,5 +1,9 @@
 package overworld;
 
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import main.Control;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Random;
@@ -18,9 +22,13 @@ public class OverworldModel implements java.io.Serializable {
     private Party player;
     private ArrayList<Party> parties;
     private transient PartyAI partyAI;
-    private String modelName;
     private long startTime = System.currentTimeMillis();
     private Random rand = new Random();
+
+    private boolean controlsLocked;
+    private boolean menuOpen;
+
+    private Control verticalDir, horizontalDir, dir;
 
     OverworldModel() {
         parties = new ArrayList<>();
@@ -32,14 +40,6 @@ public class OverworldModel implements java.io.Serializable {
         }
 
         startPartyAI();
-    }
-
-    String getModelName() {
-        return modelName;
-    }
-
-    void setModelName(String name) {
-        this.modelName = name;
     }
 
     public long getStartTime() {
@@ -59,7 +59,7 @@ public class OverworldModel implements java.io.Serializable {
         do {
             int x = rand.nextInt(getMapSize() - 1);
             int y = rand.nextInt(getMapSize() - 1);
-            if (getTiles()[x][y].tresspassable) {
+            if (getTiles()[x][y].type.equals("Settlement")) {
                 startPos[0] = x;
                 startPos[1] = y;
                 return startPos;
@@ -110,24 +110,140 @@ public class OverworldModel implements java.io.Serializable {
         return parties.get(index);
     }
 
-    // sets current pos at index to current value plus sum
-    void setCurrPos(int index, int pos) {
-        if (index == 0)
-            player.setTileX((short) pos);
-        else
-            player.setTileY((short) pos);
+    void setControlsLocked(boolean locked) {
+        this.controlsLocked = locked;
     }
 
-    // gets player position on either x or y axis
-    int getCurrPos(int index) {
-        if (index == 0)
-            return player.getTileX();
-        else
-            return player.getTileY();
+    public void setMenuOpen(boolean menuOpen) {
+        this.menuOpen = menuOpen;
+    }
+
+    boolean getMenuOpen() {
+        return menuOpen;
     }
 
     // generates new map
     private void newGame(int mapSize) throws SQLException {
         map = new Map(mapSize);
+    }
+
+    double[] getAngles() {
+        return player.calcAngles(player.getxOffset(), player.getyOffset(), OverworldView.mapTileSize);
+    }
+
+    int process(Control key, boolean released) {
+
+        /*
+            Return code -1 = remove pane from stack
+            Return code 0 = controls locked, do nothing
+            Return code 1 = open/close menu (depends on menuOpen boolean)
+            Return code 2 = show tile borders
+            Return code 3 = player movement
+         */
+
+        // remove one menu from scene
+        if (key == Control.BACK && !menuOpen)
+            return -1;
+        // if looking at a menu, lock controls
+        if (controlsLocked)
+            return 0;
+
+        // open menu
+        if (key == Control.BACK || key == Control.MENU || key == Control.OPENCHAR || key == Control.OPENINV || key == Control.OPENNOTES || key == Control.OPENOPTIONS || key == Control.OPENPARTY) {
+            menuOpen = !menuOpen;
+            return 1;
+        }
+
+        // when player touches key, stops automatic moving through map (moving by clicking on a tile)
+        player.setPath(null);
+
+        //System.out.println("XPos: " + getCurrPos(0));
+        //System.out.println("YPos: " + getCurrPos(1));
+        //System.out.println("Tile size: " + getMapTileSize());
+
+        // test code for AI movement
+        if (key == Control.T) {
+            //model.getParty(0).nextMove(model.getBooleanMap(), model.getParties());
+            getParty(0).nextMove(getTiles(), getBooleanMap(), getParties());
+        }
+
+        // shows tile borders
+        if (key == Control.ALT)
+            return 2;
+
+        // movement on map processing
+        if (key == Control.LEFT || key == Control.RIGHT || key == Control.UP || key == Control.DOWN) {
+
+            System.out.println(key);
+
+            if (key == Control.UP || key == Control.DOWN)
+                verticalDir = key;
+            else
+                horizontalDir = key;
+
+            Control dir;
+            if (verticalDir == Control.UP && horizontalDir == Control.RIGHT)
+                dir = Control.UPRIGHT;
+            else if (verticalDir == Control.UP && horizontalDir == Control.LEFT)
+                dir = Control.UPLEFT;
+            else if (verticalDir == Control.DOWN && horizontalDir == Control.RIGHT)
+                dir = Control.DOWNRIGHT;
+            else if (verticalDir == Control.DOWN && horizontalDir == Control.LEFT)
+                dir = Control.DOWNLEFT;
+            else if (verticalDir == Control.UP || verticalDir == Control.DOWN)
+                dir = verticalDir;
+            else if (horizontalDir == Control.LEFT || horizontalDir == Control.RIGHT)
+                dir = horizontalDir;
+            else
+                dir = Control.NULL;
+
+            if (!released) {
+                getPlayer().setSpeedY(getPlayer().getSpeedY(dir, getTiles()));
+                getPlayer().setSpeedX(getPlayer().getSpeedX(dir, getTiles()));
+            } else {
+                if (key == Control.RIGHT || key == Control.LEFT) {
+                    getPlayer().setSpeedX(0);
+                    horizontalDir = Control.NULL;
+                } else {
+                    getPlayer().setSpeedY(0);
+                    verticalDir = Control.NULL;
+                }
+            }
+
+            // detect if player has moved tiles, and if so, add and remove rows appropriately
+            if (getPlayer().detectTileChange(OverworldView.mapTileSize, true)) {
+                return 3;
+            }
+        }
+
+        return 0;
+    }
+
+    int process(MouseEvent event, int xPos, int yPos) {
+        if (controlsLocked)
+            return 0;
+
+        System.out.println("Tile type: " + getTiles()[xPos][yPos].type);
+
+        if (event.getButton() == MouseButton.PRIMARY) {
+            // processing mouse events for left click
+            System.out.println("Tile @ pos " + xPos + ", " + yPos);
+            if (getTiles()[xPos][yPos].type.equalsIgnoreCase("Settlement") || getTiles()[xPos][yPos].type.equalsIgnoreCase("InMap")) {
+                // display additional menus if dungeon or settlement
+                // lock controls to prevent moving on world map while scrolling menu
+                if (player.getTileX() - xPos == 0 && player.getTileY() - yPos == 0) {
+                    controlsLocked = true;
+                    if (getTiles()[xPos][yPos].type.equalsIgnoreCase("Settlement"))
+                        return 11;
+                    else if (getTiles()[xPos][yPos].type.equalsIgnoreCase("InMap"))
+                        return 12;
+                }
+            }
+
+        } else if (event.getButton() == MouseButton.SECONDARY) {
+            return 21;
+        }
+
+        return 0;
     }
 }

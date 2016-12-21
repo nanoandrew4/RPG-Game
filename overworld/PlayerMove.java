@@ -80,31 +80,11 @@ class PlayerMove extends Thread {
                 model.getPlayer().setxOffset(view.getPlayerXOffset());
                 model.getPlayer().setyOffset(view.getPlayerYOffset());
 
-                if (model.getPlayer().detectTileChange(view.getMapTileSize(), true)) {
-                    double angles[] = model.getPlayer().calcAngles(model.getPlayer().getxOffset(), model.getPlayer().getyOffset(), view.getMapTileSize());
-                    if (angles[0] > 22.5)
-                        Platform.runLater(() -> view.addColumn(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), false));
-                    if (angles[0] < -22.5)
-                        Platform.runLater(() -> view.addRow(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), false));
-                    if (angles[1] > 22.5)
-                        Platform.runLater(() -> view.addRow(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), true));
-                    if (angles[1] < -22.5)
-                        Platform.runLater(() -> view.addColumn(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), true));
-                    if (Math.abs(view.getPlayerXOffset()) > view.getMapTileSize() / 2) {
-                        if (view.getPlayerXOffset() > 0) {
-                            Platform.runLater(() -> view.addColumn(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), true));
-                            Platform.runLater(() -> view.addRow(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), true));
-                        } else {
-                            Platform.runLater(() -> view.addColumn(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), false));
-                            Platform.runLater(() -> view.addRow(model.getTiles(), model.getPlayer(), model.getParties(), model.getMapSize(), false));
-                        }
-                    }
+                int returnCode = model.process(model.getPlayer().getDir(), false);
 
-                    try {
-                        sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                if (returnCode == 3) {
+                    view.reDraw(model.getAngles(), model.getTiles(), model.getPlayer(), model.getParties());
+                    controller.setMouseEvents();
                 }
             }
         }

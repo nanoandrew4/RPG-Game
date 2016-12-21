@@ -9,10 +9,10 @@ class Map implements java.io.Serializable {
 
     /*
         Map class holds all information related to the overworld map, such as the world gen algorithm and 2D array of type Tile
+        TODO: FIX CHANGEONAXIS FOR NWNE TILE
      */
 
     private Random rand; // random value seeded with current time to use in world gen
-    //private DBManager dbManager;
 
     private Tile[][] tiles; // array containing all the information for each tile in the game
     private boolean[][] booleanMap;
@@ -32,23 +32,11 @@ class Map implements java.io.Serializable {
     private final int MAX_DUNGEON;
 
     Map(int mapSize) throws SQLException {
-        //this.dbManager = dbManager;
         rand = new Random(System.currentTimeMillis());
 
-        /*if (!newGame) {
-            ResultSet rs = dbManager.selectFromDatabase("WORLD_DATA");
-
-            while (rs.next()) {
-                this.mapSize = rs.getRow();
-            }
-            this.mapSize = (int) Math.sqrt(this.mapSize) + 1;
-
-        } else*/
         this.mapSize = mapSize;
 
         booleanMap = new boolean[this.mapSize][this.mapSize];
-
-        //dbManager.setMapSize(this.mapSize);
 
         MIN_MOUNTAIN = (int) (0.5 * mapSize);
         MAX_MOUNTAIN = (int) (1.0 * mapSize);
@@ -93,68 +81,6 @@ class Map implements java.io.Serializable {
     boolean[][] getBooleanMap() {
         return booleanMap;
     }
-
-    /*private void load() throws SQLException {
-
-        System.out.println("Starting world load");
-
-        long start = System.currentTimeMillis();
-
-        ResultSet rs = dbManager.selectFromDatabase("WORLD_DATA");
-        int x = 0, y = 0;
-
-        tiles = new Tile[mapSize][mapSize];
-
-        while (rs.next()) {
-
-            if (x >= mapSize - 1) {
-                x = 0;
-                y++;
-            }
-
-            String type = rs.getString("TYPE");
-            String subType = rs.getString("SUBTYPE");
-            String branch = rs.getString("BRANCH");
-            String name = rs.getString("NAME");
-            int relationship = rs.getInt("RELATIONSHIP");
-
-            if (type.equalsIgnoreCase("Settlement")) // add other dynamic tiles in the future
-                tiles[x][y] = new Tile(type, subType, branch, name, relationship);
-
-            else
-                tiles[x][y] = new Tile(type);
-
-            x++;
-        }
-
-        System.out.println("Load took: " + ((double) (System.currentTimeMillis() - start) / 1000) + "s");
-    }
-
-    void save() throws SQLException {
-
-        System.out.println("Starting game save");
-        long start = System.currentTimeMillis();
-
-        dbManager.deleteTable("WORLD_DATA");
-        dbManager.createTables();
-
-        dbManager.setAutoCommit(false);
-
-        for (int y = 0; y < mapSize; y++) {
-            for (int x = 0; x < mapSize; x++) {
-                if (tiles[x][y].settlementTile != null) {
-                    dbManager.insertIntoTable_WORLD_DATA(tiles[x][y].type, tiles[x][y].settlementTile.subType, tiles[x][y].settlementTile.branch,
-                            tiles[x][y].settlementTile.settlementName, tiles[x][y].settlementTile.relationship);
-                } else
-                    dbManager.insertIntoTable_WORLD_DATA(tiles[x][y].type, null, null, null, 0);
-            }
-        }
-
-        dbManager.commit();
-        dbManager.setAutoCommit(true);
-
-        System.out.println("Game save took: " + ((float) (System.currentTimeMillis() - start) / 1000) + "s");
-    }*/
 
     private int returnDiffTileBonus(int sameTileCount) {
         return (int) (5 * (Math.pow(2, -0.5 * sameTileCount)));
@@ -739,7 +665,7 @@ class Map implements java.io.Serializable {
                 int randX = rand.nextInt(mapSize) + 2;
                 int randY = rand.nextInt(mapSize) + 2;
                 if (isAreaEmpty(tiles, randX, randY, 2, mapSize)) {
-                    tiles[randX][randY] = new Tile("Settlement", "Village", 'c', name = Main.genRandName(rand.nextInt(4) + 4), 50);
+                    tiles[randX][randY] = new Tile("Settlement", "Village", name = Main.genRandName(rand.nextInt(4) + 4), 50);
                     break;
                 }
             }

@@ -1,9 +1,7 @@
 package overworld;
 
 import javafx.animation.AnimationTimer;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.LongProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -14,12 +12,14 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import org.omg.CORBA.BAD_CONTEXT;
 
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Stack;
+import java.time.Year;
+import java.util.*;
 
 class Images {
 
@@ -63,7 +63,7 @@ class Images {
         mountain = new Image("/media/graphics/overworld/Mountain.png", width, height, true, false);
         grass = new Image("/media/graphics/overworld/Grass.png", width, height, true, false);
 
-        banner = new Image("/media/graphics/overworld/banner/banner.png", width / 4, height / 4, true, false);
+        banner = new Image("/media/graphics/overworld/banner/banner.png", width / 1.2, height / 4, false, false);
 
         waterAll = new Image("/media/graphics/overworld/water/WaterAll.png", width, height, true, false);
         waterE = new Image("/media/graphics/overworld/water/WaterE.png", width, height, true, false);
@@ -86,39 +86,39 @@ class OverworldView {
 
     /*
         Displays all graphical elements of the overworld with data from the model provided by the controller
-
-        TODO: CHANGE ALL STATIC ARBITRARY VALUES IN LOWER CLASSES TO WORK ON ALL DISPLAYS EQUALLY
+        177.69230508522173 - mapTileSize on desktop monitor
      */
 
     private static float zoomMultiplier = 2.2f;
 
-    /*
-        Vars to be used for moving animation
-     */
-    static int zoom = (int) (6 * zoomMultiplier);
+    static int tilesAcrossScreen = 6; // tiles to be fit across screen in vertical or horizontal direction
+    static int zoom = (int) (tilesAcrossScreen * zoomMultiplier);
+    private double screenWidth, screenHeight;
     static double mapTileSize;
+
     private final LongProperty lastUpdateTime = new SimpleLongProperty();
+
     private Images images;
-    ImageView[][][] imageViews; // for controller to access and add click events
-    private ImageView centerTile;
-    private ImageView playerIV;
-    private HashMap<Party, ImageView> pIVHashMap; // when party is eliminated, delete from hashmap
-    Button manageCity = new Button("Manage"); // for info window, so controller can access it - will be imagebutton
-    Button enterDungeon = new Button("Enter");
-    Stack<Pane> paneStack = new Stack<>(); // makes returning to previous window easier
+    private ImageView[][][] imageViews; // for controller to access and add click events
+    private Pane[][] banners;
+
+    private Stack<Pane> paneStack = new Stack<>(); // makes returning to previous window easier
     private Pane overworldLayout, infoBox;
-    private double screenWidth, screenHeight, padding = 15;
+    private ImageView centerTile, playerIV;
+
+    private HashMap<Party, ImageView> pIVHashMap; // when party is eliminated, delete from hashmap
 
     OverworldView(double screenWidth, double screenHeight) {
         imageViews = new ImageView[zoom * 2 + 1][zoom * 2 + 1][2];
+        banners = new Pane[zoom * 2 + 1][zoom * 2 + 1];
         pIVHashMap = new HashMap<>();
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
 
         if (screenWidth > screenHeight) {
-            mapTileSize = screenHeight / (zoom / zoomMultiplier);
+            mapTileSize = screenHeight / tilesAcrossScreen;
         } else {
-            mapTileSize = screenWidth / (zoom / zoomMultiplier);
+            mapTileSize = screenWidth / tilesAcrossScreen;
         }
     }
 
@@ -157,7 +157,7 @@ class OverworldView {
             for (int x = -zoom; x <= zoom; x++) {
                 int xPos = (player.getTileX() + x < 0 ? (player.getTileX() + x >= mapSize ? mapSize - 1 : 0) : player.getTileX() + x);
                 int yPos = (player.getTileY() + y < 0 ? (player.getTileY() + y >= mapSize ? mapSize - 1 : 0) : player.getTileY() + y);
-                drawTile(tiles, player, (float) (mapTileSize / 2), x + zoom, y + zoom, xPos, yPos,
+                drawTile(tiles, player, x + zoom, y + zoom, xPos, yPos,
                         0.5 * mapTileSize * (x - y) + (screenWidth / 2) - mapTileSize / 2,
                         0.25 * mapTileSize * (x + y) + (screenHeight / 2) - mapTileSize * 3 / 4
                 );
@@ -178,6 +178,9 @@ class OverworldView {
 
         // draw all entities that are within visible range
         drawEntities(player, parties);
+
+        // draw banners for settlements (must be on top of players)
+        drawBanners();
 
         System.out.println("Center tile " + centerTile.getLayoutX() + ", " + centerTile.getLayoutY());
         System.out.println("Player pos " + playerIV.getLayoutX() + ", " + playerIV.getLayoutY());
@@ -227,37 +230,6 @@ class OverworldView {
          */
 
         return new Image("/media/graphics/redDot.png", 6, 6, false, false);
-    }
-
-    private void genBanner(Tile tile, double parentX, double parentY, float width, float height) {
-
-        /*
-            Generates the banner graphical element to overlay over each settlement
-         */
-
-        tile.banner = new Pane();
-
-        double boxHeight = height / 1.5;
-
-        Rectangle box = new Rectangle((double) width, boxHeight, Paint.valueOf("white"));
-
-        ImageView bannerL = new ImageView(images.banner);
-        ImageView bannerR = new ImageView(images.banner);
-        Text name = new Text(tile.settlementTile.settlementName);
-        name.setFont(new Font(10));
-        Text relationship = new Text((tile.settlementTile.relationship >= 0 ? "+" : "-") + tile.settlementTile.relationship);
-        relationship.setFont(new Font(10));
-
-        bannerL.relocate(0, boxHeight / 3);
-        bannerR.relocate((double) width - (double) width / 3, boxHeight / 3);
-        name.relocate((double) width / 2 - calcStringWidth(tile.settlementTile.settlementName) / 2, boxHeight / 3);
-        relationship.relocate((double) width / 2 - calcStringWidth(" " + tile.settlementTile.relationship), 0);
-
-        tile.banner.getChildren().addAll(box, bannerL, bannerR, name, relationship);
-        tile.banner.setVisible(false);
-
-        tile.banner.setLayoutX((parentX - (mapTileSize / 2)) - (width / 2));
-        tile.banner.setLayoutY((parentY - (mapTileSize / 4)) - (height / 2));
     }
 
     private Image genTile(int xPos, int yPos, Tile[][] tiles) {
@@ -312,47 +284,70 @@ class OverworldView {
         return null;
     }
 
-    private void drawTile(Tile[][] tiles, Party player, float bannerSize, int imgX, int imgY, int xPos, int yPos, double pixelX, double pixelY) {
+    private void drawTile(Tile[][] tiles, Party player, int imgX, int imgY, int xPos, int yPos, double pixelX, double pixelY) {
 
         /*
             Draws Image Views and tiles to screen for init load only
          */
 
-        // add tiles
+        // add tile
 
         imageViews[imgX][imgY][0] = new ImageView(genTile(xPos, yPos, tiles));
         imageViews[imgX][imgY][0].setLayoutX(pixelX);
         imageViews[imgX][imgY][0].setLayoutY(pixelY);
-        setMoveAnim(imageViews[imgX][imgY][0], player, tiles);
         overworldLayout.getChildren().add(imageViews[imgX][imgY][0]);
+        setMoveAnim(imageViews[imgX][imgY][0], player);
 
-        // add settlement banners
-
-        if (tiles[xPos][yPos].type.equalsIgnoreCase("Settlement")) {
-            genBanner(tiles[xPos][yPos], imageViews[imgX][imgY][0].getLayoutX(), imageViews[imgX][imgY][0].getLayoutY(), bannerSize, bannerSize / 2);
-            tiles[xPos][yPos].banner.setLayoutX(pixelX); // fix positioning so is in center of tile...
-            tiles[xPos][yPos].banner.setLayoutY(pixelY);
-            setMoveAnim(tiles[xPos][yPos].banner, player);
-            overworldLayout.getChildren().add(tiles[xPos][yPos].banner);
-        }
-
-        // add tile borders
+        // add tile border
 
         imageViews[imgX][imgY][1] = new ImageView(images.tileBorder);
         imageViews[imgX][imgY][1].setLayoutX(pixelX);
         imageViews[imgX][imgY][1].setLayoutY(pixelY);
         imageViews[imgX][imgY][1].setVisible(false);
-        setMoveAnim(imageViews[imgX][imgY][1], player, tiles);
         overworldLayout.getChildren().add(imageViews[imgX][imgY][1]);
+
+        setMoveAnim(imageViews[imgX][imgY][1], player);
+
+        // add settlement banner
+
+        if (tiles[xPos][yPos].type.equalsIgnoreCase("Settlement")) {
+            genBanner(tiles[xPos][yPos], imgX, imgY, imageViews[imgX][imgY][0].getLayoutX(), imageViews[imgX][imgY][0].getLayoutY(),
+                    (float)images.banner.getWidth(), (float)images.banner.getHeight());
+            //tiles[xPos][yPos].banner.setLayoutX(pixelX); // fix positioning so is in center of tile...
+            //tiles[xPos][yPos].banner.setLayoutY(pixelY);
+            // added later (after players)
+            setMoveAnim(banners[imgX][imgY], player);
+        }
+    }
+    
+    // rename pls
+    void reDraw (double[] angles, Tile[][] tiles, Party player, ArrayList<Party> parties) {
+        if (angles[0] > 22.5)
+            addColumn(tiles, player, parties, false);
+        if (angles[0] < -22.5)
+            addRow(tiles, player, parties, false);
+        if (angles[1] > 22.5)
+            addRow(tiles, player, parties, true);
+        if (angles[1] < -22.5)
+            addColumn(tiles, player, parties, true);
+        if (Math.abs(getPlayerXOffset()) > getMapTileSize() / 2) {
+            if (getPlayerXOffset() > 0) {
+                addColumn(tiles, player, parties, true);
+                addRow(tiles, player, parties, true);
+            } else {
+                addColumn(tiles, player, parties, false);
+                addRow(tiles, player, parties, false);
+            }
+        }
     }
 
-    void addRow(Tile[][] tiles, Party player, ArrayList<Party> parties, int mapSize, boolean top) {
+    private void addRow(Tile[][] tiles, Party player, ArrayList<Party> parties, boolean top) {
 
         /*
             Adds a row when a tile change on the y axis is detected
          */
 
-        if ((top && player.getTileY() + (zoom) + 1 < mapSize) || (!top && player.getTileY() + (zoom) - 1 > 0)) {
+        if ((top && player.getTileY() + (zoom) + 1 < 1000) || (!top && player.getTileY() + (zoom) - 1 > 0)) {
             for (int x = 0; x < zoom * 2 + 1; x++) {
                 if (!top)
                     for (int y = 0; y < zoom * 2; y++) // move all images down
@@ -362,23 +357,23 @@ class OverworldView {
                         imageViews[x][y][0].setImage(imageViews[x][y - 1][0].getImage());
 
                 int yPos = player.getTileY() + (!top ? -zoom : zoom);
-                int xPos = (player.getTileX() + x < 0 ? (player.getTileX() + x >= mapSize ? mapSize - 1 : 0) : player.getTileX() + x);
+                int xPos = (player.getTileX() + x < 0 ? (player.getTileX() + x >= 1000 ? 1000 - 1 : 0) : player.getTileX() + x);
 
                 imageViews[x][!top ? 0 : zoom * 2 - 1][0].setImage(genTile(xPos, yPos, tiles));
             }
-            moveImageViews(top ? mapTileSize / 2 : -mapTileSize / 2, top ? -mapTileSize / 4 : mapTileSize / 4);
+            moveSceneElements(top ? mapTileSize / 2 : -mapTileSize / 2, top ? -mapTileSize / 4 : mapTileSize / 4);
             drawEntities(player, parties);
         }
     }
 
-    void addColumn(Tile[][] tiles, Party player, ArrayList<Party> parties, int mapSize, boolean right) {
+    private void addColumn(Tile[][] tiles, Party player, ArrayList<Party> parties, boolean right) {
 
         /*
             Adds a column when a tile change on the x axis is detected
          */
 
         //System.out.println("Adding column");
-        if ((right && player.getTileY() + (zoom) + 1 < mapSize) || (!right && player.getTileY() + (zoom) - 1 > 0)) {
+        if ((right && player.getTileY() + (zoom) + 1 < 1000) || (!right && player.getTileY() + (zoom) - 1 > 0)) {
             for (int y = 0; y < zoom * 2 + 1; y++) {
                 if (right)
                     for (int x = 0; x < zoom * 2; x++)
@@ -388,16 +383,70 @@ class OverworldView {
                         imageViews[x][y][0].setImage(imageViews[x - 1][y][0].getImage());
 
                 int xPos = player.getTileX() + (right ? -zoom : zoom);
-                int yPos = (player.getTileY() + y < 0 ? (player.getTileY() + y >= mapSize ? mapSize - 1 : 0) : player.getTileY() + y);
+                int yPos = (player.getTileY() + y < 0 ? (player.getTileY() + y >= 1000 ? 1000 - 1 : 0) : player.getTileY() + y);
 
                 imageViews[right ? 0 : zoom * 2 - 1][y][0].setImage(genTile(xPos, yPos, tiles));
             }
-            moveImageViews(right ? mapTileSize / 2 : -mapTileSize / 2, right ? mapTileSize / 4 : -mapTileSize / 4);
+            moveSceneElements(right ? mapTileSize / 2 : -mapTileSize / 2, right ? mapTileSize / 4 : -mapTileSize / 4);
             drawEntities(player, parties);
         }
     }
 
-    private void setMoveAnim(ImageView imageView, Party player, Tile[][] tiles) {
+    ImageView getTileIV(int arrX, int arrY) {
+        return imageViews[arrX][arrY][0];
+    }
+
+    void showTileBorders(boolean show) {
+        for (int y = -OverworldView.zoom; y < OverworldView.zoom; y++) {
+            for (int x = -OverworldView.zoom; x < OverworldView.zoom; x++) {
+                if (imageViews[x + OverworldView.zoom][y + OverworldView.zoom][1] == null)
+                    continue;
+                imageViews[x + OverworldView.zoom][y + OverworldView.zoom][1].setVisible(show);
+            }
+        }
+    }
+
+    private void genBanner(Tile tile, int parentImgX, int parentImgY, double parentPixelX, double parentPixelY, float width, float height) {
+
+        /*
+            Generates the banner graphical element to overlay over each settlement
+         */
+
+        banners[parentImgX][parentImgY] = new Pane();
+
+        ImageView banner = new ImageView(images.banner);
+
+        Text name = new Text(tile.settlementTile.settlementName);
+        name.setFont(Font.font("Luminari", FontWeight.NORMAL, 14));
+
+        banner.relocate(0, height / 3);
+        name.relocate((double) (width / 2) - (calcStringWidth(tile.settlementTile.settlementName) / 2), banner.getLayoutY() + height / 3);
+
+        banners[parentImgX][parentImgY].getChildren().addAll(banner, name);
+        banners[parentImgX][parentImgY].setVisible(false);
+
+        banners[parentImgX][parentImgY].setLayoutX((parentPixelX + (mapTileSize / 2) - (width / 2)));
+        banners[parentImgX][parentImgY].setLayoutY((parentPixelY + (mapTileSize / 2) + (height / 8)));
+    }
+
+    private void drawBanners() {
+        for (int y = 0; y <= zoom * 2; y++) {
+            for (int x = 0; x <= zoom * 2; x++) {
+                if (banners[x][y] != null)
+                    overworldLayout.getChildren().add(banners[x][y]);
+            }
+        }
+    }
+
+    Pane getBanner(int arrX, int arrY) {
+        return banners[arrX][arrY];
+    }
+
+    void showBanner(int xPos, int yPos, boolean show) {
+        banners[xPos][yPos].setVisible(show);
+    }
+
+    private void setMoveAnim(ImageView imageView, Party player) {
 
         /*
             Sets the movement animation of a tile (imageview)
@@ -415,12 +464,6 @@ class OverworldView {
 
                     imageView.setLayoutX(imageView.getLayoutX() - player.getSpeedX());
                     imageView.setLayoutY(imageView.getLayoutY() + player.getSpeedY());
-
-                    if (imageView.equals(imageViews[imageViews.length - 1][imageViews.length - 1][0])) {
-                        // when last tile movement is done, determine player speed
-                        player.setSpeedX(player.getSpeedX(player.getDir(), tiles));
-                        player.setSpeedY(player.getSpeedY(player.getDir(), tiles));
-                    }
                 }
                 lastUpdateTime.set(timestamp);
             }
@@ -460,11 +503,11 @@ class OverworldView {
             @Override
             public void handle(long timestamp) {
                 if (lastUpdateTime.get() > 0) {
-                    if (pane == null) { // if redundant delete if statement
+                    if (pane == null) {
                         stop();
                         return;
                     }
-                    pane.setLayoutX(pane.getLayoutX() + player.getSpeedX());
+                    pane.setLayoutX(pane.getLayoutX() - player.getSpeedX());
                     pane.setLayoutY(pane.getLayoutY() + player.getSpeedY());
                 }
                 lastUpdateTime.set(timestamp);
@@ -472,98 +515,19 @@ class OverworldView {
         }.start();
     }
 
-    private void moveImageViews(double xOffset, double yOffset) {
+    private void moveSceneElements(double xOffset, double yOffset) {
+
+        // could also just cycle through elements in overworld layout
+
         for (int y = 0; y <= zoom * 2; y++)
             for (int x = 0; x <= zoom * 2; x++) {
                 imageViews[x][y][0].setLayoutX(imageViews[x][y][0].getLayoutX() + xOffset);
                 imageViews[x][y][0].setLayoutY(imageViews[x][y][0].getLayoutY() + yOffset);
                 imageViews[x][y][1].setLayoutX(imageViews[x][y][1].getLayoutX() + xOffset);
                 imageViews[x][y][1].setLayoutY(imageViews[x][y][1].getLayoutY() + yOffset);
+                //banners[x][y].setLayoutX(banners[x][y].getLayoutX() + xOffset);
+                //banners[x][y].setLayoutY(banners[x][y].getLayoutY() + yOffset);
             }
-    }
-
-    void setMenuPane(Pane p) {
-        overworldLayout.getChildren().add(p);
-    }
-
-    void showSettlementInfo(SettlementTile tile) {
-
-        /*
-            Shows the information of a settlement tile. Click event handled by controller
-         */
-
-        infoBox = new Pane();
-
-        paneStack.push(infoBox);
-
-        double boxWidth = screenWidth / 3;
-        double boxHeight = screenHeight / 5;
-
-        Rectangle box = new Rectangle(boxWidth, boxHeight, Paint.valueOf("white"));
-        box.relocate((screenWidth / 2) - (boxWidth / 2), screenHeight / 2 - (boxHeight / 2));
-
-        infoBox.getChildren().addAll(
-                box,
-                createButton(manageCity, (screenWidth / 2) - boxWidth / 2 + padding, screenHeight / 2 + boxHeight / 2 - 50),
-                //createButton(diplomacy, screenWidth / 2 - calcStringWidth("Diplomacy") / 2, screenHeight / 2 + boxHeight / 2 - 50, "Diplomacy"),
-                //createButton(trade, screenWidth / 2 + boxWidth / 2 - padding - calcStringWidth("Trade"), screenHeight / 2 + boxHeight / 2 - 50, "Trade"),
-                createText(screenWidth / 2 - calcStringWidth(tile.settlementName) / 2, screenHeight / 2 - (boxHeight / 2) + 20, tile.settlementName, 24),
-                createText(screenWidth / 2 - calcStringWidth(tile.subType) / 2, screenHeight / 2 - (boxHeight / 2) + 40, tile.subType, 16),
-                createText(screenWidth / 2 - boxWidth / 2 + padding, screenHeight / 2 - (boxHeight / 2) + 55, "Type: " + (tile.branch == 'm' ? "Military" : "Commercial"), 12),
-                createText(screenWidth / 2 - boxWidth / 2 + padding, screenHeight / 2 - (boxHeight / 2) + 70, "Relationship: " + tile.relationship, 12)
-        );
-        overworldLayout.getChildren().add(infoBox);
-    }
-
-    // TODO: FUNCTION THAT DETERMINES POSITION TO PLACE ELEMENT IN THE INFO BOXES
-
-    void showInMapInfo(String name, String difficulty) {
-
-        /*
-            Shows the information of a settlement tile. Click event handled by controller
-            TODO: SHOULD PASS THE INMAPTILE OBJECT?
-         */
-
-        infoBox = new Pane();
-
-        paneStack.push(infoBox);
-
-        double boxWidth = screenWidth / 3;
-        double boxHeight = screenHeight / 5;
-
-        Rectangle box = new Rectangle(boxWidth, boxHeight, Paint.valueOf("white"));
-        box.relocate((screenWidth / 2) - (boxWidth / 2), screenHeight / 2 - (boxHeight / 2));
-
-        infoBox.getChildren().addAll(
-                box,
-                createButton(enterDungeon, (screenWidth / 2) - (calcStringWidth(enterDungeon.getText())), (screenHeight / 2)),
-                createText((screenWidth / 2) - calcStringWidth(name), (screenHeight / 2) - (boxHeight / 2) + 20, name, 24),
-                createText((screenWidth / 2) - calcStringWidth(difficulty), (screenHeight / 2) - (boxHeight / 2) + 40, difficulty, 16)
-        );
-        overworldLayout.getChildren().add(infoBox);
-    }
-
-    private Text createText(double x, double y, String string, int font) { // font size
-
-        /*
-            Creates and returns a text object at coords x, y with text string and font font
-         */
-
-        Text text = new Text(x, y, string);
-        text.setFont(new Font(font));
-
-        return text;
-    }
-
-    private Button createButton(Button button, double x, double y) {
-
-        /*
-            Creates and returns a button object at coords x, y and with text string
-         */
-
-        button.setPadding(Insets.EMPTY);
-        button.relocate(x, y);
-        return button;
     }
 
     private double calcStringWidth(String string) {
@@ -577,49 +541,128 @@ class OverworldView {
         return fm.stringWidth(string); // for variable font size
     }
 
-    void removePane(Pane pane) {
+    void addPane (Pane p) {
+
+        /*
+            Adds pane to GUI
+         */
+
+        overworldLayout.getChildren().add(p);
+    }
+
+    boolean removePane() {
 
         /*
             Removes a pane (window) from the GUI
          */
 
-        overworldLayout.getChildren().remove(pane);
+        if (!paneStack.empty()) {
+            overworldLayout.getChildren().remove(paneStack.pop());
+            return true;
+        } else
+            return false;
     }
 
-    void showCityManagement(SettlementTile tile) {
+    void showSettlementInfo(SettlementTile tile, int arrX, int arrY) {
 
         /*
-            Creates and displays the city management window
+            Shows the information of a settlement tile. Click event handled by controller
          */
 
-        Pane managmentBox = new Pane();
+        banners[arrX][arrY].setVisible(false);
 
-        paneStack.push(managmentBox);
+        double limit = screenWidth / 1.2;
+        double xIncrement = images.banner.getWidth();
+        double yIncrement = images.banner.getHeight();
 
-        double boxWidth = screenWidth / 2.5;
-        double boxHeight = screenHeight / 2.5;
+        // creates animation that makes the banner bigger to fit more info
+        ScaleAnimation anim = new ScaleAnimation(xIncrement, yIncrement, images.banner,
+                banners[arrX][arrY].getLayoutX(), banners[arrX][arrY].getLayoutY(), limit);
 
-        final double BOXLEFTBOUND = screenWidth / 2 - boxWidth / 2 + padding;
-        final double BOXRIGHTBOUND = screenWidth / 2 + boxWidth / 2 - padding;
-        final double BOXTOPBOUND = screenHeight / 2 - boxHeight / 2 + padding;
-        final double BOXBOTTOMBOUND = screenHeight / 2 + boxHeight / 2 - padding;
+        // add animated imageView to scene, no frames from animation seem to be missed by adding after
+        overworldLayout.getChildren().add(anim.getImageView());
 
+        // necessary to calculate top left coordinates of image
+        double finalWidth = images.banner.getWidth();
+        double finalHeight = images.banner.getHeight();
+
+        while (finalWidth < limit) {
+            finalWidth += xIncrement;
+            finalHeight += yIncrement;
+        }
+
+        double topLeftX = (screenWidth - finalWidth) / 2;
+        double topLeftY = (screenHeight - finalHeight) / 2; // needs fixing
+
+        System.out.println();
+
+        infoBox = new Pane();
+
+        paneStack.push(infoBox);
+
+        infoBox.getChildren().addAll(
+                anim.getImageView(),
+                createText(topLeftY + (finalHeight / 5.5), tile.settlementName, Font.font("Luminari", FontWeight.BOLD, 24), screenWidth),
+                createText(topLeftY + (finalHeight / 3.5), tile.subType, Font.font("Luminari", FontWeight.NORMAL, 18), screenWidth),
+                createText(topLeftY + (finalHeight / 2.5),
+                        "This settlement is a " + tile.subType.toLowerCase() +
+                        " that currently has a populace count of " + tile.population + "\n and has " + tile.resources[0] + " wood, " +
+                        tile.resources[1] + " stone, " + tile.resources[2] + " iron and " + tile.resources[3] + " gold in it's warehouse/s",
+                        Font.font("Luminari", FontWeight.NORMAL, 16), screenWidth)
+        );
+        overworldLayout.getChildren().add(infoBox);
+    }
+
+    void showInMapInfo(String name, String difficulty) {
+
+        /*
+            Shows the information of a settlement tile. Click event handled by controller
+         */
+
+        String enterInfo = "Press enter to explore this dungeon";
+
+        infoBox = new Pane();
+
+        paneStack.push(infoBox);
+
+        double boxWidth = screenWidth / 3;
+        double boxHeight = screenHeight / 5;
 
         Rectangle box = new Rectangle(boxWidth, boxHeight, Paint.valueOf("white"));
         box.relocate((screenWidth / 2) - (boxWidth / 2), screenHeight / 2 - (boxHeight / 2));
 
-        managmentBox.getChildren().addAll(
+        infoBox.getChildren().addAll(
                 box,
-                createText(screenWidth / 2 - calcStringWidth("City Managment") / 2, BOXTOPBOUND + 10, "City Management", 20),
-
-                createText(BOXLEFTBOUND, BOXTOPBOUND + 50, "Economy", 16),
-                createText(BOXLEFTBOUND, BOXTOPBOUND + 70, "Capital: " + tile.capital, 12),
-                createText(BOXLEFTBOUND, BOXTOPBOUND + 110, "Population: " + tile.population, 12),
-
-                createText(screenWidth / 2 - calcStringWidth("Politics") / 2, BOXTOPBOUND + 50, "Politics", 16),
-                createText(screenWidth / 2 - calcStringWidth("Average Happiness: ") / 2, BOXTOPBOUND + 70, "Average Happiness: " + tile.avgHappiness, 12)
+                createText((screenWidth / 2) - calcStringWidth(name), (screenHeight / 2) - (boxHeight / 2) + 20, name, new Font(24)),
+                createText((screenWidth / 2) - calcStringWidth(difficulty), (screenHeight / 2) - (boxHeight / 2) + 40, difficulty, new Font(16)),
+                createText(screenWidth / 2 - calcStringWidth(enterInfo), screenHeight / 2 - (boxHeight / 2) + 80, enterInfo, new Font(12))
         );
+        overworldLayout.getChildren().add(infoBox);
+    }
 
-        overworldLayout.getChildren().add(managmentBox);
+    private Text createText(double x, double y, String string, Font font) { // font size
+
+        /*
+            Creates and returns a text object at coords x, y with text string and font font
+         */
+
+        Text text = new Text(x, y, string);
+        text.setFont(font);
+
+        return text;
+    }
+
+    private Text createText(double y, String string, Font font, double wrappingWidth) { // font size
+
+        /*
+            Creates and returns a text object centered on x axis, at y-axis coord y, with String string, Font font
+         */
+
+        Text text = new Text(0, y, string);
+        text.setFont(font);
+        text.setWrappingWidth(wrappingWidth);
+        text.setTextAlignment(TextAlignment.CENTER);
+
+        return text;
     }
 }

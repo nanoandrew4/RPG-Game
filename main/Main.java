@@ -928,13 +928,12 @@ public class Main extends Application {
     }
 
     public void saveModel(int slot) throws IOException {
-        overworldController.setModelName("save" + slot);
 
         System.out.println("Saving game...");
         long start = System.currentTimeMillis();
-        FSTObjectOutput out = new FSTObjectOutput(new FileOutputStream("src/saves/" 
-                + overworldController.getModelName() + ".sav"));
-        out.writeObject(new SaveFile("src/saves/" + overworldController.getModelName() + ".sav", 
+        FSTObjectOutput out = new FSTObjectOutput(new FileOutputStream("src/saves/save"
+                + slot + ".sav"));
+        out.writeObject(new SaveFile("src/saves/save" + slot + ".sav",
                 IMController.getModel().getParty()[0].getName(), "/media/graphics/inmap/trump.png",
                 IMController.getModel().getParty()[0].getLVL(), 
                 (double)(System.currentTimeMillis() - overworldController.getModel().getStartTime()) / 3600000d, slot));

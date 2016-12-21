@@ -11,8 +11,6 @@ class Tile implements java.io.Serializable {
     boolean accessible; // for entering cities
     String type;
     SettlementTile settlementTile;
-    transient Pane banner;
-
     InMapTile inMapTile;
 
     Tile() {
@@ -42,11 +40,11 @@ class Tile implements java.io.Serializable {
     }
 
     // for settlements
-    Tile(String type, String subType, char branch, String name, int relationship) {
+    Tile(String type, String subType, String name, int relationship) {
         this.type = type;
         this.accessible = true;
         this.tresspassable = true;
-        settlementTile = new SettlementTile(subType, branch, name, (byte)relationship);
+        settlementTile = new SettlementTile(subType, name, (byte)relationship);
     }
 
     // set tresspasaibility and accessibility based on tile type
@@ -65,22 +63,20 @@ class InMapTile extends Tile implements java.io.Serializable {
 class SettlementTile extends Tile implements java.io.Serializable {
 
     public String subType; // village, city...
-    public char branch; // m for military or c for commercial
     public byte relationship;
     //public String faction;
     public String settlementName;
 
     float capital;
     int population;
-    int[] resources; // wood, stone, gold, iron
+    int[] resources; // wood, stone, iron, gold
     float avgHappiness;
 
-    SettlementTile(String subType, char branch, String name, byte relationship) {
+    SettlementTile(String subType, String name, byte relationship) {
         accessible = true;
         tresspassable = false;
         this.settlementName = name;
         this.subType = subType;
-        this.branch = branch;
         this.relationship = relationship;
 
         avgHappiness = 0;
