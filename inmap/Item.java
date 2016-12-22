@@ -11,14 +11,14 @@ import java.util.ArrayList;
 public class Item implements java.io.Serializable {
         //static vars
     //take name, return item template
-    static transient HashMap<String, Item> items = new HashMap();
+    static HashMap<String, Item> items = new HashMap();
     //take id, return item template
-    static transient HashMap<Short, Item> iditems = new HashMap();
+    static HashMap<Short, Item> iditems = new HashMap();
     //take id, return name
-    static transient HashMap<Short, String> idname = new HashMap();
+    static HashMap<Short, String> idname = new HashMap();
     //take name, return id
-    static transient HashMap<String, Short> nameid = new HashMap();
-    static transient ArrayList<String> 
+    static HashMap<String, Short> nameid = new HashMap();
+    static ArrayList<String> 
             wpns = new ArrayList(), //weapons
             arms = new ArrayList(), //armor
             accs = new ArrayList(), //accessories

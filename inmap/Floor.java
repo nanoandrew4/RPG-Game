@@ -6,10 +6,11 @@
 package inmap;
 
 import java.awt.Point;
+import java.util.ArrayDeque;
 
 import main.Control;
 
-class Floor implements java.io.Serializable{
+class Floor implements java.io.Serializable {
     InMapModel model;
     Location location;
     int size, sizeX, sizeY; //size is arbitrary, affects sizeX/Y
@@ -171,7 +172,7 @@ class Floor implements java.io.Serializable{
                     
                     //drop items
                     if(chars[ex][ey].race.name.equals("Monster") && Math.random() < 1) {
-                        items[ex][ey] = Item.randomMonsterDrop();
+                        dropItem(Item.randomMonsterDrop(), ex, ey);
                     }
                     
                     //kill dead character
@@ -280,9 +281,21 @@ class Floor implements java.io.Serializable{
             for(int y = 0; y < sizeY; y++)
                 map[x][y] = -1;
         
+        //lower visibilities for hostile maps
+        if(location.type.equals("dungeon") || location.type.equals("cave")
+                || location.type.equals("cave")) {
+            for(int x = 0; x < sizeX; x++) {
+                for(int y = 0; y < sizeY; y++) {
+                    if(tiles[x][y].vis > 20)
+                        tiles[x][y].vis = 20;
+                }
+            }
+        }
+        
         //breadth-first recursive fill
         map[party[0].x][party[0].y] = 0;
-        tileVis(map, party[0].x, party[0].y);
+        int limit = model.getVisDist();
+        tileVis(map, party[0].x, party[0].y, limit);
         
         //set tile visibilities
         for(int x = 0; x < sizeX; x++) {
@@ -293,10 +306,10 @@ class Floor implements java.io.Serializable{
                         for(int y2 = y-1; y2 < y+2; y2++) {
                             //bounds and check for higher visibility
                             if(x2 >= 0 && x2 < sizeX && y2 >= 0 && y2 < sizeY &&
-                                    tiles[x2][y2].vis < 64 / model.getVisDist() * 
-                                    (model.getVisDist() - map[x][y])) {
-                                tiles[x2][y2].vis = (byte)(64 / model.getVisDist() * 
-                                        (model.getVisDist() - map[x][y]));
+                                    tiles[x2][y2].vis < 64 / limit * 
+                                    (limit - map[x][y])) {
+                                tiles[x2][y2].vis = (byte)(64 / limit * 
+                                        (limit - map[x][y]));
                             }
                         }
                     }
@@ -306,29 +319,29 @@ class Floor implements java.io.Serializable{
     }
     
     //recursive breadth-first pathing
-    private void tileVis(byte[][] map, int x, int y) {
-        if(map[x][y] == model.getVisDist())
+    private void tileVis(byte[][] map, int x, int y, int limit) {
+        if(map[x][y] == limit)
             return;
         
         if(x > 0 && (map[x-1][y] > map[x][y]+1 || map[x-1][y] == -1) 
                 && !tiles[x-1][y].isWall) {
             map[x-1][y] = (byte)(map[x][y]+1);
-            tileVis(map, x-1, y);
+            tileVis(map, x-1, y, limit);
         }
         if(x < sizeX-1 && (map[x+1][y] > map[x][y]+1 || map[x+1][y] == -1) 
                 && !tiles[x+1][y].isWall) {
             map[x+1][y] = (byte)(map[x][y]+1);
-            tileVis(map, x+1, y);
+            tileVis(map, x+1, y, limit);
         }
         if(y > 0 && (map[x][y-1] > map[x][y]+1 || map[x][y-1] == -1) 
                 && !tiles[x][y-1].isWall) {
             map[x][y-1] = (byte)(map[x][y]+1);
-            tileVis(map, x, y-1);
+            tileVis(map, x, y-1, limit);
         }
         if(y < sizeY-1 && (map[x][y+1] > map[x][y]+1 || map[x][y+1] == -1) 
                 && !tiles[x][y+1].isWall) {
             map[x][y+1] = (byte)(map[x][y]+1);
-            tileVis(map, x, y+1);
+            tileVis(map, x, y+1, limit);
         }
     }
     
@@ -358,6 +371,37 @@ class Floor implements java.io.Serializable{
         }
         
         return boolMap;
+    }
+    
+    //drop an item on the ground
+    public void dropItem(Item item, int x, int y) {
+        //simple placement if no item already exists
+        if(!items[x][y].exists && !tiles[x][y].isWall && tiles[x][y].floorMovement == 0) {
+            items[x][y] = item;
+        }
+        else {
+            //breadth first search for empty space
+            ArrayDeque<Point> ad = new ArrayDeque();
+            Point p;
+            for(p = new Point(x, y); p != null; p = ad.poll()) {
+                if(!tiles[p.x][p.y].isWall) {
+                    if(!items[p.x][p.y].exists && tiles[p.x][p.y].floorMovement == 0)
+                        break;
+                    if(p.x < sizeX - 1)
+                        ad.add(new Point(p.x+1, p.y));
+                    if(p.x > 0)
+                        ad.add(new Point(p.x-1, p.y));
+                    if(p.y < sizeY - 1)
+                        ad.add(new Point(p.x, p.y+1));
+                    if(p.y > 0)
+                        ad.add(new Point(p.x, p.y-1));
+                }
+            }
+            //if empty space was found
+            if(p != null) {
+                items[p.x][p.y] = item;
+            }
+        }
     }
     
     //generate a floor given parameters
@@ -684,26 +728,20 @@ class Floor implements java.io.Serializable{
         }
         
         boolean[][] filled = new boolean[size*3+1][size*3+1];
-        for(int x = 0; x < size*3+1; x++)
-            filled[size*2][x] = true;
-        for(int x = 0; x < size*3+1; x++)
-            filled[x][size*2] = true;
         
         //farm
         if(size == 1) {
             for(int x = 0; x < size*3; x++) {
                 for(int y = 0; y < size*3; y++) {
                     if(!filled[x][y]) {
-                        switch((int)(Math.random()*4)) {
+                        switch((int)(Math.random()*7)) {
                             case 0:
-                                genSmallHouse(2+x*6, 2+y*6);
-                                filled[x][y] = true;
+                                genSmallHouse(filled, x, y);
                                 break;
                             case 1:
+                                genRandomHouses(filled, x, y);
                                 break;
-                            case 2:
-                                break;
-                            case 3:
+                            default:
                                 break;
                         }
                     }
@@ -715,24 +753,17 @@ class Floor implements java.io.Serializable{
             for(int x = 0; x < size*3; x++) {
                 for(int y = 0; y < size*3; y++) {
                     if(!filled[x][y]) {
-                        switch((int)(Math.random()*4)) {
+                        switch((int)(Math.random()*10)) {
                             case 0:
-                                genSmallHouse(2+x*6, 2+y*6);
-                                filled[x][y] = true;
+                                genSmallHouse(filled, x, y);
                                 break;
                             case 1:
-                                genRandomHouses(2+x*6, 2+y*6);
-                                filled[x][y] = true;
+                                genRandomHouses(filled, x, y);
                                 break;
                             case 2:
-                                if(y < size*2-1 && !filled[x][y+1]) {
-                                    genSmallInn(2+x*6, 2+y*6);
-                                    filled[x][y] = true;
-                                    filled[x][y+1] = true;
-                                }
+                                genSmallInn(filled, x, y);
                                 break;
-                            case 3:
-                                genBigInn(2+x*6, 2+y*6);
+                            default:
                                 break;
                         }
                     }
@@ -750,6 +781,7 @@ class Floor implements java.io.Serializable{
                         tiles[x][y] = new Tile("StoneFloor" + (int)(Math.random()*3+1));
                 }
             }
+            //openings
             for(int i = -1; i < 2; i++) {
                 tiles[sizeX/2+i][1] = new Tile("StoneFloor" + (int)(Math.random()*3+1));
                 tiles[sizeX/2+i][sizeY-2] = new Tile("StoneFloor" + (int)(Math.random()*3+1));
@@ -759,27 +791,64 @@ class Floor implements java.io.Serializable{
             for(int x = 0; x < size*3; x++) {
                 for(int y = 0; y < size*3; y++) {
                     if(!filled[x][y]) {
-                        switch((int)(Math.random()*4)) {
+                        switch((int)(Math.random()*7)) {
                             case 0:
-                                for(int i = 3+x*6; i < 7+x*6; i++)
-                                    for(int j = 3+y*6; j < 7+y*6; j++)
-                                        tiles[i][j] = new Tile("WoodWall");
-                                for(int i = 4+x*6; i < 6+x*6; i++)
-                                    for(int j = 4+y*6; j < 6+y*6; j++)
-                                        tiles[i][j] = new Tile("WoodFloor");
-                                tiles[5+x*6][6+y*6] = new Tile("Door");
-                                filled[x][y] = true;
+                                genSmallHouse(filled, x, y);
                                 break;
                             case 1:
+                                genBigInn(filled, x, y);
                                 break;
                             case 2:
+                                genRandomHouses(filled, x, y);
                                 break;
-                            case 3:
+                            default:
                                 break;
                         }
                     }
                 }
             }
+        }
+        //bigger stone
+        else if(size == 4) {
+            //outside wall
+            for(int x = 1; x < sizeX-1; x++) {
+                for(int y = 1; y < sizeY-1; y++) {
+                    if(x == 1 || x == sizeX-2 || y == 1 || y == sizeY-2)
+                        tiles[x][y] = new Tile("StoneWall");
+                    else
+                        tiles[x][y] = new Tile("StoneFloor" + (int)(Math.random()*3+1));
+                }
+            }
+            //openings
+            for(int i = -2; i < 3; i++) {
+                tiles[sizeX/2+i][1] = new Tile("StoneFloor" + (int)(Math.random()*3+1));
+                tiles[sizeX/2+i][sizeY-2] = new Tile("StoneFloor" + (int)(Math.random()*3+1));
+            }
+            
+            //tiles
+            for(int x = 0; x < size*3; x++) {
+                for(int y = 0; y < size*3; y++) {
+                    if(!filled[x][y]) {
+                        switch((int)(Math.random()*5)) {
+                            case 0:
+                                genSmallHouse(filled, x, y);
+                                break;
+                            case 1:
+                                genBigHall(filled, x, y);
+                                break;
+                            case 2:
+                                genBigInn(filled, x, y);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+        //metropolis
+        else if(size == 5) {
+            
         }
 
         //start at bottom of map
@@ -808,114 +877,193 @@ class Floor implements java.io.Serializable{
     
         //extra methods for city gen
     //1x1
-    private void genRandomHouses(int x, int y) {
+    private void genRandomHouses(boolean[][] filled, int x, int y) {
+        if(!checkClear(filled, x, y, 1, 1))
+            return;
+        fillArea(filled, x, y, 1, 1);
+        
+        String[] s = null;
         switch((int)(Math.random()*5)) {
             case 0:
-                tiles[x+1][y+1] = new Tile("WoodWall");
-                tiles[x+2][y+1] = new Tile("WoodWall");
-                tiles[x+1][y+2] = new Tile("WoodWallWindow");
-                tiles[x+2][y+2] = new Tile("WoodWallDoor");
-                tiles[x+4][y+4] = new Tile("WoodWall");
-                tiles[x+5][y+4] = new Tile("WoodWall");
-                tiles[x+4][y+5] = new Tile("WoodWallWindow");
-                tiles[x+5][y+5] = new Tile("WoodWallDoor");
+                s = condense(
+                        "      ",
+                        " 00   ",
+                        " 12   ",
+                        "      ",
+                        "   00 ",
+                        "   12 "
+                );
                 break;
             case 1:
-                tiles[x+1][y+2] = new Tile("WoodWall");
-                tiles[x+2][y+2] = new Tile("WoodWall");
-                tiles[x+1][y+3] = new Tile("WoodWallWindow");
-                tiles[x+2][y+3] = new Tile("WoodWallDoor");
-                tiles[x+5][y+0] = new Tile("WoodWall");
-                tiles[x+6][y+0] = new Tile("WoodWall");
-                tiles[x+5][y+1] = new Tile("WoodWallWindow");
-                tiles[x+6][y+1] = new Tile("WoodWallDoor");
+                s = condense(
+                        "    00",
+                        "    12",
+                        " 00   ",
+                        " 12   ",
+                        "      ",
+                        "      "
+                );
                 break;
             case 2:
-                tiles[x+0][y+1] = new Tile("WoodWall");
-                tiles[x+1][y+1] = new Tile("WoodWall");
-                tiles[x+0][y+2] = new Tile("WoodWallWindow");
-                tiles[x+1][y+2] = new Tile("WoodWallDoor");
-                tiles[x+1][y+5] = new Tile("WoodWall");
-                tiles[x+2][y+5] = new Tile("WoodWall");
-                tiles[x+1][y+6] = new Tile("WoodWallWindow");
-                tiles[x+2][y+6] = new Tile("WoodWallDoor");
-                tiles[x+5][y+2] = new Tile("WoodWall");
-                tiles[x+6][y+2] = new Tile("WoodWall");
-                tiles[x+5][y+3] = new Tile("WoodWallWindow");
-                tiles[x+6][y+3] = new Tile("WoodWallDoor");
+                s = condense(
+                        "      ",
+                        "00    ",
+                        "12  00",
+                        "    12",
+                        " 00   ",
+                        " 12   "
+                );
                 break;
             case 3:
-                tiles[x+3][y+1] = new Tile("WoodWall");
-                tiles[x+4][y+1] = new Tile("WoodWall");
-                tiles[x+3][y+2] = new Tile("WoodWallWindow");
-                tiles[x+4][y+2] = new Tile("WoodWallDoor");
-                tiles[x+0][y+5] = new Tile("WoodWall");
-                tiles[x+1][y+5] = new Tile("WoodWall");
-                tiles[x+0][y+6] = new Tile("WoodWallWindow");
-                tiles[x+1][y+6] = new Tile("WoodWallDoor");
+                s = condense(
+                        "      ",
+                        "   00 ",
+                        "   12 ",
+                        "      ",
+                        "00    ",
+                        "12    "
+                );
                 break;
             case 4:
-                tiles[x+1][y+1] = new Tile("WoodWall");
-                tiles[x+2][y+1] = new Tile("WoodWall");
-                tiles[x+1][y+2] = new Tile("WoodWallWindow");
-                tiles[x+2][y+2] = new Tile("WoodWallDoor");
-                tiles[x+1][y+3] = new Tile("WoodWall");
-                tiles[x+2][y+3] = new Tile("WoodWall");
-                tiles[x+1][y+4] = new Tile("WoodWallWindow");
-                tiles[x+2][y+4] = new Tile("WoodWallDoor");
-                tiles[x+3][y+1] = new Tile("WoodWall");
-                tiles[x+4][y+1] = new Tile("WoodWall");
-                tiles[x+3][y+2] = new Tile("WoodWallWindow");
-                tiles[x+4][y+2] = new Tile("WoodWallDoor");
-                tiles[x+3][y+3] = new Tile("WoodWall");
-                tiles[x+4][y+3] = new Tile("WoodWall");
-                tiles[x+3][y+4] = new Tile("WoodWallWindow");
-                tiles[x+4][y+4] = new Tile("WoodWallDoor");
+                s = condense(
+                        "      ",
+                        " 0000 ",
+                        " 1212 ",
+                        " 0000 ",
+                        " 1212 ",
+                        "      "
+                );
                 break;
         }
+        
+        interpretMap(s, x*6+2, y*6+2, "WoodWall", "WoodWallWindow", "WoodWallDoor");
     }
     
     //1x1
-    private void genSmallHouse(int x, int y) {
-        for(int i = 1+x; i < 5+x; i++) {
-            for(int j = 1+y; j < 5+y; j++) {
-                if(i == 1+x || i == 4+x || j == 1+y || j == 4+y)
-                    tiles[i][j] = new Tile("WoodWall");
-                else
-                    tiles[i][j] = new Tile("WoodFloor");
-            }
-        }
-        tiles[2+x][4+y] = new Tile("WoodWallWindow");
-        tiles[3+x][4+y] = new Tile("Door");
+    private void genSmallHouse(boolean[][] filled, int x, int y) {
+        if(!checkClear(filled, x, y, 1, 1))
+            return;
+        fillArea(filled, x, y, 1, 1);
+        
+        String[] s = condense(
+                "      ",
+                " 1111 ",
+                " 1001 ",
+                " 1001 ",
+                " 1231 ",
+                "      "
+        );
+        interpretMap(s, x*6+2, y*6+2, "WoodFloor", "WoodWall", "WoodWallWindow", "Door");
     }
     
     //1x2
-    private void genSmallInn(int x, int y) {
-        for(int i = 1+x; i < 5+x; i++) {
-            for(int j = y; j < y+12; j++) {
-                if(i == 1+x || i == 4+x || j == y || j == 11+y)
-                    tiles[i][j] = new Tile("WoodWall");
-                else
-                    tiles[i][j] = new Tile("WoodFloor");
-            }
-        }
-        for(int j = 5+y; j < 12+y; j++) {
-            tiles[x][j] = new Tile("WoodWall");
-        }
-        tiles[x+2][y+5] = new Tile("WoodWall");
-        tiles[x+2][y+8] = new Tile("WoodWall");
-        tiles[x+1][y+6] = new Tile("WoodFloor");
-        tiles[x+1][y+7] = new Tile("WoodFloor");
-        tiles[x+1][y+9] = new Tile("WoodFloor");
-        tiles[x+1][y+10] = new Tile("WoodFloor");
-        tiles[x+1][y+2] = new Tile("Door");
-        tiles[x+4][y+2] = new Tile("Door");
-        tiles[x+3][y+5] = new Tile("Door");
-        tiles[x+3][y+8] = new Tile("Door");
+    private void genSmallInn(boolean[][] filled, int x, int y) {
+        if(!checkClear(filled, x, y, 1, 2))
+            return;
+        fillArea(filled, x, y, 1, 2);
+        
+        String[] s = condense(
+                " 1111 ",
+                " 1001 ",
+                " 2002 ",
+                " 1001 ",
+                " 1001 ",
+                "11121 ",
+                "10001 ",
+                "10001 ",
+                "11121 ",
+                "10001 ",
+                "10001 ",
+                "11111 "
+        );
+        interpretMap(s, x*6+2, y*6+2, "WoodFloor", "WoodWall", "Door");
     }
     
     //2x2
-    private void genBigInn(int x, int y) {
+    private void genBigInn(boolean[][] filled, int x, int y) {
+        if(!checkClear(filled, x, y, 2, 2))
+            return;
+        fillArea(filled, x, y, 2, 2);
         
+        String[] s = condense(
+                "            ",
+                " 00000      ",
+                " 01110      ",
+                " 21112      ",
+                " 01110      ",
+                " 0020000200 ",
+                " 0111111110 ",
+                " 0020020020 ",
+                " 0110110110 ",
+                " 0110110110 ",
+                " 0000000000 ",
+                "            "
+        );
+        interpretMap(s, x*6+2, y*6+2, "WoodWall", "WoodFloor", "Door");
+    }
+    
+    //3x2
+    private void genBigHall(boolean[][] filled, int x, int y) {
+        if(!checkClear(filled, x, y, 3, 2))
+            return;
+        fillArea(filled, x, y, 3, 2);
+        
+        String[] s = condense(
+                "                  ",
+                " 0000  0000  0000 ",
+                " 0110000110000110 ",
+                " 0111111111111110 ",
+                " 0011111111111100 ",
+                "  01111111111110  ",
+                "  01111111111110  ",
+                " 0011111111111100 ",
+                " 0111111111111110 ",
+                " 0110020000200110 ",
+                " 0000   00   0000 ",
+                "                  "
+        );
+        interpretMap(s, x*6+2, y*6+2, "WoodWall", "WoodFloor", "Door");
+    }
+    
+    //check area to see if clear: also OOB
+    private boolean checkClear(boolean[][] filled, int x, int y, int width, int height) {
+        if(6*(x+width)+2 >= sizeX || 6*(y+height)+2 >= sizeY)
+            return false;
+        
+        for(int i = 0; i < width; i++) {
+            for(int j = 0; j < height; j++) {
+                if(x+i >= filled.length || y+j >= filled[0].length || filled[x+i][y+j]) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    //fill area: bounds should already be checked
+    private void fillArea(boolean[][] filled, int x, int y, int width, int height) {
+        for(int i = 0; i < width; i++) {
+            for(int j = 0; j < height; j++) {
+                filled[x+i][y+j] = true;
+            }
+        }
+    }
+    
+    //take map, fill tiles with given tile types
+    private void interpretMap(String[] map, int sx, int sy, String... names) {
+        for(int y = 0; y < map.length; y++) {
+            for(int x = 0; x < map[0].length(); x++) {
+                //ignore ' ' tiles
+                if(map[y].charAt(x) != ' ') {
+                    tiles[sx+x][sy+y] = new Tile(names[Integer.valueOf(map[y].substring(x, x+1))]);
+                }
+            }
+        }
+    }
+    
+    //condense strings into array
+    private String[] condense(String... s) {
+        return s;
     }
 }

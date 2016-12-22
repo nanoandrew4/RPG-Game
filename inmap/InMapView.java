@@ -230,7 +230,7 @@ class InMapView {
         UIPane.getChildren().addAll(uiLogT);
         
         //menu
-        Rectangle box4 = new Rectangle(screenWidth, screenHeight, Paint.valueOf("GREY"));
+        Rectangle box4 = new Rectangle(screenWidth, screenHeight, Paint.valueOf("BLACK"));
         box4.relocate(0, 0);
         box4.setOpacity(.5);
         
@@ -249,7 +249,7 @@ class InMapView {
         Text[] menuText = new Text[5];
         for(int i = 0; i < 5; i++) {
             menuText[i] = new Text(screenWidth*2/19+screenWidth*4*i/25, screenHeight*2/9, "");
-            menuText[i].setFont(Font.font("Arial", FontWeight.BOLD, 28));
+            menuText[i].setFont(Font.font("Zapfino", FontWeight.BOLD, 20));
             menuText[i].setFill(Paint.valueOf("WHITE"));
             menuText[i].setWrappingWidth(screenWidth/6);
             menuText[i].setTextAlignment(TextAlignment.CENTER);
@@ -343,11 +343,13 @@ class InMapView {
             invButtons[i].setWrappingWidth(screenWidth/6);
             invButtons[i].setTextAlignment(TextAlignment.CENTER);
             invButtons[i].setFill(Paint.valueOf("WHITE"));
-            invButtons[i].setFont(Font.font("Arial", FontWeight.NORMAL, 24));
+            invButtons[i].setFont(Font.font("Trattatello", FontWeight.NORMAL, 28));
             
             invRButtons[i] = new Rectangle(screenWidth/6, screenHeight/20, Paint.valueOf("WHITE"));
             invRButtons[i].relocate(screenWidth*3/4, screenHeight*40/71+screenHeight/18*i);
             invRButtons[i].setOpacity(.2);
+            invRButtons[i].setArcHeight(50);
+            invRButtons[i].setArcWidth(10);
         }
         invButtons[0].setText("USE / EQUIP");
         invButtons[1].setText("MOVE");
@@ -461,22 +463,25 @@ class InMapView {
         notePane.getChildren().addAll(t3);
         
         //opPane
-        Text[] opButtons = new Text[3];
-        opRButtons = new Rectangle[3];
-        for(int i = 0; i < 3; i++) {
+        Text[] opButtons = new Text[4];
+        opRButtons = new Rectangle[4];
+        for(int i = 0; i < 4; i++) {
             opButtons[i] = new Text(screenWidth*3/4, screenHeight*3/5+screenHeight/18*i, "");
             opButtons[i].setWrappingWidth(screenWidth/6);
             opButtons[i].setTextAlignment(TextAlignment.CENTER);
             opButtons[i].setFill(Paint.valueOf("WHITE"));
-            opButtons[i].setFont(Font.font("Monaco", FontWeight.NORMAL, 24));
+            opButtons[i].setFont(Font.font("Trattatello", FontWeight.NORMAL, 28));
             
             opRButtons[i] = new Rectangle(screenWidth/6, screenHeight/20, Paint.valueOf("WHITE"));
             opRButtons[i].relocate(screenWidth*3/4, screenHeight*40/71+screenHeight/18*i);
             opRButtons[i].setOpacity(.2);
+            opRButtons[i].setArcHeight(50);
+            opRButtons[i].setArcWidth(10);
         }
         opButtons[0].setText("SAVE GAME");
         opButtons[1].setText("LOAD GAME");
         opButtons[2].setText("OPTIONS");
+        opButtons[3].setText("QUIT");
         
         opRSaves = new Rectangle[6];
         for(int i = 0; i < 6; i++) {
@@ -498,7 +503,7 @@ class InMapView {
             
             for (int y = 0; y < 2; y++) {
                 saveInfo[i][y].setFont(Font.font("Trattatello", FontWeight.NORMAL, 24));
-                saveInfo[i][y].setFill(Paint.valueOf("BLACK"));
+                saveInfo[i][y].setFill(Paint.valueOf("WHITE"));
             }
             
             opPane.getChildren().addAll(saveInfo[i]);
@@ -572,6 +577,9 @@ class InMapView {
     public final void initAnimation() {
         //movement animation creation
         tUp = new Timeline();
+        tLeft = new Timeline();
+        tDown = new Timeline();
+        tRight = new Timeline();
         for(int x = 0; x < 24; x++) {
             for(int y = 0; y < 16; y++) {
                 for(int i = 0; i < 7; i++) {
@@ -583,15 +591,6 @@ class InMapView {
                                 new KeyFrame(Duration.millis(100),
                                 new KeyValue(imageViews[x][y][i].translateYProperty(),
                                         imageViews[x][y][i].getTranslateY())));
-                    }
-                }
-            }
-        }
-        tLeft = new Timeline();
-        for(int x = 0; x < 24; x++) {
-            for(int y = 0; y < 16; y++) {
-                for(int i = 0; i < 7; i++) {
-                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
                         tLeft.getKeyFrames().addAll(
                                 new KeyFrame(Duration.ZERO, 
                                 new KeyValue(imageViews[x][y][i].translateXProperty(), 
@@ -599,15 +598,6 @@ class InMapView {
                                 new KeyFrame(Duration.millis(100),
                                 new KeyValue(imageViews[x][y][i].translateXProperty(),
                                         imageViews[x][y][i].getTranslateX())));
-                    }
-                }
-            }
-        }
-        tDown = new Timeline();
-        for(int x = 0; x < 24; x++) {
-            for(int y = 0; y < 16; y++) {
-                for(int i = 0; i < 7; i++) {
-                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
                         tDown.getKeyFrames().addAll(
                                 new KeyFrame(Duration.ZERO, 
                                 new KeyValue(imageViews[x][y][i].translateYProperty(), 
@@ -615,15 +605,6 @@ class InMapView {
                                 new KeyFrame(Duration.millis(100),
                                 new KeyValue(imageViews[x][y][i].translateYProperty(),
                                         imageViews[x][y][i].getTranslateY())));
-                    }
-                }
-            }
-        }
-        tRight = new Timeline();
-        for(int x = 0; x < 24; x++) {
-            for(int y = 0; y < 16; y++) {
-                for(int i = 0; i < 7; i++) {
-                    if(x != 11 || y != 7 || (i != 1 && i != 3 && i != 4)) {
                         tRight.getKeyFrames().addAll(
                                 new KeyFrame(Duration.ZERO, 
                                 new KeyValue(imageViews[x][y][i].translateXProperty(), 
@@ -747,6 +728,9 @@ class InMapView {
                     imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0]
                             .setImage(Images.tiles[vd.floor.tiles[x][y].id]);
                 }
+                else if(vd.locationType.equals("city"))
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0]
+                            .setImage(Images.tiles[Tile.tiles.get("Grass").id]);
                 else
                     imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][0].setImage(null);
             }
@@ -838,8 +822,9 @@ class InMapView {
                     imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][4].setFitWidth(64 * 
                             (double)vd.floor.chars[x][y].currentHP / vd.floor.chars[x][y].maxHP);
                 }
-                else
+                else {
                     imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][4].setVisible(false);
+                }
             }
         }
 
@@ -850,8 +835,12 @@ class InMapView {
                     imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][6]
                             .setOpacity(1-(double)vd.floor.tiles[x][y].vis/64);
                 }
-                else
+                else if(vd.locationType.equals("city")) {
+                    imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][6].setOpacity(.05);
+                }
+                else {
                     imageViews[x-vd.floor.party[0].x+11][y-vd.floor.party[0].y+7][6].setOpacity(1);
+                }
             }
         }
 
@@ -1212,6 +1201,9 @@ class InMapView {
                     invText[i].setText(vd.inv[i].displayName.substring(0, 12) + "...");
                 else
                     invText[i].setText(vd.inv[i].displayName);
+                
+                if(vd.invStacks[i] > 1)
+                    invText[i].setText(invText[i].getText() + " x" + vd.invStacks[i]);
             }
             for(int i = 0; i < 4; i++)
                 invRButtons[i].setOpacity(.2);

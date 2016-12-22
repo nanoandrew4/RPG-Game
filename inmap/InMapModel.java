@@ -15,13 +15,14 @@ import java.util.HashMap;
 
 import main.*;
 
-public class InMapModel implements java.io.Serializable{
+public class InMapModel implements java.io.Serializable {
     //saved variables
     private final HashMap<Point, Location> maps; //all maps
     private Point currentMap; //current map location
     private Character[] party; //[0] is player
     private int visDist; //visibility distance
-    private Item[] inv; //inventory: 64
+    private Item[] inv; //inventory: size 64
+    private int[] invStacks; //stacks in inventory
     private int gold;
     private String name, portrait; //filepath of portrait
     private int sprite; //sprite number in Images.playerSprites
@@ -53,8 +54,10 @@ public class InMapModel implements java.io.Serializable{
         party = new Character[5];
         maps = new HashMap();
         inv = new Item[64];
+        invStacks = new int[64];
         Arrays.fill(party, new Character());
         Arrays.fill(inv, new Item());
+        Arrays.fill(invStacks, 0);
         visDist = 7;
         
         //create character
@@ -82,6 +85,9 @@ public class InMapModel implements java.io.Serializable{
         inv[0] = new Item("Apple");
         inv[1] = new Item("Bread");
         inv[2] = new Item("Lucky Coin");
+        invStacks[0] = 1;
+        invStacks[1] = 1;
+        invStacks[2] = 1;
         
         //temporary variables
         focus = "floor";
@@ -106,8 +112,11 @@ public class InMapModel implements java.io.Serializable{
         party = new Character[5];
         maps = new HashMap();
         inv = new Item[64];
+        invStacks = new int[64];
         Arrays.fill(party, new Character());
         Arrays.fill(inv, new Item());
+        Arrays.fill(inv, new Item());
+        Arrays.fill(invStacks, 0);
         visDist = 7;
         
         //create temp hero
@@ -130,8 +139,10 @@ public class InMapModel implements java.io.Serializable{
         }
         
         //testing
-        for(int i = (int)(Math.random()*30)+20; i >= 0; i--)
+        for(int i = (int)(Math.random()*30)+20; i >= 0; i--) {
             inv[i] = Item.randomItem(0, null);
+            invStacks[i] = 1;
+        }
 //        for(int i = 0; i < 100; i++)
 //            makeLocation(new Point(i, i), "tower");
         
@@ -278,7 +289,15 @@ public class InMapModel implements java.io.Serializable{
                 if(r >= 1000) {
                     short id = (short)(r % 1000);
                     for(int i = 0; i < 64; i++) {
-                        if(!inv[i].exists) {
+                        //stacking items
+                        if(inv[i].id == id && (inv[i].type == ItemType.CONSUMABLE 
+                                || inv[i].type == ItemType.MATERIAL)) {
+                            invStacks[i]++;
+                            log.add(0, "Picked up another " + Item.idname.get((short)id) + ".");
+                            break;
+                        }
+                        //no item exists
+                        else if(!inv[i].exists) {
                             inv[i] = new Item(Item.get((short)id), (byte)0, (byte)0);
                             log.add(0, "Picked up " + Item.idname.get((short)id) + ".");
                             break;
@@ -542,7 +561,7 @@ public class InMapModel implements java.io.Serializable{
                         menuP.y = -1;
                     }
                     else if(menuWindow.equals("options") && menuP.y < 0) {
-                        menuP.y = 2;
+                        menuP.y = 3;
                     }
                 }
                 break;
@@ -595,7 +614,7 @@ public class InMapModel implements java.io.Serializable{
                     else if(menuWindow.equals("char")) {
                         menuP.y = -1;
                     }
-                    else if(menuWindow.equals("options") && menuP.y > 2) {
+                    else if(menuWindow.equals("options") && menuP.y > 3) {
                         menuP.y = 0;
                     }
                 }
@@ -637,7 +656,12 @@ public class InMapModel implements java.io.Serializable{
                                         party[0].currentMP = party[0].maxMP;
 
                                     invText = Item.idname.get(inv[menuP.x*16+menuP.y].id) + " used.";
-                                    inv[menuP.x*16+menuP.y].reset();
+                                    
+                                    //reduce stack
+                                    invStacks[menuP.x*16+menuP.y]--;
+                                    //if none left, reset item
+                                    if(invStacks[menuP.x*16+menuP.y] == 1)
+                                        inv[menuP.x*16+menuP.y].reset();
                                 //}
                             }
                             else if(inv[menuP.x*16+menuP.y].type == ItemType.WEAPON) {
@@ -746,6 +770,14 @@ public class InMapModel implements java.io.Serializable{
                     //enter save selection
                     else if(menuP.y == 0 || menuP.y == 1) {
                         selectP = 0;
+                    }
+                    //options
+                    else if(menuP.y == 2) {
+                        
+                    }
+                    //quit
+                    else if(menuP.y == 3) {
+                        System.exit(0);
                     }
                 }
                 break;
@@ -868,11 +900,11 @@ public class InMapModel implements java.io.Serializable{
         party[0].currentHP = party[0].maxHP;
         party[0].exists = true;
         Location temp;
-        switch((int)(Math.random()*4)) {
+        switch(3/*(int)(Math.random()*4)*/) {
             case 0: temp = new Location(this, "tower", (int)(Math.random()*3+1), party); break;
             case 1: temp = new Location(this, "dungeon", (int)(Math.random()*3+1), party); break;
             case 2: temp = new Location(this, "cave", (int)(Math.random()*3+1), party); break;
-            case 3: temp = new Location(this, "city", 2, party); break;
+            case 3: temp = new Location(this, "city", (int)(Math.random()*4+1), party); break;
             default: temp = null;
         }
         maps.put(new Point(-1, -1), temp);
@@ -880,18 +912,26 @@ public class InMapModel implements java.io.Serializable{
     }
     
     //sort inventory
-    void sortInventory() {
+    private void sortInventory() {
+        //stack consumables and materials
+        for(int i = 0; i < 63; i++) {
+            for(int j = i+1; j < 64; j++) {
+                if(inv[i].id == inv[j].id && (inv[i].type == ItemType.CONSUMABLE 
+                        || inv[i].type == ItemType.MATERIAL)) {
+                    invStacks[i] += invStacks[j];
+                    invStacks[j] = 0;
+                    inv[j].reset();
+                }
+            }
+        }
+        
         //close gaps
         for(int x = 0; x < 64; x++) {
             if(!inv[x].exists) {
                 //find furthest item from back
-                for(int y = 63; y >= 0; y--) {
+                for(int y = 63; y > x; y--) {
                     if(inv[y].exists) {
                         swapInventory(x, y);
-                    }
-                    else if(y <= x) {
-                        x = 64;
-                        break;
                     }
                 }
             }
@@ -916,6 +956,9 @@ public class InMapModel implements java.io.Serializable{
         Item temp = inv[i1];
         inv[i1] = inv[i2];
         inv[i2] = temp;
+        int tempi = invStacks[i1];
+        invStacks[i1] = invStacks[i2];
+        invStacks[i2] = tempi;
     }
     
     //set current map
@@ -949,11 +992,13 @@ public class InMapModel implements java.io.Serializable{
     //getters
     Location getCurrentLocation() { return maps.get(currentMap); }
     Location getLocation(Point id) { return maps.get(id); }
+    String getLocationType() { return getCurrentLocation().type; }
     public Character[] getParty() { return party; }
     String getName() { return name; }
     int getSprite() { return sprite; }
     String getPortrait() { return portrait; }
     Item[] getInventory() { return inv; }
+    int[] getInvStacks() { return invStacks; }
     String getInvDes() { return invText; }
     int getGold() { return gold; }
     Point getMenuPoint() { return menuP; }

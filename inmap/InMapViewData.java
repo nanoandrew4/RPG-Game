@@ -11,7 +11,7 @@ import javafx.scene.text.Text;
 import main.Control;
 
 public class InMapViewData {
-    String focus, menuWindow, invDes;
+    String focus, menuWindow, invDes, locationType;
     String[] talkText;
     Floor floor;
     Point tempP, menuP;
@@ -20,6 +20,7 @@ public class InMapViewData {
     Control facing;
     Character[] party;
     Item[] inv;
+    int[] invStacks;
     boolean qiVisible, menuToggle, running;
     Text[][] saveInfo;
     ImageView[] saveImages;

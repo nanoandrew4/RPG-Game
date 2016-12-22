@@ -94,6 +94,7 @@ public class InMapController implements Runnable {
         viewdata.focus = model.getFocus();
         viewdata.gold = model.getGold();
         viewdata.inv = model.getInventory();
+        viewdata.invStacks = model.getInvStacks();
         viewdata.menuP.setLocation(model.getMenuPoint());
         viewdata.tempP.setLocation(model.getTempPoint());
         viewdata.useP = model.getUsePoint();
@@ -106,6 +107,7 @@ public class InMapController implements Runnable {
         viewdata.talkState = model.getTalkState();
         viewdata.talkSelect = model.getTalkSelect();
         viewdata.talkIndex = model.getTalkIndex();
+        viewdata.locationType = model.getLocationType();
         viewdata.running = model.getRunning();
         viewdata.facing = model.getFacing();
         viewdata.saveImages = main.saveImages;

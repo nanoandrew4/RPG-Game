@@ -1,5 +1,13 @@
 /*
     Contains dialogue for NPCs.
+    How the constructor works:
+    -If a string starting with a '#' is encountered, all strings following it 
+        until the next '#' will be part of a set stored in a HashMap under the
+        numbers following the original '#'.
+    -If a '$' is encountered during the construction of a set, it is prompting
+        a response, usually either yes or no.
+    -A '%' signifies action for the model, with the characters following it
+        representing what action to take.
 */
 
 package main;
