@@ -3,6 +3,8 @@ package overworld;
 import main.Main;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Random;
 
 class Map implements java.io.Serializable {
@@ -657,18 +659,44 @@ class Map implements java.io.Serializable {
 
         System.out.println("Starting settlement tiles gen");
 
-        // generates settlements
-        for (int a = 0; a < rand.nextInt(MAX_SETTLEMENT) + MIN_SETTLEMENT; a++) {
-            // TODO: IMPROVE AND IMPLEMENT ALL SETTLEMENTS, CREATE KINGDOMS ETC...
-            String name;
+        // TODO: FIGURE OUT HOW TO GENERATE KINGDOMS, IF RANDOMLY OR BY SECTIONS OF MAP
+
+        int settlementsTotal = rand.nextInt(MAX_SETTLEMENT) + MIN_SETTLEMENT;
+        ArrayList<String> names = new ArrayList<>(); // used to prevent duplicate names
+
+        // generates villages
+        for (int a = 0; a < settlementsTotal; a++) {
+            String settlementType;
+            String name = "";
+
+            if (a < settlementsTotal * 0.3)
+                settlementType = "Hamlet";
+            else if (a < settlementsTotal * 0.6)
+                settlementType = "Village";
+            else if (a < settlementsTotal * 0.75)
+                settlementType = "Town";
+            else if (a < settlementsTotal * 0.9) {
+                if (rand.nextBoolean())
+                    settlementType = "Castle";
+                else
+                    settlementType = "City";
+            } else {
+                if (rand.nextBoolean())
+                    settlementType = "Citadel";
+                else
+                    settlementType = "Metropolis";
+            }
+
             while (true) {
                 int randX = rand.nextInt(mapSize) + 2;
                 int randY = rand.nextInt(mapSize) + 2;
-                if (isAreaEmpty(tiles, randX, randY, 2, mapSize)) {
-                    tiles[randX][randY] = new Tile("Settlement", "Village", name = Main.genRandName(rand.nextInt(4) + 4), 50);
+                if (isAreaEmpty(tiles, randX, randY, 2, mapSize) && !nameExists(names, name)) {
+                    tiles[randX][randY] = new Tile("Settlement", settlementType, name = Main.genRandName(rand.nextInt(4) + 4), 50);
                     break;
                 }
             }
+
+            names.add(name);
         }
 
         System.out.println("Filling in null tiles...");
@@ -697,6 +725,14 @@ class Map implements java.io.Serializable {
                 if (a < 0 || b < 0 || a >= mapSize || b >= mapSize || tiles[a][b] != null)
                     return false;
         return true;
+    }
+
+    private boolean nameExists(ArrayList<String> names, String name) {
+        for (String name1 : names) {
+            if (name1.equals(name))
+                return true;
+        }
+        return false;
     }
 
     private void populateArea(Tile[][] tiles, int x, int y, int radius, String type) {

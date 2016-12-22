@@ -129,13 +129,16 @@ public class OverworldController implements Runnable {
                 if (!view.removePane())
                     model.setControlsLocked(false);
                 // lock controls
-            } else if (returnCode == 1) {
+            } else if (returnCode == 1 || model.getMenuOpen()) {
+                if (!model.getMenuOpen()) {
+                    model.setMenuOpen(true);
+                    model.setControlsLocked(true);
+                    view.addPane(main.getMenuPane(), true);
+                }
                 if (model.getMenuOpen() && main.processMenuInput(main.getControl(event.getCode()))) {
                     model.setMenuOpen(false);
+                    model.setControlsLocked(false);
                     view.removePane();
-                } else if (!model.getMenuOpen()) {
-                    model.setMenuOpen(true);
-                    view.addPane(main.getMenuPane());
                 }
             } else if (returnCode == 2)
                 view.showTileBorders(true);

@@ -87,11 +87,12 @@ class OverworldView {
     /*
         Displays all graphical elements of the overworld with data from the model provided by the controller
         177.69230508522173 - mapTileSize on desktop monitor
+        TODO: FONT SIZES DEPENDANT ON SCREEN SIZE
      */
 
     private static float zoomMultiplier = 2.2f;
 
-    static int tilesAcrossScreen = 6; // tiles to be fit across screen in vertical or horizontal direction
+    private static int tilesAcrossScreen = 6; // tiles to be fit across screen in vertical or horizontal direction
     static int zoom = (int) (tilesAcrossScreen * zoomMultiplier);
     private double screenWidth, screenHeight;
     static double mapTileSize;
@@ -242,6 +243,8 @@ class OverworldView {
 
         if (type.equalsIgnoreCase("Settlement")) {
             if (tiles[xPos][yPos].settlementTile.subType.equalsIgnoreCase("Village"))
+                return images.village;
+            else
                 return images.village;
         } else if (type.equalsIgnoreCase("InMap")) {
             if (tiles[xPos][yPos].inMapTile.inmapType.equalsIgnoreCase("Tower"))
@@ -541,19 +544,21 @@ class OverworldView {
         return fm.stringWidth(string); // for variable font size
     }
 
-    void addPane (Pane p) {
+    void addPane (Pane p, boolean addToStack) {
 
         /*
             Adds pane to GUI
          */
 
+        if (addToStack)
+            paneStack.add(p);
         overworldLayout.getChildren().add(p);
     }
 
     boolean removePane() {
 
         /*
-            Removes a pane (window) from the GUI
+            Removes a pane (window) from the stack
          */
 
         if (!paneStack.empty()) {

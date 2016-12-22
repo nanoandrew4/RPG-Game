@@ -25,8 +25,8 @@ public class OverworldModel implements java.io.Serializable {
     private long startTime = System.currentTimeMillis();
     private Random rand = new Random();
 
-    private boolean controlsLocked;
-    private boolean menuOpen;
+    private boolean controlsLocked = false;
+    private boolean menuOpen = false;
 
     private Control verticalDir, horizontalDir, dir;
 
@@ -114,7 +114,7 @@ public class OverworldModel implements java.io.Serializable {
         this.controlsLocked = locked;
     }
 
-    public void setMenuOpen(boolean menuOpen) {
+    void setMenuOpen(boolean menuOpen) {
         this.menuOpen = menuOpen;
     }
 
@@ -149,10 +149,8 @@ public class OverworldModel implements java.io.Serializable {
             return 0;
 
         // open menu
-        if (key == Control.BACK || key == Control.MENU || key == Control.OPENCHAR || key == Control.OPENINV || key == Control.OPENNOTES || key == Control.OPENOPTIONS || key == Control.OPENPARTY) {
-            menuOpen = !menuOpen;
+        if (key == Control.BACK || key == Control.MENU || key == Control.OPENCHAR || key == Control.OPENINV || key == Control.OPENNOTES || key == Control.OPENOPTIONS || key == Control.OPENPARTY)
             return 1;
-        }
 
         // when player touches key, stops automatic moving through map (moving by clicking on a tile)
         player.setPath(null);
@@ -173,9 +171,6 @@ public class OverworldModel implements java.io.Serializable {
 
         // movement on map processing
         if (key == Control.LEFT || key == Control.RIGHT || key == Control.UP || key == Control.DOWN) {
-
-            System.out.println(key);
-
             if (key == Control.UP || key == Control.DOWN)
                 verticalDir = key;
             else
