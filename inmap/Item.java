@@ -134,8 +134,10 @@ public class Item implements java.io.Serializable {
                 break;
         } while(true);
         
-        
-        return new Item(i, randRarity(rarcon), (byte)0);
+        if(i.type != ItemType.MATERIAL && i.type != ItemType.CONSUMABLE)
+            return new Item(i, randRarity(rarcon), (byte)0);
+        else
+            return new Item(i, (byte)0, (byte)0);
     }
     
     //get total number of items
@@ -213,34 +215,37 @@ public class Item implements java.io.Serializable {
     final void calculateRarity() {
         
         //rarity
-        this.rarity = rarity;
-        if(rarity == 0 || type.equals("consumable")) {
-            displayName = idname.get(id);
+        if(type == ItemType.CONSUMABLE || type == ItemType.MATERIAL) {
             this.rarity = 0;
         }
-        else if(rarity == 1) {
-            displayName = idname.get(id) + " ★";
-            des += " An unusual item.";
-        }
-        else if(rarity == 2) {
-            displayName = idname.get(id) + " ▲";
-            des += " A strange item.";
-        }
-        else if(rarity == 3) {
-            displayName = idname.get(id) + " ☆";
-            des += " An unique item.";
-        }
-        else if(rarity == 4) {
-            displayName = idname.get(id) + " ✪";
-            des += " An extraordinary item.";
-        }
-        else if(rarity == 5) {
-            displayName = idname.get(id) + " ꕤ";
-            des += " A fear-inducing item.";
-        }
-        else {
-            System.out.println("Rarity issue.");
-            displayName = idname.get(id);
+        switch (rarity) {
+            case 0:
+                displayName = idname.get(id);
+                break;
+            case 1:
+                displayName = idname.get(id) + " ★";
+                des += " An unusual item.";
+                break;
+            case 2:
+                displayName = idname.get(id) + " ▲";
+                des += " A strange item.";
+                break;
+            case 3:
+                displayName = idname.get(id) + " ☆";
+                des += " An unique item.";
+                break;
+            case 4:
+                displayName = idname.get(id) + " ✪";
+                des += " An extraordinary item.";
+                break;
+            case 5:
+                displayName = idname.get(id) + " ꕤ";
+                des += " A fear-inducing item.";
+                break;
+            default:
+                System.out.println("Rarity issue.");
+                displayName = idname.get(id);
+                break;
         }
         
         //added stats for rarity based on original item
@@ -300,5 +305,10 @@ public class Item implements java.io.Serializable {
         rarity = 0;
         setStats(null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
                 0, 0, 0, 0, 0, 0, 0, (byte)0, (byte)0);
+    }
+    
+    //return duplicate item
+    final Item copy() {
+        return new Item(this, rarity, LVL);
     }
 }

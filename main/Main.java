@@ -227,6 +227,8 @@ public class Main extends Application {
             saveR[i].relocate(screenWidth/8 + i%2 * screenWidth * 2/5, 
                         screenHeight/10 + Math.floor(i/2) * screenHeight/4);
             saveR[i].setOpacity(.2);
+            saveR[i].setArcHeight(20);
+            saveR[i].setArcWidth(20);
         }
         
         loadPane.getChildren().addAll(saveR);

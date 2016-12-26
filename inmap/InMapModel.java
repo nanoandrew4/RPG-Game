@@ -18,17 +18,22 @@ import main.*;
 public class InMapModel implements java.io.Serializable {
     //saved variables
     private final HashMap<Point, Location> maps; //all maps
+    private final HashMap<Character, Item[]> invs; //npc inventories
+    private final HashMap<Character, int[]> stacks; //npc stacks
     private Point currentMap; //current map location
     private Character[] party; //[0] is player
     private int visDist; //visibility distance
     private Item[] inv; //inventory: size 64
     private int[] invStacks; //stacks in inventory
+    private Item[] tradeInv; //trading inventory
+    private int[] tradeStacks; //stacks in trading inventory
     private int gold;
     private String name, portrait; //filepath of portrait
     private int sprite; //sprite number in Images.playerSprites
     
     //temporary variables
     private String focus, menuWindow, invText;
+    private boolean tradeState;
     private final Point tempP, menuP; //menu cursor pointers
     private int useP, usePmax, selectP; //selection pointer
     private boolean qiVisible; //quick info window
@@ -53,6 +58,8 @@ public class InMapModel implements java.io.Serializable {
         //init arrays
         party = new Character[5];
         maps = new HashMap();
+        invs = new HashMap();
+        stacks = new HashMap();
         inv = new Item[64];
         invStacks = new int[64];
         Arrays.fill(party, new Character());
@@ -111,6 +118,8 @@ public class InMapModel implements java.io.Serializable {
         //init arrays
         party = new Character[5];
         maps = new HashMap();
+        invs = new HashMap();
+        stacks = new HashMap();
         inv = new Item[64];
         invStacks = new int[64];
         Arrays.fill(party, new Character());
@@ -143,8 +152,6 @@ public class InMapModel implements java.io.Serializable {
             inv[i] = Item.randomItem(0, null);
             invStacks[i] = 1;
         }
-//        for(int i = 0; i < 100; i++)
-//            makeLocation(new Point(i, i), "tower");
         
         //temporary variables
         focus = "floor";
@@ -205,6 +212,9 @@ public class InMapModel implements java.io.Serializable {
                 }
             case "talk":
                 processTalkInput(input);
+                return r;
+            case "trade":
+                processTradeInput(input);
                 return r;
             case "menu":
                 return processMenuInput(input);
@@ -375,9 +385,34 @@ public class InMapModel implements java.io.Serializable {
                         talkIndex++;
                         talkTimer = System.currentTimeMillis();
                         
-                        //start talkSelect if prompted
-                        if(talkText[talkIndex].equals("$")) {
+                        //start talkSelect if prompted, analyze commands
+                        if(talkText[talkIndex].charAt(0) == '$') {
                             talkSelect = 0;
+                        }
+                        else if(talkText[talkIndex].charAt(0) == '%') {
+                            //start trade
+                            if(talkText[talkIndex].substring(1).equals("trade")) {
+                                focus = "trade";
+                                tradeState = true;
+                                Character c;
+                                int dx = 0, dy = 0;
+                                switch(facing) {
+                                    case UP:
+                                        dy = -1;
+                                        break;
+                                    case LEFT:
+                                        dx = -1;
+                                        break;
+                                    case RIGHT:
+                                        dx = 1;
+                                        break;
+                                    case DOWN:
+                                        dy = 1;
+                                        break;
+                                }
+                                loadInventory(getCurrentLocation().getCurrentFloor().
+                                        chars[party[0].x+dx][party[0].y+dy]);
+                            }
                         }
                         
                         break;
@@ -414,6 +449,175 @@ public class InMapModel implements java.io.Serializable {
                     }
                     break;
             }
+        }
+    }
+    
+    //process trade input
+    private void processTradeInput(Control input) {
+        switch(input) {
+            case LEFT:
+                //shift menu page left
+                if(menuP.y == -1) {
+                    tradeState = !tradeState;
+                }
+                //selection
+                else if(selectP != -1) {
+                    break;
+                }
+                //scroll around menu
+                else {
+                    menuP.x--;
+                    if(menuP.x < 0)
+                        menuP.x = 3;
+                    if(tradeState)
+                        invText = tradeInv[menuP.x*16+menuP.y].des;
+                    else
+                        invText = inv[menuP.x*16+menuP.y].des;
+                }
+                break;
+
+            case RIGHT:
+                //shift page right
+                if(menuP.y == -1) {
+                    tradeState = !tradeState;
+                }
+                //selection
+                else if(selectP != -1) {
+                    break;
+                }
+                //scroll around menu
+                else {
+                    menuP.x++;
+                    if(menuP.x > 3)
+                        menuP.x = 0;
+                    if(tradeState)
+                        invText = tradeInv[menuP.x*16+menuP.y].des;
+                    else
+                        invText = inv[menuP.x*16+menuP.y].des;
+                }
+                break;
+
+            case UP:
+                //cannot move up in menu page select
+                if(menuP.y == -1) {
+                    break;
+                }
+                //selection movement
+                else if(selectP != -1) {
+                    selectP--;
+
+                    if(menuWindow.equals("inv") && selectP < 0) {
+                        selectP = 3;
+                    }
+                    else if(menuWindow.equals("options")) {
+                        selectP--;
+
+                        if (selectP < 0)
+                            selectP += 6;
+                    }
+                }
+                //scroll around menu
+                else {
+                    menuP.y--;
+                    if(menuP.y < 0)
+                        menuP.y = 15;
+                    if(tradeState)
+                        invText = tradeInv[menuP.x*16+menuP.y].des;
+                    else
+                        invText = inv[menuP.x*16+menuP.y].des;
+                }
+                break;
+
+            case DOWN:
+                //nothing
+                if(menuP.y == -1) {
+                    break;
+                }
+                //selection movement
+                else if(selectP != -1) {
+                    selectP++;
+                    if(selectP > 1) {
+                        selectP = 0;
+                    }
+                }
+                //scroll around menu
+                else {
+                    menuP.y++;
+                    if(menuP.y > 15)
+                        menuP.y = 0;
+                    if(tradeState)
+                        invText = tradeInv[menuP.x*16+menuP.y].des;
+                    else
+                        invText = inv[menuP.x*16+menuP.y].des;
+                }
+                break;
+
+            case SELECT:
+                //enter menu
+                if(menuP.y == -1) {
+                    menuP.move(0, 0);
+                    if(tradeState)
+                        invText = tradeInv[menuP.x*16+menuP.y].des;
+                    else
+                        invText = inv[0].des;
+                }
+                //button selection
+                else if(selectP != -1) {
+                    //buy/sell
+                    if(selectP == 0) {
+                        //buying
+                        if(tradeState) {
+                            
+                        }
+                        //selling
+                        else {
+                            
+                        }
+                    }
+                    //cancel
+                    else if(selectP == 1) {
+                        selectP = -1;
+                    }
+                }
+                else {
+                    selectP = 0;
+                }
+                break;
+
+            case BACK:
+                //menu pages
+                if(menuP.y == -1) {
+                    focus = "talk";
+                    talkIndex++;
+                }
+                //button selection
+                else if(selectP != -1) {
+                    selectP = -1;
+                }
+                //back to buy/sell select
+                else {
+                    menuP.move(0, -1);
+                    menuToggle = false;
+                }
+                break;
+
+            case TOGGLE:
+                if(menuP.y != -1)
+                    menuToggle = !menuToggle;
+                break;
+
+            case SWITCH:
+                //sort respective inventories
+                if(selectP == -1) {
+                    if(tradeState)
+                        sortInventory(tradeInv, tradeStacks);
+                    else
+                        sortInventory(inv, invStacks);
+                }
+                break;
+
+            default:
+                break;
         }
     }
     
@@ -471,11 +675,16 @@ public class InMapModel implements java.io.Serializable {
             case RIGHT:
                 //shift page right
                 if(menuP.y == -1) {
-                    if(menuWindow.equals("inv")) menuWindow = "char";
-                    else if(menuWindow.equals("char")) menuWindow = "party";
-                    else if(menuWindow.equals("party")) menuWindow = "notes";
-                    else if(menuWindow.equals("notes")) menuWindow = "options";
-                    else if(menuWindow.equals("options")) menuWindow = "inv";
+                    if(menuWindow.equals("inv")) 
+                        menuWindow = "char";
+                    else if(menuWindow.equals("char")) 
+                        menuWindow = "party";
+                    else if(menuWindow.equals("party")) 
+                        menuWindow = "notes";
+                    else if(menuWindow.equals("notes")) 
+                        menuWindow = "options";
+                    else if(menuWindow.equals("options")) 
+                        menuWindow = "inv";
                 }
                 //temporary pointer
                 else if(tempP.x != -1) {
@@ -657,11 +866,11 @@ public class InMapModel implements java.io.Serializable {
 
                                     invText = Item.idname.get(inv[menuP.x*16+menuP.y].id) + " used.";
                                     
-                                    //reduce stack
-                                    invStacks[menuP.x*16+menuP.y]--;
                                     //if none left, reset item
                                     if(invStacks[menuP.x*16+menuP.y] == 1)
                                         inv[menuP.x*16+menuP.y].reset();
+                                    //reduce stack
+                                    invStacks[menuP.x*16+menuP.y]--;
                                 //}
                             }
                             else if(inv[menuP.x*16+menuP.y].type == ItemType.WEAPON) {
@@ -714,7 +923,7 @@ public class InMapModel implements java.io.Serializable {
                             //using a material...
                             else if(inv[menuP.x*16+menuP.y].type == ItemType.MATERIAL) {
                                 invText = "You can't use or equip" + 
-                                        Item.idname.get(inv[menuP.x*16+menuP.y].id) + ".";
+                                        Item.idname.get(inv[menuP.x*16+menuP.y].id) + "...";
                             }
 
                             selectP = -1;
@@ -724,20 +933,23 @@ public class InMapModel implements java.io.Serializable {
                             //selected swap item
                             if(tempP.x != -1) {
                                 //swap
-                                Item temp = inv[tempP.x*16+tempP.y];
-                                inv[tempP.x*16+tempP.y] = inv[menuP.x*16+menuP.y];
-                                inv[menuP.x*16+menuP.y] = temp;
+                                swapInventory(tempP.x*16+tempP.y, menuP.x*16+menuP.y);
                                 tempP.move(-1, -1);
                                 selectP = -1;
                             }
                             else {
                                 tempP.move(0, 0);
+                                invText = inv[0].des;
                             }
                         }
                         //discard
                         else if(selectP == 2) {
+                            if(hasControl)
+                                getCurrentLocation().getCurrentFloor().dropItem(
+                                        inv[menuP.x*16+menuP.y].copy(), party[0].x, party[0].y);
                             invText = Item.idname.get(inv[menuP.x*16+menuP.y].id) + " dropped.";
                             inv[menuP.x*16+menuP.y].reset();
+                            invStacks[menuP.x*16+menuP.y] = 0;
                             selectP = -1;
                         }
                         //cancel
@@ -796,7 +1008,7 @@ public class InMapModel implements java.io.Serializable {
                 else if(selectP != -1) {
                     selectP = -1;
                 }
-                //scrolling around
+                //back to menu page selection
                 else {
                     menuP.move(0, -1);
                     menuToggle = false;
@@ -805,7 +1017,7 @@ public class InMapModel implements java.io.Serializable {
 
             case SWITCH:
                 if(menuWindow.equals("inv") && selectP == -1) {
-                    sortInventory();
+                    sortInventory(inv, invStacks);
                     if(menuP.y != -1)
                         invText = inv[menuP.x*16+menuP.y].des;
                 }
@@ -900,7 +1112,7 @@ public class InMapModel implements java.io.Serializable {
         party[0].currentHP = party[0].maxHP;
         party[0].exists = true;
         Location temp;
-        switch(3/*(int)(Math.random()*4)*/) {
+        switch((int)(Math.random()*4)) {
             case 0: temp = new Location(this, "tower", (int)(Math.random()*3+1), party); break;
             case 1: temp = new Location(this, "dungeon", (int)(Math.random()*3+1), party); break;
             case 2: temp = new Location(this, "cave", (int)(Math.random()*3+1), party); break;
@@ -912,26 +1124,31 @@ public class InMapModel implements java.io.Serializable {
     }
     
     //sort inventory
-    private void sortInventory() {
+    private void sortInventory(Item[] items, int[] itemStacks) {
         //stack consumables and materials
         for(int i = 0; i < 63; i++) {
             for(int j = i+1; j < 64; j++) {
-                if(inv[i].id == inv[j].id && (inv[i].type == ItemType.CONSUMABLE 
-                        || inv[i].type == ItemType.MATERIAL)) {
-                    invStacks[i] += invStacks[j];
-                    invStacks[j] = 0;
-                    inv[j].reset();
+                if(items[i].id == items[j].id && (items[i].type == ItemType.CONSUMABLE 
+                        || items[i].type == ItemType.MATERIAL)) {
+                    itemStacks[i] += itemStacks[j];
+                    itemStacks[j] = 0;
+                    items[j].reset();
                 }
             }
         }
         
         //close gaps
         for(int x = 0; x < 64; x++) {
-            if(!inv[x].exists) {
+            if(!items[x].exists) {
                 //find furthest item from back
                 for(int y = 63; y > x; y--) {
-                    if(inv[y].exists) {
-                        swapInventory(x, y);
+                    if(items[y].exists) {
+                        Item temp = items[x];
+                        items[x] = items[y];
+                        items[y] = temp;
+                        int tempi = itemStacks[x];
+                        itemStacks[x] = itemStacks[y];
+                        itemStacks[y] = tempi;
                     }
                 }
             }
@@ -940,12 +1157,17 @@ public class InMapModel implements java.io.Serializable {
         //brute force sort
         for(int i = 0; i < 63; i++) {
             for(int j = 0; j < 63; j++) {
-                if(!inv[j+1].exists) {
+                if(!items[j+1].exists) {
                     break;
                 }
-                else if(Collator.getInstance().compare(inv[j].displayName, 
-                        inv[j+1].displayName) > 0) {
-                    swapInventory(j, j+1);
+                else if(Collator.getInstance().compare(items[j].displayName, 
+                        items[j+1].displayName) > 0) {
+                    Item temp = items[j];
+                    items[j] = items[j+1];
+                    items[j+1] = temp;
+                    int tempi = itemStacks[j];
+                    itemStacks[j] = itemStacks[j+1];
+                    itemStacks[j+1] = tempi;
                 }
             }
         }
@@ -989,6 +1211,31 @@ public class InMapModel implements java.io.Serializable {
         }
     }
     
+    //load npc inventory
+    void loadInventory(Character c) {
+        if(invs.containsKey(c)) {
+            tradeInv = invs.get(c);
+            tradeStacks = stacks.get(c);
+        }
+        else {
+            Item[] newInv = new Item[64];
+            int[] newStacks = new int[64];
+            for(int i = 0; i < 64; i++) {
+                newInv[i] = new Item();
+            }
+            for(int i = (int)(Math.random()*30)+20; i >= 0; i--) {
+                newInv[i] = Item.randomItem(0, null);
+                newStacks[i] = 1;
+            }
+            
+            invs.put(c, newInv);
+            stacks.put(c, newStacks);
+            
+            tradeInv = newInv;
+            tradeStacks = newStacks;
+        }
+    }
+    
     //getters
     Location getCurrentLocation() { return maps.get(currentMap); }
     Location getLocation(Point id) { return maps.get(id); }
@@ -998,7 +1245,9 @@ public class InMapModel implements java.io.Serializable {
     int getSprite() { return sprite; }
     String getPortrait() { return portrait; }
     Item[] getInventory() { return inv; }
+    Item[] getTradeInv() { return tradeInv; }
     int[] getInvStacks() { return invStacks; }
+    int[] getTradeStacks() { return tradeStacks; }
     String getInvDes() { return invText; }
     int getGold() { return gold; }
     Point getMenuPoint() { return menuP; }
@@ -1012,6 +1261,7 @@ public class InMapModel implements java.io.Serializable {
     int getTalkState() { return talkState; }
     int getTalkSelect() { return talkSelect; }
     String[] getTalkText() { return talkText; }
+    boolean getTradeState() { return tradeState; }
     int getTalkIndex() { return talkIndex; }
     boolean getRunning() { return running; }
     ArrayList<String> getLog() { return log; } 

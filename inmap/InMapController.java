@@ -86,15 +86,21 @@ public class InMapController implements Runnable {
     
     //update data to give to view
     private void updateViewData() {
-        if (model.getCurrentLocation() == null)
+        if (model.getCurrentLocation() == null) {
             viewdata.floor = null;
-        else
+            viewdata.locationType = null;
+        }
+        else {
             viewdata.floor = model.getCurrentLocation().getCurrentFloor();
+            viewdata.locationType = model.getLocationType();
+        }
         viewdata.menuWindow = model.getMenuWindow();
         viewdata.focus = model.getFocus();
         viewdata.gold = model.getGold();
         viewdata.inv = model.getInventory();
         viewdata.invStacks = model.getInvStacks();
+        viewdata.tradeInv = model.getTradeInv();
+        viewdata.tradeStacks = model.getTradeStacks();
         viewdata.menuP.setLocation(model.getMenuPoint());
         viewdata.tempP.setLocation(model.getTempPoint());
         viewdata.useP = model.getUsePoint();
@@ -107,7 +113,7 @@ public class InMapController implements Runnable {
         viewdata.talkState = model.getTalkState();
         viewdata.talkSelect = model.getTalkSelect();
         viewdata.talkIndex = model.getTalkIndex();
-        viewdata.locationType = model.getLocationType();
+        viewdata.tradeState = model.getTradeState();
         viewdata.running = model.getRunning();
         viewdata.facing = model.getFacing();
         viewdata.saveImages = main.saveImages;

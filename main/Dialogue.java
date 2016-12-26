@@ -8,6 +8,7 @@
         a response, usually either yes or no.
     -A '%' signifies action for the model, with the characters following it
         representing what action to take.
+        -"%trade": start trading
 */
 
 package main;
@@ -23,21 +24,23 @@ public class Dialogue {
                 return new Dialogue(
                         "#0", "Hello! Feel free to take a look at my wares!", 
                         "$", 
-                        "#00", "Sorry, I'm out of goods right now.", 
+                        "#00", "Alright! Go ahead.", 
+                        "%trade", "Thanks for the business.",
                         "#01", "Fine then, you cheapskate."
                 );
             case 1:
                 return new Dialogue(
                         "#0", "Welcome to my store! Take a look around.",
                         "$",
-                        "#00", "You don't have enough money to buy anything...",
+                        "#00", "Do you really have any money on you...?", 
+                        "%trade", "Thanks for the business.",
                         "#01", "Then get out of here."
                 );
             case 2:
                 return new Dialogue(
                         "#0", "Good day! Browse through my goods!",
                         "$",
-                        "#00", "Sorry, try again later.",
+                        "%trade", "Thanks for the business.", "Come again next time.",
                         "#01", "Well, that's okay too I guess."
                 );
             case 3:
@@ -53,7 +56,8 @@ public class Dialogue {
                         "#0010", "No. It's not.",
                         "#0011", "Correct. The final question:", "How would you rate this quiz out of 10?",
                         "$",
-                        "#00110", "Thanks, and congratulations! You completed the quiz, and win nothing!",
+                        "#00110", "Congratulations! You can look at my store now!",
+                        "%trade", "Thanks!",
                         "#00111", "Wrong. You failed the quiz."
                 );
             default:
@@ -136,7 +140,7 @@ public class Dialogue {
     
     //get lines of current state
     public String[] getText() {
-        return lines.get(state);
+        return lines.getOrDefault(state, condense("I AM ERROR"));
     }
     
     //advance state
@@ -148,5 +152,9 @@ public class Dialogue {
     public boolean nextState(char s) {
         state += s;
         return lines.get(state) == null;
+    }
+    
+    private String[] condense(String... s) {
+        return s;
     }
 }
