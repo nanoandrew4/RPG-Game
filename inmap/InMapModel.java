@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 
 import main.*;
@@ -36,6 +37,7 @@ public class InMapModel implements java.io.Serializable {
     private boolean tradeState;
     private final Point tempP, menuP; //menu cursor pointers
     private int useP, usePmax, selectP; //selection pointer
+    private int sortType; //sorting types
     private boolean qiVisible; //quick info window
     private boolean menuToggle; //menu toggle
     private boolean running; //holding shift: mostly for movement
@@ -362,6 +364,35 @@ public class InMapModel implements java.io.Serializable {
                         talkText = dialogue.getText();
                         talkIndex = 0;
                         talkTimer = System.currentTimeMillis();
+
+                        //start talkSelect if prompted, analyze commands
+                        if(talkText[talkIndex].charAt(0) == '$') {
+                            talkSelect = 0;
+                        }
+                        else if(talkText[talkIndex].charAt(0) == '%') {
+                            //start trade
+                            if(talkText[talkIndex].substring(1).equals("trade")) {
+                                focus = "trade";
+                                tradeState = true;
+                                int dx = 0, dy = 0;
+                                switch(facing) {
+                                    case UP:
+                                        dy = -1;
+                                        break;
+                                    case LEFT:
+                                        dx = -1;
+                                        break;
+                                    case RIGHT:
+                                        dx = 1;
+                                        break;
+                                    case DOWN:
+                                        dy = 1;
+                                        break;
+                                }
+                                loadInventory(getCurrentLocation().getCurrentFloor().
+                                        chars[party[0].x+dx][party[0].y+dy]);
+                            }
+                        }
                         break;
                     }
                     //SELECT and BACK have some of the same processing
@@ -394,7 +425,6 @@ public class InMapModel implements java.io.Serializable {
                             if(talkText[talkIndex].substring(1).equals("trade")) {
                                 focus = "trade";
                                 tradeState = true;
-                                Character c;
                                 int dx = 0, dy = 0;
                                 switch(facing) {
                                     case UP:
@@ -505,15 +535,8 @@ public class InMapModel implements java.io.Serializable {
                 //selection movement
                 else if(selectP != -1) {
                     selectP--;
-
-                    if(menuWindow.equals("inv") && selectP < 0) {
-                        selectP = 3;
-                    }
-                    else if(menuWindow.equals("options")) {
-                        selectP--;
-
-                        if (selectP < 0)
-                            selectP += 6;
+                    if(selectP < 0) {
+                        selectP = 1;
                     }
                 }
                 //scroll around menu
@@ -557,7 +580,7 @@ public class InMapModel implements java.io.Serializable {
                 if(menuP.y == -1) {
                     menuP.move(0, 0);
                     if(tradeState)
-                        invText = tradeInv[menuP.x*16+menuP.y].des;
+                        invText = tradeInv[0].des;
                     else
                         invText = inv[0].des;
                 }
@@ -607,12 +630,11 @@ public class InMapModel implements java.io.Serializable {
                 break;
 
             case SWITCH:
-                //sort respective inventories
+                //sort both inventories
                 if(selectP == -1) {
-                    if(tradeState)
-                        sortInventory(tradeInv, tradeStacks);
-                    else
-                        sortInventory(inv, invStacks);
+                    sortType++;
+                    sortInventory(tradeInv, tradeStacks);
+                    sortInventory(inv, invStacks);
                 }
                 break;
 
@@ -1017,6 +1039,7 @@ public class InMapModel implements java.io.Serializable {
 
             case SWITCH:
                 if(menuWindow.equals("inv") && selectP == -1) {
+                    sortType++;
                     sortInventory(inv, invStacks);
                     if(menuP.y != -1)
                         invText = inv[menuP.x*16+menuP.y].des;
@@ -1123,8 +1146,10 @@ public class InMapModel implements java.io.Serializable {
         maps.get(currentMap).getCurrentFloor().passControl(Control.UP);
     }
     
-    //sort inventory
+    //sort a given inventory with stacks
     private void sortInventory(Item[] items, int[] itemStacks) {
+        int max = 64;
+        
         //stack consumables and materials
         for(int i = 0; i < 63; i++) {
             for(int j = i+1; j < 64; j++) {
@@ -1138,30 +1163,129 @@ public class InMapModel implements java.io.Serializable {
         }
         
         //close gaps
-        for(int x = 0; x < 64; x++) {
+        for(int x = 0; x < max; x++) {
             if(!items[x].exists) {
                 //find furthest item from back
-                for(int y = 63; y > x; y--) {
-                    if(items[y].exists) {
+                for(int y = 63; y > 0; y--) {
+                    if(y <= x) {
+                        max = y-1;
+                        break;
+                    }
+                    else if(items[y].exists) {
                         Item temp = items[x];
                         items[x] = items[y];
                         items[y] = temp;
                         int tempi = itemStacks[x];
                         itemStacks[x] = itemStacks[y];
                         itemStacks[y] = tempi;
+                        max = y;
+                        break;
                     }
                 }
             }
         }
         
-        //brute force sort
-        for(int i = 0; i < 63; i++) {
-            for(int j = 0; j < 63; j++) {
-                if(!items[j+1].exists) {
-                    break;
+        //comparator for items
+        Comparator sorter;
+        
+        //reset sort type if over
+        if(sortType > 4)
+            sortType -= 5;
+        
+        //create comparator
+        switch(sortType) {
+            //by name
+            case 0:
+                class Sorter implements Comparator {
+                    @Override
+                    public int compare(Object o1, Object o2) {
+                        return Collator.getInstance().compare(Item.idname.get(((Item)o1).id),
+                                Item.idname.get(((Item)o2).id));
+                    }
                 }
-                else if(Collator.getInstance().compare(items[j].displayName, 
-                        items[j+1].displayName) > 0) {
+                sorter = new Sorter();
+                break;
+            //by type
+            case 1:
+                class Sorter implements Comparator {
+                    @Override
+                    public int compare(Object o1, Object o2) {
+                        if(((Item)o1).type.value() > ((Item)o2).type.value())
+                            return 1;
+                        else if(((Item)o1).type.value() < ((Item)o2).type.value())
+                            return -1;
+                        else
+                            return 0;
+                    }
+                }
+                sorter = new Sorter();
+                break;
+            //by value
+            case 2:
+                class Sorter implements Comparator {
+                    @Override
+                    public int compare(Object o1, Object o2) {
+                        if(((Item)o1).VAL > ((Item)o2).VAL)
+                            return -1;
+                        else if(((Item)o1).VAL < ((Item)o2).VAL)
+                            return 1;
+                        else
+                            return 0;
+                    }
+                }
+                sorter = new Sorter();
+                break;
+            //by DMG
+            case 3:
+                class Sorter implements Comparator {
+                    @Override
+                    public int compare(Object o1, Object o2) {
+                        if(((Item)o1).DMG > ((Item)o2).DMG)
+                            return -1;
+                        else if(((Item)o1).DMG < ((Item)o2).DMG)
+                            return 1;
+                        else
+                            return 0;
+                    }
+                }
+                sorter = new Sorter();
+                break;
+            //by rarity
+            case 4:
+                class Sorter implements Comparator {
+                    @Override
+                    public int compare(Object o1, Object o2) {
+                        if(((Item)o1).rarity > ((Item)o2).rarity)
+                            return -1;
+                        else if(((Item)o1).rarity < ((Item)o2).rarity)
+                            return 1;
+                        else
+                            return 0;
+                    }
+                }
+                sorter = new Sorter();
+                break;
+            //by id: not really useful
+            default:
+                class Sorter implements Comparator {
+                    @Override
+                    public int compare(Object o1, Object o2) {
+                        if(((Item)o1).id > ((Item)o2).id)
+                            return 1;
+                        else if(((Item)o1).id < ((Item)o2).id)
+                            return -1;
+                        else
+                            return 0;
+                    }
+                }
+                sorter = new Sorter();
+                break;
+        }
+        
+        //brute force sort
+        for(int i = 0; i < max; i++) {
+            for(int j = 0; j < max - 1; j++) {
+                if(sorter.compare(items[j], items[j+1]) > 0) {
                     Item temp = items[j];
                     items[j] = items[j+1];
                     items[j+1] = temp;
@@ -1174,7 +1298,7 @@ public class InMapModel implements java.io.Serializable {
     }
     
     //switch two items in inventory
-    void swapInventory(int i1, int i2) {
+    private void swapInventory(int i1, int i2) {
         Item temp = inv[i1];
         inv[i1] = inv[i2];
         inv[i2] = temp;
@@ -1267,4 +1391,5 @@ public class InMapModel implements java.io.Serializable {
     ArrayList<String> getLog() { return log; } 
     Control getFacing() { return facing; }
     int getVisDist() { return visDist; }
+    int getSortType() { return sortType; }
 }

@@ -18,4 +18,15 @@ public enum ItemType {
         }
         return "";
     }
+    
+    public int value() {
+        switch(this) {
+            case WEAPON: return 0;
+            case ARMOR: return 1;
+            case ACCESSORY: return 2;
+            case CONSUMABLE: return 3;
+            case MATERIAL: return 4;
+        }
+        return -1;
+    }
 }

@@ -40,6 +40,7 @@ public class Dialogue {
                 return new Dialogue(
                         "#0", "Good day! Browse through my goods!",
                         "$",
+                        "#00", 
                         "%trade", "Thanks for the business.", "Come again next time.",
                         "#01", "Well, that's okay too I guess."
                 );

@@ -18,7 +18,8 @@ public class InMapViewData {
     Floor floor;
     Point tempP, menuP;
     int useP, selectP, gold, talkIndex,
-            talkState, talkSelect, returnCode;
+            talkState, talkSelect, returnCode,
+            sortType;
     Control facing;
     Character[] party;
     Item[] inv, tradeInv;

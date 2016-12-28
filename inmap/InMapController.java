@@ -116,6 +116,7 @@ public class InMapController implements Runnable {
         viewdata.tradeState = model.getTradeState();
         viewdata.running = model.getRunning();
         viewdata.facing = model.getFacing();
+        viewdata.sortType = model.getSortType();
         viewdata.saveImages = main.saveImages;
         viewdata.saveInfo = main.saveInfo;
         viewdata.returnCode = returnCode;
