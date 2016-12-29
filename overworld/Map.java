@@ -185,7 +185,7 @@ class Map implements java.io.Serializable {
     private String[] getPossibleDirections(String prev, String genDir) {
 
         /*
-            Returns the tiles that match up with the previous one (on all sides)
+            Returns the tiles that match up with the previous one, in the direction that the generation is happening
          */
 
         String[] dirs = new String[3];
@@ -332,7 +332,7 @@ class Map implements java.io.Serializable {
                 if (x)
                     return 0;
                 else
-                    return -1;
+                    return 1;
             case "WaterNWSW":
                 if (x)
                     return 1;
@@ -386,7 +386,8 @@ class Map implements java.io.Serializable {
             TODO: FIX RANDOM BUG THAT HAPPENS WHEN THE ARRAY RUNS OUT (-1)
          */
 
-        System.out.println("Force redirect activated");
+        if (OverworldController.debug)
+            System.out.println("Force redirect activated");
 
         if (dir.equals("north")) {
             tiles[x][y] = new Tile("WaterE");
@@ -448,13 +449,13 @@ class Map implements java.io.Serializable {
 
         Tile[][] tiles = new Tile[mapSize][mapSize];
 
-        System.out.println("Starting water tiles gen");
+        if (OverworldController.debug)
+            System.out.println("Starting water tiles gen");
 
         //////////////////////////////////////////////////////////
         // WATER TILES GEN
 
         int waterLineMax = mapSize / 20;
-        System.out.println("MaxWaterline: " + waterLineMax);
         String genDir = "east";
         //String currDir = "east";
 
@@ -490,8 +491,10 @@ class Map implements java.io.Serializable {
         tiles[endPos++][y] = new Tile(tile);
         y++;
 
-        System.out.println("Eastward generation finished");
-        System.out.println("Last x,y positions : " + endPos + ", " + y);
+        if (OverworldController.debug) {
+            System.out.println("Eastward generation finished");
+            System.out.println("Last x,y positions : " + endPos + ", " + y);
+        }
 
         int x = endPos;
         genDir = "south";
@@ -519,8 +522,10 @@ class Map implements java.io.Serializable {
         tiles[x][endPos++] = new Tile(tile);
         x--;
 
-        System.out.println("Southward generation finished");
-        System.out.println("Last x,y positions : " + x + ", " + endPos);
+        if (OverworldController.debug) {
+            System.out.println("Southward generation finished");
+            System.out.println("Last x,y positions : " + x + ", " + endPos);
+        }
 
         y = endPos;
         genDir = "west";
@@ -548,8 +553,10 @@ class Map implements java.io.Serializable {
         tiles[endPos--][y] = new Tile(tile);
         y--;
 
-        System.out.println("Westward generation finished");
-        System.out.println("Last x,y positions : " + endPos + ", " + y);
+        if (OverworldController.debug) {
+            System.out.println("Westward generation finished");
+            System.out.println("Last x,y positions : " + endPos + ", " + y);
+        }
 
         x = endPos;
         genDir = "north";
@@ -573,8 +580,10 @@ class Map implements java.io.Serializable {
             x += changeOnAxis(tile, true);
         }
 
-        System.out.println("Northward generation finished");
-        System.out.println("Last x,y positions : " + x + ", " + endPos);
+        if (OverworldController.debug) {
+            System.out.println("Northward generation finished");
+            System.out.println("Last x,y positions : " + x + ", " + endPos);
+        }
 
         for (y = 0; y < mapSize; y++) {
             boolean genAllWater = true;
@@ -595,13 +604,14 @@ class Map implements java.io.Serializable {
         // END WATER TILES GEN
         //////////////////////////////////////////////////////////
 
-        System.out.println("Finished water tiles gen");
+        if (OverworldController.debug) {
+            System.out.println("Finished water tiles gen");
+            System.out.println("Starting mountain tiles gen");
+        }
 
         // GEN MOUNTAINS
 
         int numOfType = rand.nextInt(MAX_MOUNTAIN) + MIN_MOUNTAIN;
-
-        System.out.println("Starting mountain tiles gen");
 
         // generates mountains
         for (int a = 0; a < numOfType; a++) {
@@ -616,11 +626,12 @@ class Map implements java.io.Serializable {
             }
         }
 
-        System.out.println("Finished mountain tiles gen");
+        if (OverworldController.debug) {
+            System.out.println("Finished mountain tiles gen");
+            System.out.println("Starting forest tiles gen");
+        }
 
         // GEN HEAVY FOREST, AND THEN LIGHT FOREST AROUND IT
-
-        System.out.println("Starting forest tiles gen");
 
         numOfType = rand.nextInt(MAX_FOREST) + MIN_FOREST;
 
@@ -639,9 +650,10 @@ class Map implements java.io.Serializable {
             }
         }
 
-        System.out.println("Finished forest tiles gen");
-
-        System.out.println("Starting dungeon tile gen");
+        if (OverworldController.debug) {
+            System.out.println("Finished forest tiles gen");
+            System.out.println("Starting dungeon tile gen");
+        }
 
         numOfType = rand.nextInt(MAX_DUNGEON) + MIN_DUNGEON;
 
@@ -657,7 +669,10 @@ class Map implements java.io.Serializable {
             }
         }
 
-        System.out.println("Starting settlement tiles gen");
+        if (OverworldController.debug) {
+            System.out.println("Finished dungeon tile gen");
+            System.out.println("Starting settlement tiles gen");
+        }
 
         // TODO: FIGURE OUT HOW TO GENERATE KINGDOMS, IF RANDOMLY OR BY SECTIONS OF MAP
 
@@ -699,7 +714,8 @@ class Map implements java.io.Serializable {
             names.add(name);
         }
 
-        System.out.println("Filling in null tiles...");
+        if (OverworldController.debug)
+            System.out.println("Filling in null tiles...");
 
         // fills in all non assigned tiles with grass tiles
         for (int a = 0; a < mapSize; a++) {
@@ -709,7 +725,8 @@ class Map implements java.io.Serializable {
             }
         }
 
-        System.out.println("World gen done!");
+        if (OverworldController.debug)
+            System.out.println("World gen done!");
         return tiles;
     }
 

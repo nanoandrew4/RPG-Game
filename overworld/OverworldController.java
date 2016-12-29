@@ -6,11 +6,12 @@
     Fix mouse events not being set properly - Dec 7 2016
     Player movement processed by the model completely - Nov 28 2016
     Player moves when tile is clicked on - Partial Nov 30 2016
-    Fix Settlement banners
+    Fix Settlement banners - Done Dec 28 2016
     Fix tile change detection
     Fixed major bug in view regarding tile size
+    Input processed by model entirely - Dec 21 2016
     Can't move on to non tresspasable tiles - Nov 30 2016 - Needs fixing - Depends on detectTileChange() being fixed to work
-    Fix world gen pls... Coastline gen, outOfBounds
+    Fix world gen pls... Coastline gen, outOfBounds - Reviewed Dec 28 2016
 
     Design and implement Economy
 
@@ -26,6 +27,7 @@
 package overworld;
 
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -37,8 +39,9 @@ import java.awt.*;
 public class OverworldController implements Runnable {
 
     private Main main;
-
     private Scene scene;
+
+    static boolean debug = false;
 
     private long start; // for timing the creation of the Model and View
 
@@ -47,20 +50,24 @@ public class OverworldController implements Runnable {
     private PlayerMove playerMove;
     private Thread playerMoveThread;
 
+    private EventHandler<MouseEvent>[][][] eventHandlers;
+
     // constructor used when creating a new game
     public OverworldController(Main main) {
         this.main = main;
         start = System.currentTimeMillis();
 
         model = new OverworldModel();
-        System.out.println("Model init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
+        if (debug)
+            System.out.println("Model init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
 
         view = new OverworldView(main.screenWidth, main.screenHeight);
 
         model.createPlayer(getBaseSpeed(), "none");
         //model.genParties(getBaseSpeed());
 
-        System.out.println("Overworld init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
+        if (debug)
+            System.out.println("Overworld init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
     }
 
     // constructor for loading game, sets model from save file to model variable
@@ -71,7 +78,8 @@ public class OverworldController implements Runnable {
         this.model = model;
         view = new OverworldView(main.screenWidth, main.screenHeight);
 
-        System.out.println("Overworld init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
+        if (debug)
+            System.out.println("Overworld init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
 
         model.startPartyAI();
     }
@@ -79,7 +87,8 @@ public class OverworldController implements Runnable {
     @Override
     public void run() {
         start = System.currentTimeMillis();
-        System.out.println("Overworld thread started");
+        if (debug)
+            System.out.println("Overworld thread started");
         setScene();
     }
 
@@ -103,9 +112,11 @@ public class OverworldController implements Runnable {
         scene = view.initDisplay(model.getTiles(), model.getPlayer(), model.getParties(), main.screenWidth, main.screenHeight,
                 view.getMapTileSize(), model.getMapSize());
         Platform.runLater(() -> main.setStage(scene)); // to update UI from non-javafx thread
+        eventHandlers = new EventHandler[OverworldView.zoom * 2 + 1][OverworldView.zoom * 2 + 1][6];
         setInput(scene);
         setMouseEvents();
-        System.out.println("Scene creation took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
+        if (debug)
+            System.out.println("Scene creation took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
     }
 
     private float getBaseSpeed() {
@@ -177,9 +188,26 @@ public class OverworldController implements Runnable {
 
         /*
             Maps click events to functions
+            TODO: HOVERING MOUSE OVER SETTLEMENT DOES NOT SHOW BANNER IF NOT ON TILE
          */
 
-        //System.out.println("Setting click events");
+        // removes click events from previous tiles related to banners
+        if (eventHandlers[0][0][5] != null) {
+            for (int y = 0; y <= OverworldView.zoom * 2; y++) {
+                for (int x = 0; x <= OverworldView.zoom * 2; x++) {
+                    if (view.getBanner(x, y) != null) {
+                        view.getTileIV(x, y).removeEventHandler(MouseEvent.MOUSE_ENTERED, eventHandlers[x][y][0]);
+                        view.getTileIV(x, y).removeEventHandler(MouseEvent.MOUSE_EXITED, eventHandlers[x][y][1]);
+                        view.getBanner(x, y).removeEventHandler(MouseEvent.MOUSE_ENTERED, eventHandlers[x][y][2]);
+                        view.getBanner(x, y).removeEventHandler(MouseEvent.MOUSE_EXITED, eventHandlers[x][y][3]);
+                        view.getBanner(x, y).removeEventHandler(MouseEvent.MOUSE_CLICKED, eventHandlers[x][y][4]);
+                    }
+                    view.getTileIV(x, y).removeEventHandler(MouseEvent.MOUSE_CLICKED, eventHandlers[x][y][5]);
+                }
+            }
+        }
+
+        // sets click events on all tiles
         for (int y = 0; y <= OverworldView.zoom * 2; y++) {
             for (int x = 0; x <= OverworldView.zoom * 2; x++) {
                 final Party p = model.getPlayer();
@@ -188,30 +216,34 @@ public class OverworldController implements Runnable {
                 final int arrX = x, arrY = y;
 
                 // mouse hovering events to show or hide settlement banners
-                if (model.getTiles()[xPos][yPos].settlementTile != null ) {
-                    view.getTileIV(arrX, arrY).addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
+                if (model.getTiles()[xPos][yPos].settlementTile != null) {
+                    view.getTileIV(arrX, arrY).addEventHandler(MouseEvent.MOUSE_ENTERED, eventHandlers[x][y][0] = event -> {
                         // if mouse is on a settlement tile, show banner for settlement
-                        view.showBanner(arrX, arrY, true);
+                        if (view.isNodeStackEmpty())
+                            view.showBanner(arrX, arrY, true);
                     });
-                    view.getTileIV(arrX, arrY).addEventHandler(MouseEvent.MOUSE_EXITED, event -> {
+                    view.getTileIV(arrX, arrY).addEventHandler(MouseEvent.MOUSE_EXITED, eventHandlers[x][y][1] = event -> {
                         // if mouse leaves settlement tile, hide banner
-                        view.showBanner(arrX, arrY, false);
+                        if (view.isNodeStackEmpty())
+                            view.showBanner(arrX, arrY, false);
                     });
-                    view.getBanner(arrX, arrY).addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
+                    view.getBanner(model.getTiles()[xPos][yPos], arrX, arrY).addEventHandler(MouseEvent.MOUSE_ENTERED, eventHandlers[x][y][2] = event -> {
                         // if mouse is on banner, show banner
-                        view.showBanner(arrX, arrY, true);
+                        if (view.isNodeStackEmpty())
+                            view.showBanner(arrX, arrY, true);
                     });
-                    view.getBanner(arrX, arrY).addEventHandler(MouseEvent.MOUSE_EXITED, event -> {
+                    view.getBanner(model.getTiles()[xPos][yPos], arrX, arrY).addEventHandler(MouseEvent.MOUSE_EXITED, eventHandlers[x][y][3] = event -> {
                         // if mouse leaves banner, hide banner
-                        view.showBanner(arrX, arrY, false);
+                        if (view.isNodeStackEmpty())
+                            view.showBanner(arrX, arrY, false);
                     });
-                    view.getBanner(arrX, arrY).addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                    view.getBanner(model.getTiles()[xPos][yPos], arrX, arrY).addEventHandler(MouseEvent.MOUSE_CLICKED, eventHandlers[x][y][4] = event -> {
                         if (event.getButton() == MouseButton.PRIMARY && model.getPlayer().getTileX() - xPos == 0 && model.getPlayer().getTileY() - yPos == 0)
                             view.showSettlementInfo(model.getTiles()[xPos][yPos].settlementTile, arrX, arrY);
                     });
                 }
 
-                view.getTileIV(arrX, arrY).addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                view.getTileIV(arrX, arrY).addEventHandler(MouseEvent.MOUSE_CLICKED, eventHandlers[x][y][5] = event -> {
 
                     // shows tile information when tile is clicked and handles all buttons in windows opened
 
