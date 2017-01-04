@@ -370,9 +370,9 @@ class OverworldView {
                         imageViews[x][y][0].setImage(imageViews[x][y - 1][0].getImage());
 
                 int yPos = player.getTileY() + (!top ? -zoom : zoom);
-                int xPos = (player.getTileX() + x < 0 ? (player.getTileX() + x >= 1000 ? 1000 - 1 : 0) : player.getTileX() + x);
+                int xPos = (player.getTileX() + x - zoom < 0 ? (player.getTileX() + x - zoom > 999 ? 999 : 0) : player.getTileX() + x - zoom);
 
-                imageViews[x][!top ? 0 : zoom * 2 - 1][0].setImage(genTile(xPos, yPos, tiles));
+                imageViews[x][!top ? 0 : zoom * 2][0].setImage(genTile(xPos, yPos, tiles));
             }
             moveSceneElements(top ? mapTileSize / 2 : -mapTileSize / 2, top ? -mapTileSize / 4 : mapTileSize / 4);
             drawEntities(player, parties);
@@ -396,9 +396,9 @@ class OverworldView {
                         imageViews[x][y][0].setImage(imageViews[x - 1][y][0].getImage());
 
                 int xPos = player.getTileX() + (right ? -zoom : zoom);
-                int yPos = (player.getTileY() + y < 0 ? (player.getTileY() + y >= 1000 ? 1000 - 1 : 0) : player.getTileY() + y);
+                int yPos = (player.getTileY() + y - zoom < 0 ? (player.getTileY() + y - zoom > 999 ? 999 : 0) : player.getTileY() + y - zoom);
 
-                imageViews[right ? 0 : zoom * 2 - 1][y][0].setImage(genTile(xPos, yPos, tiles));
+                imageViews[right ? 0 : zoom * 2][y][0].setImage(genTile(xPos, yPos, tiles));
             }
             moveSceneElements(right ? mapTileSize / 2 : -mapTileSize / 2, right ? mapTileSize / 4 : -mapTileSize / 4);
             drawEntities(player, parties);
@@ -433,10 +433,10 @@ class OverworldView {
         ImageView banner = new ImageView(images.banner);
 
         Text name = new Text(tile.settlementTile.settlementName);
-        name.setFont(Font.font("Luminari", FontWeight.NORMAL, 14));
+        name.setFont(Font.font("Luminari", FontWeight.NORMAL, (screenWidth / 1680) * 14));
 
         banner.relocate(0, height / 3);
-        name.relocate((width / 2) - (calcStringWidth(tile.settlementTile.settlementName) / 2), banner.getLayoutY() + height / 3);
+        name.relocate((width / 2) - name.getBoundsInLocal().getWidth() / 2, banner.getLayoutY() + height / 3);
 
         banners[arrX][arrY].getChildren().addAll(banner, name);
         banners[arrX][arrY].setVisible(false);
@@ -552,17 +552,6 @@ class OverworldView {
             }
     }
 
-    private double calcStringWidth(String string) {
-
-        /*
-            Calculates and returns the width of string (graphical element)
-         */
-
-        BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-        java.awt.FontMetrics fm = img.getGraphics().getFontMetrics();
-        return fm.stringWidth(string); // for variable font size
-    }
-
     void addPane (Pane p, boolean addToStack) {
 
         /*
@@ -621,13 +610,13 @@ class OverworldView {
 
             infoBox.getChildren().addAll(
                     newBanner,
-                    createText(newBanner.getLayoutY() + newBanner.getImage().getHeight() / 4.5, tile.settlementName, Font.font("Luminari", FontWeight.BOLD, 24), screenWidth),
-                    createText(newBanner.getLayoutY() + newBanner.getImage().getHeight() / 3, tile.subType, Font.font("Luminari", FontWeight.NORMAL, 18), screenWidth),
+                    createText(newBanner.getLayoutY() + newBanner.getImage().getHeight() / 4.5, tile.settlementName, Font.font("Luminari", FontWeight.BOLD, (screenWidth / 1680) * 24), screenWidth),
+                    createText(newBanner.getLayoutY() + newBanner.getImage().getHeight() / 3, tile.subType, Font.font("Luminari", FontWeight.NORMAL, (screenWidth / 1680) * 18), screenWidth),
                     createText(newBanner.getLayoutY() + newBanner.getImage().getHeight() / 2,
                             "This settlement is a " + tile.subType.toLowerCase() +
                                     " that currently has a populace count of " + tile.population + "\n and has " + tile.resources[0] + " wood, " +
                                     tile.resources[1] + " stone, " + tile.resources[2] + " iron and " + tile.resources[3] + " gold in it's warehouse/s",
-                            Font.font("Luminari", FontWeight.NORMAL, 16), screenWidth)
+                            Font.font("Luminari", FontWeight.NORMAL, ((screenWidth / 1680) * 16)), screenWidth)
             );
             overworldLayout.getChildren().add(infoBox);
         });
@@ -653,9 +642,9 @@ class OverworldView {
 
         infoBox.getChildren().addAll(
                 box,
-                createText((screenWidth / 2) - calcStringWidth(name), (screenHeight / 2) - (boxHeight / 2) + 20, name, new Font(24)),
-                createText((screenWidth / 2) - calcStringWidth(difficulty), (screenHeight / 2) - (boxHeight / 2) + 40, difficulty, new Font(16)),
-                createText(screenWidth / 2 - calcStringWidth(enterInfo), screenHeight / 2 - (boxHeight / 2) + 80, enterInfo, new Font(12))
+                createText((screenWidth / 2), (screenHeight / 2) - (boxHeight / 2) + 20, name, new Font(24)),
+                createText((screenWidth / 2), (screenHeight / 2) - (boxHeight / 2) + 40, difficulty, new Font(16)),
+                createText(screenWidth / 2, screenHeight / 2 - (boxHeight / 2) + 80, enterInfo, new Font(12))
         );
         overworldLayout.getChildren().add(infoBox);
     }
@@ -666,8 +655,9 @@ class OverworldView {
             Creates and returns a text object at coords x, y with text string and font font
          */
 
-        Text text = new Text(x, y, string);
+        Text text = new Text(string);
         text.setFont(font);
+        text.relocate(x - text.getBoundsInLocal().getWidth() / 2, y);
 
         return text;
     }

@@ -41,7 +41,7 @@ public class OverworldController implements Runnable {
     private Main main;
     private Scene scene;
 
-    static boolean debug = false;
+    static boolean debug = true;
 
     private long start; // for timing the creation of the Model and View
 

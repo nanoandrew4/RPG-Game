@@ -2,10 +2,9 @@ package overworld;
 
 import main.Main;
 
+import java.awt.*;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Random;
+import java.util.*;
 
 class Map implements java.io.Serializable {
 
@@ -59,7 +58,7 @@ class Map implements java.io.Serializable {
     }
 
     private void newMap() throws SQLException {
-        tiles = genMap(mapSize);
+        genMap(mapSize);
     }
 
     int getMapSize() { // returns map size
@@ -110,7 +109,7 @@ class Map implements java.io.Serializable {
         if (prev.equalsIgnoreCase(""))
             return "WaterSW";
 
-        if (y <= 4 || x <= 4 || y >= mapSize - 5 || x >= mapSize - 5) // equal signs necessary to avoid rare crash
+        if (y <= 3 || x <= 3 || y >= mapSize - 5 || x >= mapSize - 5) // equal signs necessary to avoid rare crash
             return null; // activates force redirect
 
         if (dir.equalsIgnoreCase("north")) {
@@ -238,7 +237,7 @@ class Map implements java.io.Serializable {
                 dirs[0] = "WaterW";
                 dirs[1] = "WaterSW";
                 dirs[2] = "WaterSWSE";
-            } else if (prev.contains("W")) {
+            } else if (prev.endsWith("W")) {
                 dirs[0] = "WaterNW";
                 dirs[1] = "WaterNWSW";
             }
@@ -262,7 +261,7 @@ class Map implements java.io.Serializable {
             } else if (prev.contains("N")) {
                 dirs[0] = "WaterNE";
                 dirs[1] = "WaterNWNE";
-            } else if (prev.contains("W")) {
+            } else if (prev.endsWith("W")) {
                 dirs[0] = "WaterNW";
                 dirs[1] = "WaterNWSW";
                 dirs[2] = "WaterN";
@@ -430,14 +429,32 @@ class Map implements java.io.Serializable {
                 return "WaterSE";
             }
         }
-        return null; // should not
+        return "WaterAll"; // should not
     }
 
-    private boolean returnCanGenWater(String tile) {
-        return tile.equals("WaterE") || tile.equals("WaterN") || tile.equals("WaterNE");
+    private void genWaterTiles(Tile[][] tiles) {
+        /*
+            Fills outside of coastline with water tiles
+         */
+
+        ArrayDeque<Point> queue = new ArrayDeque<>();
+
+        queue.push(new Point(0, 0));
+
+        for (Point p = queue.poll(); p != null; p = queue.poll()) {
+            tiles[p.x][p.y] = new Tile("WaterAll");
+            if (p.x + 1 < mapSize && tiles[p.x + 1][p.y] == null)
+                queue.push(new Point(p.x + 1, p.y));
+            if (p.x > 0 && tiles[p.x - 1][p.y] == null)
+                queue.push(new Point(p.x - 1, p.y));
+            if (p.y + 1 < mapSize && tiles[p.x][p.y + 1] == null)
+                queue.push(new Point(p.x, p.y + 1));
+            if (p.y > 0 && tiles[p.x][p.y - 1] == null)
+                queue.push(new Point(p.x, p.y - 1));
+        }
     }
 
-    private Tile[][] genMap(int mapSize) {
+    private void genMap(int mapSize) {
 
         /*
             Core of the world gen algorithm
@@ -447,7 +464,7 @@ class Map implements java.io.Serializable {
             Fills in null tiles with grass type tiles
          */
 
-        Tile[][] tiles = new Tile[mapSize][mapSize];
+        tiles = new Tile[mapSize][mapSize];
 
         if (OverworldController.debug)
             System.out.println("Starting water tiles gen");
@@ -456,52 +473,50 @@ class Map implements java.io.Serializable {
         // WATER TILES GEN
 
         int waterLineMax = mapSize / 20;
-        String genDir = "east";
-        //String currDir = "east";
+        int startY = rand.nextInt(waterLineMax) + 3;
 
+        String genDir = "east";
         int endPos = mapSize - (rand.nextInt(waterLineMax) + 3);
-        int y = rand.nextInt(waterLineMax) + 3;
+        int y = startY;
         String tile = "";
         String prevTile;
         int sameTileCount = 0;
 
-        for (int x = rand.nextInt(waterLineMax) + 3; x < mapSize - endPos; x += changeOnAxis(tile, true)) { // first iteration of coastline defining
+        // first iteration of coastline defining
+        for (int x = waterLineMax + 3; x < endPos; x += changeOnAxis(tile, true)) {
             prevTile = tile;
-            if (prevTile.equals(tile))
+            tile = nextWaterTile(tile, genDir, x, y, mapSize, sameTileCount);
+            if (tile != null && prevTile.equals(tile))
                 sameTileCount++;
             else
                 sameTileCount = 0;
-            tile = nextWaterTile(tile, genDir, x, y, mapSize, sameTileCount);
             if (tile == null) {
                 tile = forceRedirect(tiles, x, y, genDir);
-                assert tile != null;
-                if (tile.equals("WaterNWSW")) {
-                    x++;
-                    y++;
-                }
+                x++;
+                y++;
                 // change x and y coords to new position
             } else {
-                if (tiles[x][y] == null) // prevents overwriting tiles from forceRedirect
+                // prevents overwriting tiles from forceRedirect
+                if (tiles[x][y] == null)
                     tiles[x][y] = new Tile(tile);
             }
             y += changeOnAxis(tile, false);
         }
 
         tile = "WaterW";
-        tiles[endPos++][y] = new Tile(tile);
+        tiles[endPos][y] = new Tile(tile);
         y++;
 
         if (OverworldController.debug) {
             System.out.println("Eastward generation finished");
-            System.out.println("Last x,y positions : " + endPos + ", " + y);
+            System.out.println("Last x ,y positions : " + endPos + ", " + y);
         }
 
         int x = endPos;
         genDir = "south";
         endPos = mapSize - (rand.nextInt(waterLineMax) + 3);
-        for (; y < mapSize - endPos; y += changeOnAxis(tile, false)) { // second iteration of coastline defining
+        for (; y < endPos; y += changeOnAxis(tile, false)) { // second iteration of coastline defining
             prevTile = tile;
-            assert prevTile != null;
             if (prevTile.equals(tile))
                 sameTileCount++;
             else
@@ -519,7 +534,7 @@ class Map implements java.io.Serializable {
         }
 
         tile = "WaterN";
-        tiles[x][endPos++] = new Tile(tile);
+        tiles[x][endPos] = new Tile(tile);
         x--;
 
         if (OverworldController.debug) {
@@ -532,7 +547,6 @@ class Map implements java.io.Serializable {
         endPos = (rand.nextInt(waterLineMax) + 3);
         for (; x > endPos; x += changeOnAxis(tile, true)) { // third iteration of coastline defining
             prevTile = tile;
-            assert prevTile != null;
             if (prevTile.equals(tile))
                 sameTileCount++;
             else
@@ -550,7 +564,7 @@ class Map implements java.io.Serializable {
         }
 
         tile = "WaterE";
-        tiles[endPos--][y] = new Tile(tile);
+        tiles[endPos][y] = new Tile(tile);
         y--;
 
         if (OverworldController.debug) {
@@ -561,9 +575,8 @@ class Map implements java.io.Serializable {
         x = endPos;
         genDir = "north";
         endPos = (rand.nextInt(waterLineMax) + 3);
-        for (; y > endPos; y += changeOnAxis(tile, false)) { // fourth iteration of coastline defining
+        for (; y > startY; y += changeOnAxis(tile, false)) { // fourth iteration of coastline defining
             prevTile = tile;
-            assert prevTile != null;
             if (prevTile.equals(tile))
                 sameTileCount++;
             else
@@ -580,26 +593,18 @@ class Map implements java.io.Serializable {
             x += changeOnAxis(tile, true);
         }
 
+        tiles[x][y] = new Tile("WaterS");
+        x++;
+
         if (OverworldController.debug) {
             System.out.println("Northward generation finished");
             System.out.println("Last x,y positions : " + x + ", " + endPos);
         }
 
-        for (y = 0; y < mapSize; y++) {
-            boolean genAllWater = true;
-            for (x = 0; x < mapSize; x++) {
-                if (tiles[x][y] == null) {
-                    if (genAllWater)
-                        tiles[x][y] = new Tile("WaterAll");
-                } else {
-                    for (; x < mapSize; x++)
-                        if (tiles[x][y] == null && tiles[x - 1][y] != null && returnCanGenWater(tiles[x - 1][y].type)) {
-                            genAllWater = true;
-                            break;
-                        }
-                }
-            }
-        }
+        for (; tiles[x][y] == null; x++)
+            tiles[x][y] = new Tile("WaterSW");
+
+        genWaterTiles(tiles);
 
         // END WATER TILES GEN
         //////////////////////////////////////////////////////////
@@ -727,7 +732,6 @@ class Map implements java.io.Serializable {
 
         if (OverworldController.debug)
             System.out.println("World gen done!");
-        return tiles;
     }
 
     private boolean isAreaEmpty(Tile[][] tiles, int x, int y, int radius, int mapSize) {
