@@ -59,7 +59,7 @@ class InMapView {
     private Rectangle menuCursor, tempCursor;
     //inventory
     private Text[] invText; //item names
-    private Text invName, invDes, invType;
+    private Text invName, invDes, invType, invGold;
     private Text[] invStats; //stats
     private Rectangle[] invRButtons; //button boxes
     private Text invSort; //sorting type
@@ -80,7 +80,7 @@ class InMapView {
     private Text talkYes, talkNo;
     //trading: similar to inventory
     private Text[] traText;
-    private Text traName, traDes, traType;
+    private Text traName, traDes, traType, traGold;
     private Text[] traStats;
     private Text[] traButtons;
     private Rectangle[] traRButtons;
@@ -398,6 +398,9 @@ class InMapView {
         invSort = new Text(screenWidth*11/14, screenHeight*6/7, "");
         invSort.setFill(Paint.valueOf("WHITE"));
         invSort.setFont(Font.font("Luminari", FontWeight.NORMAL, 24));
+        invGold = new Text(screenWidth*11/14, screenHeight*25/28, "");
+        invGold.setFill(Paint.valueOf("WHITE"));
+        invGold.setFont(Font.font("Luminari", FontWeight.NORMAL, 24));
         
         invStatPane.getChildren().add(invType);
         invStatPane.getChildren().addAll(invStats);
@@ -405,7 +408,7 @@ class InMapView {
         invPane.getChildren().addAll(invText);
         invPane.getChildren().addAll(invButtons);
         invPane.getChildren().addAll(invRButtons);
-        invPane.getChildren().addAll(invTextPane, invSort);
+        invPane.getChildren().addAll(invTextPane, invSort, invGold);
         
         //charPane
         ImageView portrait = new ImageView(Images.portrait);
@@ -656,6 +659,10 @@ class InMapView {
         traSort = new Text(screenWidth*11/14, screenHeight*6/7, "");
         traSort.setFill(Paint.valueOf("WHITE"));
         traSort.setFont(Font.font("Luminari", FontWeight.NORMAL, 24));
+        
+        traGold = new Text(screenWidth*11/14, screenHeight*25/28, "");
+        traGold.setFill(Paint.valueOf("WHITE"));
+        traGold.setFont(Font.font("Luminari", FontWeight.NORMAL, 24));
                 
         tradePane.getChildren().addAll(box5, traFocus, traCursor);
         
@@ -664,7 +671,7 @@ class InMapView {
         tradePane.getChildren().addAll(traButtons);
         tradePane.getChildren().addAll(traRButtons);
         
-        tradePane.getChildren().addAll(tradeTextPane, traSort);
+        tradePane.getChildren().addAll(tradeTextPane, traSort, traGold);
 
         //ripPane
         Text ripT = new Text(0, screenHeight/2, ("YOU ARE DEAD"));
@@ -1042,7 +1049,7 @@ class InMapView {
                 if(i < log.size()) {
                     uiLogT[i].setText(log.get(i));
                     uiLogFade[i].setFromValue(uiLogT[i].getOpacity());
-                    uiLogFade[i].setDuration(Duration.millis(uiLogT[i].getOpacity()*10000));
+                    uiLogFade[i].setDuration(Duration.millis(uiLogT[i].getOpacity()*4000));
                     uiLogFade[i].playFromStart();
                 }
                 else {
@@ -1185,6 +1192,7 @@ class InMapView {
             //selection
             if(vd.selectP != -1) {
                 traCursor.setOpacity(.2);
+                traDes.setText(vd.invDes);
                 traRButtons[vd.selectP].setOpacity(.5);
             }
             //moving around menu
@@ -1208,7 +1216,7 @@ class InMapView {
                 else {
                     traName.setText("");
                     traType.setText("");
-                    traDes.setText("");
+                    traDes.setText(vd.invDes);
                     updateTradeStats(new Item());
                 }
             }
@@ -1431,15 +1439,17 @@ class InMapView {
                 invRButtons[i].setOpacity(.2);
             
             if(vd.sortType == 0)
-                invSort.setText("Sorted by Name");
+                invSort.setText("(F) Sorted by Name");
             else if(vd.sortType == 1)
-                invSort.setText("Sorted by Type");
+                invSort.setText("(F) Sorted by Type");
             else if(vd.sortType == 2)
-                invSort.setText("Sorted by Value");
+                invSort.setText("(F) Sorted by Value");
             else if(vd.sortType == 3)
-                invSort.setText("Sorted by Damage");
+                invSort.setText("(F) Sorted by Damage");
             else if(vd.sortType == 4)
-                invSort.setText("Sorted by Rarity");
+                invSort.setText("(F) Sorted by Rarity");
+            
+            invGold.setText(String.valueOf(vd.gold) + " g");
         }
         else if(vd.menuWindow.equals("char")) {
             chName.setText("Ronald Rump");
@@ -1518,16 +1528,18 @@ class InMapView {
         for(int i = 0; i < 2; i++)
             traRButtons[i].setOpacity(.2);
             
+        traGold.setText(String.valueOf(vd.gold) + " g");
+            
         if(vd.sortType == 0)
-            traSort.setText("Sorted by Name");
+            traSort.setText("(F) Sorted by Name");
         else if(vd.sortType == 1)
-            traSort.setText("Sorted by Type");
+            traSort.setText("(F) Sorted by Type");
         else if(vd.sortType == 2)
-            traSort.setText("Sorted by Value");
+            traSort.setText("(F) Sorted by Value");
         else if(vd.sortType == 3)
-            traSort.setText("Sorted by Damage");
+            traSort.setText("(F) Sorted by Damage");
         else if(vd.sortType == 4)
-            traSort.setText("Sorted by Rarity");
+            traSort.setText("(F) Sorted by Rarity");
     }
     
     //update inventory stat text

@@ -171,8 +171,27 @@ class Floor implements java.io.Serializable {
                     chars[sx][sy].gainEXP(chars[ex][ey]);
                     
                     //drop items
-                    if(chars[ex][ey].race.name.equals("Monster") && Math.random() < 1) {
-                        dropItem(Item.randomMonsterDrop(), ex, ey);
+                    if(chars[ex][ey].race.name.equals("Monster")) {
+                        //drops for chest
+                        if(chars[ex][ey].name.equals("Chest")) {
+                            //random gold
+                            int gold = (int)(1e7/(Math.random()*5e3+1e3));
+                            model.addGold(gold);
+                            model.logAdd("Obtained " + gold + " gold.");
+                            for(int i = (int)(Math.random()*3+1); i > 0; i--)
+                                dropItem(Item.randomChestDrop(), ex, ey);
+                        }
+                        //everything else
+                        else {
+                            //random gold
+                            int gold = (int)(1e6/(Math.random()*1e4+1e3));
+                            model.addGold(gold);
+                            model.logAdd("Obtained " + gold + " gold.");
+                            //base drop chance
+                            if(Math.random() < .2) {
+                                dropItem(Item.randomMonsterDrop(), ex, ey);
+                            }
+                        }
                     }
                     
                     //kill dead character
@@ -188,7 +207,7 @@ class Floor implements java.io.Serializable {
             }
         }
         //moving floors
-        else if(tiles[ex][ey].floorMovement != 0 && chars[sx][sy].name.equals(party[0].name)) {
+        else if(tiles[ex][ey].floorMovement != 0 && chars[sx][sy] == party[0]) {
             location.changeFloor(tiles[ex][ey].floorMovement);
             chars[sx][sy] = new Character();
             
@@ -856,10 +875,8 @@ class Floor implements java.io.Serializable {
         enterY = sizeY-1;
 
         npcs = new Character[2];
-        npcs[0] = new Character();
-        npcs[0].generateNPC();
-        npcs[1] = new Character();
-        npcs[1].generateNPC();
+        npcs[0] = Character.generateCitizen();
+        npcs[1] = Character.generateCitizen();
         npcs[0].x = 2;
         npcs[0].y = 2;
         chars[2][2] = npcs[0];

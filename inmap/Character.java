@@ -31,12 +31,11 @@ public class Character implements java.io.Serializable {
     double CRT, HIT, EVA, DMG, DEF, RES, PRC; //combat stats
     String name; //name
     AIType AIMode;
+    NPCType type;
     Path path;
     boolean hostile;
     Race race;
-    Item weapon;
-    Item armor;
-    Item acc1, acc2, acc3;
+    Item weapon, armor, acc1, acc2, acc3;
     
         //static methods
     //initialize sprites
@@ -59,7 +58,17 @@ public class Character implements java.io.Serializable {
         nameid.put("Chest", 15);
         nameid.put("Bell", 16);
         nameid.put("Bat", 17);
-        nameid.put("NPC", 12);
+        
+        nameid.put("NPC0", 18);
+        nameid.put("NPC1", 19);
+        nameid.put("NPC2", 20);
+        nameid.put("NPC3", 21);
+        nameid.put("NPC4", 22);
+        nameid.put("NPC5", 23);
+        nameid.put("NPC6", 24);
+        nameid.put("NPC7", 25);
+        nameid.put("NPC8", 26);
+        nameid.put("NPC9", 27);
         
         nameid.put("Hero", 99);
     }
@@ -74,6 +83,24 @@ public class Character implements java.io.Serializable {
         return names[(int)(Math.random()*names.length)];
     }
     
+    //random NPC generation
+    static Character generateCitizen() {
+        Character c = new Character();
+        c.setStats(true, 1, 5, 1, 90, 1, 1, 1, 1, "NPC" + (char)(Math.random()*10+48), 
+                "Human", AIType.WANDER, NPCType.CITIZEN, new Path(), false);
+        c.id = getID(c.name);
+        return c;
+    }
+    
+    //random NPC generation
+    static Character generateMerchant() {
+        Character c = new Character();
+        c.setStats(true, 1, 5, 1, 90, 1, 1, 1, 1, "NPC" + (char)(Math.random()*10+48), 
+                "Human", AIType.WANDER, NPCType.CITIZEN, new Path(), false);
+        c.id = getID(c.name);
+        return c;
+    }
+    
         //normal methods
     //empty character
     Character() {
@@ -83,8 +110,8 @@ public class Character implements java.io.Serializable {
     
     //generate character given parameters
     Character(int LVL, int VIT, int INT, int ACC, int STR, int WIS, int LUK, int CHA, 
-            String name, String race, AIType AIMode, Path path, boolean hostile) {
-        setStats(true, LVL, VIT, INT, ACC, STR, WIS, LUK, CHA, name, race, AIMode, path, hostile);
+            String name, String race, AIType AIMode, NPCType type, Path path, boolean hostile) {
+        setStats(true, LVL, VIT, INT, ACC, STR, WIS, LUK, CHA, name, race, AIMode, type, path, hostile);
         id = getID(name);
     }
     
@@ -97,8 +124,8 @@ public class Character implements java.io.Serializable {
     }
 
     //set stats
-    final void setStats(boolean exists, int LVL, int VIT, int INT, int ACC, int STR, int WIS,
-                        int LUK, int CHA, String name, String race, AIType AIMode, Path path, boolean hostile) {
+    final void setStats(boolean exists, int LVL, int VIT, int INT, int ACC, int STR, int WIS, int LUK, int CHA, 
+                        String name, String race, AIType AIMode, NPCType type, Path path, boolean hostile) {
         this.exists = exists;
         this.LVL = LVL;
         EXP = 0;
@@ -111,6 +138,7 @@ public class Character implements java.io.Serializable {
         this.CHA = CHA;
         this.name = name;
         this.AIMode = AIMode;
+        this.type = type;
         this.path = path;
         this.hostile = hostile;
 
@@ -128,37 +156,45 @@ public class Character implements java.io.Serializable {
         currentMP = maxMP;
     }
     
-    //random NPC generation
-    void generateNPC() {
-        setStats(true, 1, 5, 1, 90, 1, 1, 1, 1, "NPC", "Human", AIType.WANDER, new Path(), false);
-        id = getID(name);
-    }
-    
     //random enemy generation
     void generateEnemy() {
         switch((int)(Math.random() * 17)) {
-            //case: setStats(exist, lvl, vit, int, acc, str, wis, luk, cha, name,     race,      ai,          path, hostile);
-//            case 0: setStats(true,   2,   3,   1,  80,   2,   4,   1,   0, "Spider", "Monster", "wandering", true); break;
-//            case 1: setStats(true,   1,   5,   1,  90,   1,   1,   1,   0, "Slug",   "Monster", "wandering", true); break;
-//            case 2: setStats(true,   5,   8,   3,  75,   6,   3,   2,   3, "Goblin", "Monster", "wandering", true); break;
-//            case 3: setStats(true,   3,   6,   3,  85,   3,   3,   1,   2, "Bat",    "Monster", "wandering", true); break;
-            case 0:  setStats(true,   5,   9,   3,  90,   9,   5,   5,   0, "Suspicious Man", "Monster", AIType.WANDER, new Path(), true); break;
-            case 1:  setStats(true,   2,   6,   3,  75,   3,   3,   3,   0, "Bat", "Monster", AIType.WANDER, new Path(), true); break;
-            case 2:  setStats(true,   2,   5,   3,  80,   2,   2,   2,   0, "Bell", "Monster", AIType.FLEE, new Path(), false); break;
-            case 3:  setStats(true,  15,  10,   3,   0,   1,   1,   1,   0, "Chest", "Monster", AIType.STILL, new Path(), false); break;
-            case 4:  setStats(true,   1,   3,   3,  60,   2,   1,   1,   0, "Chick", "Monster", AIType.WANDER, new Path(), false); break;
-            case 5:  setStats(true,   2,   5,   3,  85,   4,   1,   1,   0, "Chicken", "Monster", AIType.WANDER, new Path(), true); break;
-            case 6:  setStats(true,   4,  11,   3,  85,   8,   3,   3,   0, "Fishman", "Monster", AIType.WANDER, new Path(), true); break;
-            case 7:  setStats(true,   5,   8,   3,  80,   6,   5,   5,   0, "Flan", "Monster", AIType.WANDER, new Path(), true); break;
-            case 8:  setStats(true,   4,   7,   3,  50,   5,   3,   3,   0, "Ghost", "Monster", AIType.WANDER, new Path(), true); break;
-            case 9:  setStats(true,   8,   9,   3,  90,  10,   3,   3,   0, "KingSlime", "Monster", AIType.WANDER, new Path(), true); break;
-            case 10: setStats(true,   5,   8,   3,  90,   9,   3,   3,   0, "Longcat", "Monster", AIType.WANDER, new Path(), true); break;
-            case 11: setStats(true,  10,  15,   3,  85,  15,   3,   3,   0, "Manta", "Monster", AIType.WANDER, new Path(), true); break;
-            case 12: setStats(true,   2,   3,   3,  60,   2,   3,   3,   0, "Mote", "Monster", AIType.WANDER, new Path(), false); break;
-            case 13: setStats(true,  13,  17,   3,  90,  22,   3,   3,   0, "Skelebro", "Monster", AIType.WANDER, new Path(), true); break;
-            case 14: setStats(true,   4,   6,   3,  70,   4,   3,   3,   0, "Snail", "Monster", AIType.WANDER, new Path(), true); break;
-            case 15: setStats(true,   7,  15,   3,  60,  13,   3,   3,   0, "SpookySlime", "Monster", AIType.WANDER, new Path(), true); break;
-            case 16: setStats(true,   6,   9,   3,  85,  16,   3,   3,   0, "SpookySlug", "Monster", AIType.WANDER, new Path(), true); break;
+            //case: setStats(exist, lvl, vit, int, acc, str, wis, luk, cha, 
+            //      name, race, ai, path, hostile);
+            case 0:  setStats(true,   5,   9,   3,  90,   9,   5,   5,   0, 
+                    "Suspicious Man", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
+            case 1:  setStats(true,   2,   6,   3,  75,   3,   3,   3,   0, 
+                    "Bat", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
+            case 2:  setStats(true,   2,   5,   3,  80,   2,   2,   2,   0, 
+                    "Bell", "Monster", AIType.FLEE, NPCType.NA, new Path(), false); break;
+            case 3:  setStats(true,  15,  10,   3,   0,   1,   1,   1,   0,
+                    "Chest", "Monster", AIType.STILL, NPCType.NA, new Path(), false); break;
+            case 4:  setStats(true,   1,   3,   3,  60,   2,   1,   1,   0, 
+                    "Chick", "Monster", AIType.WANDER, NPCType.NA, new Path(), false); break;
+            case 5:  setStats(true,   2,   5,   3,  85,   4,   1,   1,   0,
+                    "Chicken", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
+            case 6:  setStats(true,   4,  11,   3,  85,   8,   3,   3,   0, 
+                    "Fishman", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
+            case 7:  setStats(true,   5,   8,   3,  80,   6,   5,   5,   0, 
+                    "Flan", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
+            case 8:  setStats(true,   4,   7,   3,  50,   5,   3,   3,   0, 
+                    "Ghost", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
+            case 9:  setStats(true,   8,   9,   3,  90,  10,   3,   3,   0, 
+                    "KingSlime", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
+            case 10: setStats(true,   5,   8,   3,  90,   9,   3,   3,   0, 
+                    "Longcat", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
+            case 11: setStats(true,  10,  15,   3,  85,  15,   3,   3,   0, 
+                    "Manta", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
+            case 12: setStats(true,   2,   3,   3,  60,   2,   3,   3,   0, 
+                    "Mote", "Monster", AIType.WANDER, NPCType.NA, new Path(), false); break;
+            case 13: setStats(true,  13,  17,   3,  90,  22,   3,   3,   0, 
+                    "Skelebro", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
+            case 14: setStats(true,   4,   6,   3,  70,   4,   3,   3,   0, 
+                    "Snail", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
+            case 15: setStats(true,   7,  15,   3,  60,  13,   3,   3,   0, 
+                    "SpookySlime", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
+            case 16: setStats(true,   6,   9,   3,  85,  16,   3,   3,   0, 
+                    "SpookySlug", "Monster", AIType.WANDER, NPCType.NA, new Path(), true); break;
         }
         id = getID(name);
         weapon = new Item("Monster Sword");
@@ -167,7 +203,8 @@ public class Character implements java.io.Serializable {
     
     //make boss: temporary
     void generateBoss() {
-        setStats(true, 8, 15, 5, 90, 12, 12, 12, 12, "Clinton", "Monster", AIType.WANDER, new Path(), true);
+        setStats(true, 8, 15, 5, 90, 12, 12, 12, 12, 
+                "Clinton", "Monster", AIType.WANDER, NPCType.NA, new Path(), true);
     }
     
     //gain exp, calculate level

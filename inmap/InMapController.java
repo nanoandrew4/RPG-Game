@@ -49,6 +49,8 @@ public class InMapController implements Runnable {
         viewdata = new InMapViewData();
         hasControl = false;
         lastControl = Control.NULL;
+        
+        run();
     }
     
     //quick constructor
@@ -61,10 +63,12 @@ public class InMapController implements Runnable {
         viewdata = new InMapViewData();
         hasControl = false;
         lastControl = Control.NULL;
+        
+        run();
     }
     
     @Override
-    public void run() {
+    public final void run() {
         scene = view.getScene();
         setInput(scene);
     }
@@ -176,7 +180,6 @@ public class InMapController implements Runnable {
     
     //keyboard input
     private void setInput(Scene scene) {
-
         //key press events
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             Control c = main.getControl(event.getCode());

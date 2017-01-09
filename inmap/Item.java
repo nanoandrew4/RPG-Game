@@ -77,8 +77,6 @@ public class Item implements java.io.Serializable {
     
     //return random monster drop
     static Item randomMonsterDrop() {
-        Item i;
-        
         double rand = Math.random();
         if(rand < .8)
             return randomItem(0, ItemType.MATERIAL);
@@ -91,9 +89,24 @@ public class Item implements java.io.Serializable {
         else if(rand < 1)
             return randomItem(0, ItemType.CONSUMABLE);
         else
-            i = null;
-        
-        return i;
+            return null;
+    }
+    
+    //return chest drop
+    static Item randomChestDrop() {
+        double rand = Math.random();
+        if(rand < .1) //10%
+            return randomItem(2, ItemType.MATERIAL);
+        else if(rand < .2) //10%
+            return randomItem(2, ItemType.CONSUMABLE);
+        else if(rand < .8/3+.2) //26.6%
+            return randomItem(2, ItemType.WEAPON);
+        else if(rand < 1.6/3+.2) //26.6%
+            return randomItem(2, ItemType.ARMOR);
+        else if(rand < 1) //26.6%
+            return randomItem(2, ItemType.ACCESSORY);
+        else
+            return null;
     }
     
     //return random item given type and rarity context
@@ -301,6 +314,7 @@ public class Item implements java.io.Serializable {
     final void reset() {
         exists = false;
         displayName = "";
+        des = "";
         id = -1;
         rarity = 0;
         setStats(null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 

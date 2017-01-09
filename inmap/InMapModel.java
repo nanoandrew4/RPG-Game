@@ -34,7 +34,7 @@ public class InMapModel implements java.io.Serializable {
     
     //temporary variables
     private String focus, menuWindow, invText;
-    private boolean tradeState;
+    private boolean tradeState, confirm;
     private final Point tempP, menuP; //menu cursor pointers
     private int useP, usePmax, selectP; //selection pointer
     private int sortType; //sorting types
@@ -71,7 +71,7 @@ public class InMapModel implements java.io.Serializable {
         
         //create character
         party[0] = new Character(1, VIT, INT, 90, STR, WIS, LUK, CHA, 
-                name, race, AIType.NONE, new Path(), false);
+                name, race, AIType.NONE, NPCType.NA, new Path(), false);
         party[0].id = 99;
         this.name = name;
         this.sprite = sprite;
@@ -132,7 +132,8 @@ public class InMapModel implements java.io.Serializable {
         
         //create temp hero
         party[0] = new Character(1, 10, 10, 90, 10, 10, 10, 10, 
-                "Hero " + (char)(Math.random()*9+49), "Human", AIType.NONE, new Path(), false);
+                "Hero " + (char)(Math.random()*10+48), "Human", 
+                AIType.NONE, NPCType.NA, new Path(), false);
         party[0].id = 99;
         name = party[0].name;
         sprite = 99;
@@ -305,20 +306,20 @@ public class InMapModel implements java.io.Serializable {
                         if(inv[i].id == id && (inv[i].type == ItemType.CONSUMABLE 
                                 || inv[i].type == ItemType.MATERIAL)) {
                             invStacks[i]++;
-                            log.add(0, "Picked up another " + Item.idname.get((short)id) + ".");
+                            logAdd("Picked up another " + Item.idname.get((short)id) + ".");
                             break;
                         }
                         //no item exists
                         else if(!inv[i].exists) {
                             inv[i] = new Item(Item.get((short)id), (byte)0, (byte)0);
-                            log.add(0, "Picked up " + Item.idname.get((short)id) + ".");
+                            logAdd("Picked up " + Item.idname.get((short)id) + ".");
                             break;
                         }
                         //no space
                         else if(i == 63) {
                             getCurrentLocation().getCurrentFloor().items[party[0].x][party[0].y] 
                                     = new Item(Item.get((short)id), (byte)0, (byte)0);
-                            log.add(0, "Inventory full.");
+                            logAdd("Inventory full.");
                             break;
                         }
                     }
@@ -334,11 +335,6 @@ public class InMapModel implements java.io.Serializable {
                     focus = "rip";
                 }
                 break;
-        }
-        
-        //reduce log size
-        while(log.size() >= 30) {
-            log.remove(log.size()-1);
         }
         
         return r;
@@ -590,20 +586,117 @@ public class InMapModel implements java.io.Serializable {
                     if(selectP == 0) {
                         //buying
                         if(tradeState) {
-                            
+                            if(!confirm) {
+                                confirm = true;
+                                menuToggle = false;
+                                invText = "Are you sure you want to purchase " 
+                                        + tradeInv[menuP.x*16+menuP.y].displayName 
+                                        + "? It will cost " 
+                                        + tradeInv[menuP.x*16+menuP.y].VAL 
+                                        + " gold.";
+                            }
+                            else {
+                                confirm = false;
+                                selectP = -1;
+
+                                if(gold < tradeInv[menuP.x*16+menuP.y].VAL) {
+                                    invText = "Not enough gold.";
+                                }
+                                else {
+                                    //find empty spot
+                                    int empty = -1;
+                                    for(int i = 0; i < 64; i++) {
+                                        if(!inv[i].exists) {
+                                            empty = i;
+                                            break;
+                                        }
+                                        else if(inv[i].id == tradeInv[menuP.x*16+menuP.y].id 
+                                                && (inv[i].type == ItemType.CONSUMABLE
+                                                || inv[i].type == ItemType.MATERIAL)) {
+                                            empty = i;
+                                            break;
+                                        }
+                                    }
+                                    //no space left
+                                    if(empty == -1) {
+                                        invText = "No space in inventory.";
+                                        break;
+                                    }
+                                    //buy
+                                    else {
+                                        invText = tradeInv[menuP.x*16+menuP.y].displayName + " purchased.";
+                                        gold -= tradeInv[menuP.x*16+menuP.y].VAL;
+                                        inv[empty] = tradeInv[menuP.x*16+menuP.y].copy();
+                                        tradeStacks[menuP.x*16+menuP.y]--;
+                                        invStacks[empty]++;
+                                        if(tradeStacks[menuP.x*16+menuP.y] <= 0)
+                                            tradeInv[menuP.x*16+menuP.y].reset();
+                                    }
+                                }
+                            }
                         }
                         //selling
                         else {
+                            if(!confirm) {
+                                confirm = true;
+                                menuToggle = false;
+                                invText = "Are you sure you want to sell " 
+                                        + inv[menuP.x*16+menuP.y].displayName 
+                                        + " for " 
+                                        + inv[menuP.x*16+menuP.y].VAL 
+                                        + " gold?";
+                            }
+                            else {
+                                confirm = false;
+                                selectP = -1;
+                                
+                                //find empty spot
+                                int empty = -1;
+                                for(int i = 0; i < 64; i++) {
+                                    if(!tradeInv[i].exists) {
+                                        empty = i;
+                                        break;
+                                    }
+                                    else if(tradeInv[i].id == inv[menuP.x*16+menuP.y].id 
+                                            && (tradeInv[i].type == ItemType.CONSUMABLE
+                                            || tradeInv[i].type == ItemType.MATERIAL)) {
+                                        empty = i;
+                                        break;
+                                    }
+                                }
+                                if(empty == -1) {
+                                    invText = "Merchant cannot buy any more.";
+                                    break;
+                                }
+                                else {
+                                    invText = inv[menuP.x*16+menuP.y].displayName + " sold.";
+                                    gold += inv[menuP.x*16+menuP.y].VAL;
+                                    tradeInv[empty] = inv[menuP.x*16+menuP.y].copy();
+                                    tradeStacks[empty]++;
+                                    invStacks[menuP.x*16+menuP.y]--;
+                                    if(invStacks[menuP.x*16+menuP.y] <= 0)
+                                        inv[menuP.x*16+menuP.y].reset();
+                                }
+                            }
                             
                         }
                     }
                     //cancel
                     else if(selectP == 1) {
+                        if(confirm) {
+                            confirm = false;
+                        if(tradeState)
+                            invText = tradeInv[menuP.x*16+menuP.y].des;
+                        else
+                            invText = inv[menuP.x*16+menuP.y].des;                        }
                         selectP = -1;
                     }
                 }
+                //start select if item exists
                 else {
-                    selectP = 0;
+                    if((tradeState && tradeInv[menuP.x*16+menuP.y].exists) 
+                            || (!tradeState && inv[menuP.x*16+menuP.y].exists))
+                        selectP = 0;
                 }
                 break;
 
@@ -615,7 +708,12 @@ public class InMapModel implements java.io.Serializable {
                 }
                 //button selection
                 else if(selectP != -1) {
+                    confirm = false;
                     selectP = -1;
+                    if(tradeState)
+                        invText = tradeInv[menuP.x*16+menuP.y].des;
+                    else
+                        invText = inv[menuP.x*16+menuP.y].des;   
                 }
                 //back to buy/sell select
                 else {
@@ -635,6 +733,12 @@ public class InMapModel implements java.io.Serializable {
                     sortType++;
                     sortInventory(tradeInv, tradeStacks);
                     sortInventory(inv, invStacks);
+                    if(menuP.y != -1) {
+                        if(tradeState)
+                            invText = tradeInv[menuP.x*16+menuP.y].des;
+                        else
+                            invText = inv[menuP.x*16+menuP.y].des;
+                    }
                 }
                 break;
 
@@ -1168,7 +1272,7 @@ public class InMapModel implements java.io.Serializable {
                 //find furthest item from back
                 for(int y = 63; y > 0; y--) {
                     if(y <= x) {
-                        max = y-1;
+                        max = y;
                         break;
                     }
                     else if(items[y].exists) {
@@ -1196,18 +1300,18 @@ public class InMapModel implements java.io.Serializable {
         switch(sortType) {
             //by name
             case 0:
-                class Sorter implements Comparator {
+                class NameSorter implements Comparator {
                     @Override
                     public int compare(Object o1, Object o2) {
                         return Collator.getInstance().compare(Item.idname.get(((Item)o1).id),
                                 Item.idname.get(((Item)o2).id));
                     }
                 }
-                sorter = new Sorter();
+                sorter = new NameSorter();
                 break;
             //by type
             case 1:
-                class Sorter implements Comparator {
+                class TypeSorter implements Comparator {
                     @Override
                     public int compare(Object o1, Object o2) {
                         if(((Item)o1).type.value() > ((Item)o2).type.value())
@@ -1218,11 +1322,11 @@ public class InMapModel implements java.io.Serializable {
                             return 0;
                     }
                 }
-                sorter = new Sorter();
+                sorter = new TypeSorter();
                 break;
             //by value
             case 2:
-                class Sorter implements Comparator {
+                class ValueSorter implements Comparator {
                     @Override
                     public int compare(Object o1, Object o2) {
                         if(((Item)o1).VAL > ((Item)o2).VAL)
@@ -1233,11 +1337,11 @@ public class InMapModel implements java.io.Serializable {
                             return 0;
                     }
                 }
-                sorter = new Sorter();
+                sorter = new ValueSorter();
                 break;
             //by DMG
             case 3:
-                class Sorter implements Comparator {
+                class DamageSorter implements Comparator {
                     @Override
                     public int compare(Object o1, Object o2) {
                         if(((Item)o1).DMG > ((Item)o2).DMG)
@@ -1248,11 +1352,11 @@ public class InMapModel implements java.io.Serializable {
                             return 0;
                     }
                 }
-                sorter = new Sorter();
+                sorter = new DamageSorter();
                 break;
             //by rarity
             case 4:
-                class Sorter implements Comparator {
+                class RaritySorter implements Comparator {
                     @Override
                     public int compare(Object o1, Object o2) {
                         if(((Item)o1).rarity > ((Item)o2).rarity)
@@ -1263,7 +1367,7 @@ public class InMapModel implements java.io.Serializable {
                             return 0;
                     }
                 }
-                sorter = new Sorter();
+                sorter = new RaritySorter();
                 break;
             //by id: not really useful
             default:
@@ -1360,13 +1464,24 @@ public class InMapModel implements java.io.Serializable {
         }
     }
     
+    //log something
+    void logAdd(String s) {
+        log.add(0, s);
+        
+        //reduce log size
+        while(log.size() >= 30) {
+            log.remove(log.size()-1);
+        }
+    }
+    void addGold(int g) { gold += g; }
+    
     //getters
+    public int getSprite() { return sprite; }
+    public Character[] getParty() { return party; }
     Location getCurrentLocation() { return maps.get(currentMap); }
     Location getLocation(Point id) { return maps.get(id); }
     String getLocationType() { return getCurrentLocation().type; }
-    public Character[] getParty() { return party; }
     String getName() { return name; }
-    int getSprite() { return sprite; }
     String getPortrait() { return portrait; }
     Item[] getInventory() { return inv; }
     Item[] getTradeInv() { return tradeInv; }
