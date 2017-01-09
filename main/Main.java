@@ -4,6 +4,7 @@
 
 package main;
 
+import inmap.Images;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.application.Application;
@@ -50,6 +51,7 @@ public class Main extends Application {
     //controllers
     private OverworldController overworldController;
     private InMapController IMController;
+
     public DBManager dbManager;
     //converts keycodes into control enums
     private HashMap<KeyCode, Control> keybindings;
@@ -648,8 +650,8 @@ public class Main extends Application {
                     
                 case ESC:
                     if (menuState.equals("main")) {
-                        startOverworldController(null);
                         startInMapController(null);
+                        startOverworldController(null);
                     }
                     
                 default:
@@ -881,13 +883,16 @@ public class Main extends Application {
     //load a game
     public void loadGame(int slot) {
         try {
+
+            OverworldController.hasControl = false;
+
             Object[] models;
             if (listOfFiles[0].getName().equals(".DS_Store"))
                 models = loadModel(listOfFiles[saveFileHM.get(slot)+1].getName().split("\\.")[0]);
             else
                 models = loadModel(listOfFiles[saveFileHM.get(slot)].getName().split("\\.")[0]);
-            startOverworldController((OverworldModel) models[0]);
             startInMapController((InMapModel) models[1]);
+            startOverworldController((OverworldModel) models[0]);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -911,10 +916,6 @@ public class Main extends Application {
             int CHA, String race, String name, int sprite, String portrait) {
         IMController = new InMapController(this, VIT, INT, STR, WIS, LUK, 
                 CHA, race, name, sprite, portrait);
-        Thread inmapThread = new Thread(IMController);
-        inmapThread.setDaemon(true);
-
-        inmapThread.run();
     }
 
     //start inmap controller with loaded model
@@ -923,10 +924,6 @@ public class Main extends Application {
             IMController = new InMapController(this);
         else 
             IMController = new InMapController(this, inMapModel);
-        Thread inmapThread = new Thread(IMController);
-        inmapThread.setDaemon(true);
-
-        inmapThread.run();
     }
 
     public void saveModel(int slot) throws IOException {
@@ -1012,6 +1009,10 @@ public class Main extends Application {
     //get menu pane from inmap
     public Pane getMenuPane() {
         return IMController.getMenuPane();
+    }
+
+    public ImageView getPlayerSprite() {
+        return new ImageView(Images.playerSprites[IMController.getModel().getSprite()]);
     }
     
     //process menu input from overworldController

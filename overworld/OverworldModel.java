@@ -59,7 +59,7 @@ public class OverworldModel implements java.io.Serializable {
         do {
             int x = rand.nextInt(getMapSize() - 1);
             int y = rand.nextInt(getMapSize() - 1);
-            if (getTiles()[x][y].type.equals("Settlement")) {
+            if (getTiles()[x][y].type.equals("InMap")) {
                 startPos[0] = x;
                 startPos[1] = y;
                 return startPos;
@@ -137,23 +137,28 @@ public class OverworldModel implements java.io.Serializable {
             Return code -1 = remove pane from stack
             Return code 0 = controls locked, do nothing
             Return code 1 = open/close menu (depends on menuOpen boolean)
-            Return code 2 = show tile borders
-            Return code 3 = player movement
+            Return code 2 = select
+            Return code 3 = show tile borders
+            Return code 4 = player movement
          */
 
         // remove one menu from scene
         if (key == Control.BACK && !menuOpen)
             return -1;
+
+        if (key == Control.SELECT)
+            return 2;
+
         // if looking at a menu, lock controls
-        if (controlsLocked)
+        if (controlsLocked || !OverworldController.hasControl)
             return 0;
+
+        // when player touches key, stops automatic moving through map (moving by clicking on a tile)
+        player.setPath(null);
 
         // open menu
         if (key == Control.BACK || key == Control.MENU || key == Control.OPENCHAR || key == Control.OPENINV || key == Control.OPENNOTES || key == Control.OPENOPTIONS || key == Control.OPENPARTY)
             return 1;
-
-        // when player touches key, stops automatic moving through map (moving by clicking on a tile)
-        player.setPath(null);
 
         //System.out.println("XPos: " + getCurrPos(0));
         //System.out.println("YPos: " + getCurrPos(1));
@@ -167,7 +172,7 @@ public class OverworldModel implements java.io.Serializable {
 
         // shows tile borders
         if (key == Control.ALT)
-            return 2;
+            return 3;
 
         // movement on map processing
         if (key == Control.LEFT || key == Control.RIGHT || key == Control.UP || key == Control.DOWN) {
@@ -207,7 +212,7 @@ public class OverworldModel implements java.io.Serializable {
 
             // detect if player has moved tiles, and if so, add and remove rows appropriately
             if (getPlayer().detectTileChange(OverworldView.mapTileSize, true)) {
-                return 3;
+                return 4;
             }
         }
 

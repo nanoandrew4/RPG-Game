@@ -11,7 +11,11 @@
     Fixed major bug in view regarding tile size
     Input processed by model entirely - Dec 21 2016
     Can't move on to non tresspasable tiles - Nov 30 2016 - Needs fixing - Depends on detectTileChange() being fixed to work
-    Fix world gen pls... Coastline gen, outOfBounds - Reviewed Dec 28 2016
+    Fix world gen pls... Coastline gen, outOfBounds - Reviewed Dec 28 2016 - Done January 4 2017
+    Fix entering to towers - Fixed Jan 6 2016
+    Fix banners not displaying correctly after moving off tile
+    Settlements and towers generate in water
+    Settlements generate in mountains
 
     Design and implement Economy
 
@@ -52,6 +56,11 @@ public class OverworldController implements Runnable {
 
     private EventHandler<MouseEvent>[][][] eventHandlers;
 
+    public static boolean hasControl;
+
+    private int clickReturnCode;
+    private Point dungeonPoint;
+
     // constructor used when creating a new game
     public OverworldController(Main main) {
         this.main = main;
@@ -61,7 +70,7 @@ public class OverworldController implements Runnable {
         if (debug)
             System.out.println("Model init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
 
-        view = new OverworldView(main.screenWidth, main.screenHeight);
+        view = new OverworldView(main.screenWidth, main.screenHeight, main.getPlayerSprite());
 
         model.createPlayer(getBaseSpeed(), "none");
         //model.genParties(getBaseSpeed());
@@ -76,12 +85,12 @@ public class OverworldController implements Runnable {
         start = System.currentTimeMillis();
 
         this.model = model;
-        view = new OverworldView(main.screenWidth, main.screenHeight);
+        view = new OverworldView(main.screenWidth, main.screenHeight, main.getPlayerSprite());
 
         if (debug)
             System.out.println("Overworld init took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
 
-        model.startPartyAI();
+        //model.startPartyAI();
     }
 
     @Override
@@ -90,10 +99,13 @@ public class OverworldController implements Runnable {
         if (debug)
             System.out.println("Overworld thread started");
         setScene();
+
+        hasControl = true;
     }
 
     //pass control back
     public void passControl() {
+        hasControl = false;
         main.setStage(scene);
         model.setControlsLocked(true);
     }
@@ -120,7 +132,7 @@ public class OverworldController implements Runnable {
     }
 
     private float getBaseSpeed() {
-        return (float) (100 / view.getMapTileSize());
+        return (float) (200 / view.getMapTileSize());
     }
 
     private void setInput(Scene scene) {
@@ -130,9 +142,6 @@ public class OverworldController implements Runnable {
          */
 
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-
-            model.getPlayer().setxOffset(view.getPlayerXOffset());
-            model.getPlayer().setyOffset(view.getPlayerYOffset());
 
             int returnCode = model.process(main.getControl(event.getCode()), false);
 
@@ -151,9 +160,12 @@ public class OverworldController implements Runnable {
                     model.setControlsLocked(false);
                     view.removePane();
                 }
-            } else if (returnCode == 2)
+            } else if (returnCode == 2 && clickReturnCode == 12) {
+                hasControl = false;
+                main.passControl(dungeonPoint);
+            } else if (returnCode == 3)
                 view.showTileBorders(true);
-            else if (returnCode == 3) {
+            else if (returnCode == 4) {
                 view.reDraw(model.getAngles(), model.getTiles(), model.getPlayer(), model.getParties());
                 setMouseEvents();
             }
@@ -163,9 +175,6 @@ public class OverworldController implements Runnable {
 
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
 
-            model.getPlayer().setxOffset(view.getPlayerXOffset());
-            model.getPlayer().setyOffset(view.getPlayerYOffset());
-
             int returnCode = model.process(main.getControl(event.getCode()), true);
 
             //System.out.println("XPos: " + model.getCurrPos(0));
@@ -173,9 +182,9 @@ public class OverworldController implements Runnable {
 
             if (returnCode == 0)
                 return;
-            else if (returnCode == 2)
+            else if (returnCode == 3)
                 view.showTileBorders(false);
-            else if (returnCode == 3) {
+            else if (returnCode == 4) {
                 view.reDraw(model.getAngles(), model.getTiles(), model.getPlayer(), model.getParties());
                 setMouseEvents();
             }
@@ -247,13 +256,14 @@ public class OverworldController implements Runnable {
 
                     // shows tile information when tile is clicked and handles all buttons in windows opened
 
-                    int returnCode = model.process(event, xPos, yPos);
-                    if (returnCode == 11) {
+                    clickReturnCode = model.process(event, xPos, yPos);
+                    if (clickReturnCode == 11) {
                         view.showSettlementInfo(model.getTiles()[xPos][yPos].settlementTile, arrX, arrY);
-                    } else if (returnCode == 12) {
-                        main.newLocation(new Point(xPos, yPos), model.getTiles()[xPos][yPos].inMapTile.inmapType.toLowerCase());
-                        view.showInMapInfo(main.getLocationName(new Point(xPos, yPos)), main.getDifficulty(new Point(xPos, yPos)));
-                    } else if (returnCode == 21) {
+                    } else if (clickReturnCode == 12) {
+                        dungeonPoint = new Point(xPos, yPos);
+                        main.newLocation(dungeonPoint, model.getTiles()[xPos][yPos].inMapTile.inmapType.toLowerCase());
+                        view.showInMapInfo(main.getLocationName(dungeonPoint), main.getDifficulty(dungeonPoint));
+                    } else if (clickReturnCode == 21) {
                         boolean startThread = playerMoveThread == null;
                         // processing mouse event for right click, moves player by itself to target tile
                         model.getPlayer().detectTileChange(OverworldView.mapTileSize, true);

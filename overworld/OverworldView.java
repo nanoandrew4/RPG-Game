@@ -115,12 +115,19 @@ class OverworldView {
 
     private HashMap<Party, ImageView> pIVHashMap; // when party is eliminated, delete from hashmap
 
-    OverworldView(double screenWidth, double screenHeight) {
+    OverworldView(double screenWidth, double screenHeight, ImageView playerIV) {
         imageViews = new ImageView[zoom * 2 + 1][zoom * 2 + 1][2];
         banners = new Pane[zoom * 2 + 1][zoom * 2 + 1];
         pIVHashMap = new HashMap<>();
+
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
+
+        this.playerIV = playerIV;
+        if (playerIV != null) {
+            playerIV.setFitWidth(48);
+            playerIV.setFitHeight(72);
+        }
 
         if (screenWidth > screenHeight) {
             mapTileSize = screenHeight / tilesAcrossScreen;
@@ -136,12 +143,12 @@ class OverworldView {
 
     // returns coordinate of player omn tile on the x axis
     float getPlayerXOffset() {
-        return (float) (centerTile.screenToLocal(playerIV.localToScreen(3, 3)).getX() - getMapTileSize() / 2);
+        return (float) (centerTile.screenToLocal(playerIV.localToScreen(24, 72)).getX() - getMapTileSize() / 2);
     }
 
     // returns coordinate of player on tile on the y axis
     float getPlayerYOffset() {
-        return (float) (-centerTile.screenToLocal(playerIV.localToScreen(3, 3)).getY() + getMapTileSize() * 3 / 4);
+        return (float) (-centerTile.screenToLocal(playerIV.localToScreen(24, 72)).getY() + getMapTileSize() * 3 / 4);
     }
 
     Stack<Node> getNodeStack() {
@@ -185,8 +192,9 @@ class OverworldView {
         imageViews[zoom][zoom][1].setVisible(true);
 
         // create and draw player image view
-        playerIV = new ImageView(genPartyImage());
-        playerIV.relocate(screenWidth / 2 - 3, screenHeight / 2 - 3);
+        if (playerIV == null)
+            playerIV = genPartyImage();
+        playerIV.relocate(screenWidth / 2 - 24, screenHeight / 2 - 72);
         overworldLayout.getChildren().add(playerIV);
 
         // draw all entities that are within visible range
@@ -226,7 +234,7 @@ class OverworldView {
 
             // if player is within FOV and no image view exists, create and draw, if goes out of FOV, remove
             if (pIVHashMap.get(p) == null && Math.abs(p.getTileX() - currX) < zoom && Math.abs(p.getTileY() - currY) < zoom) {
-                pIVHashMap.put(p, iv = new ImageView(genPartyImage()));
+                pIVHashMap.put(p, iv = genPartyImage());
                 iv.relocate(playerIV.getLayoutX() + (p.getTileX() - player.getTileX()) * (mapTileSize / 2) + p.getxOffset(), playerIV.getLayoutY() + ((p.getTileY() - player.getTileY()) * (mapTileSize / 4) + p.getyOffset()));
                 System.out.println(iv.getLayoutX() + ", " + iv.getLayoutY());
                 setMoveAnim(p, player);
@@ -238,13 +246,13 @@ class OverworldView {
         }
     }
 
-    private Image genPartyImage() {
+    private ImageView genPartyImage() {
 
         /*
             Generates an ImageView to represent a party
          */
 
-        return new Image("/media/graphics/redDot.png", 6, 6, false, false);
+        return new ImageView(new Image("/media/graphics/redDot.png", 6, 6, false, false));
     }
 
     private Image genTile(int xPos, int yPos, Tile[][] tiles) {
@@ -484,8 +492,12 @@ class OverworldView {
                         return;
                     }
 
-                    imageView.setLayoutX(imageView.getLayoutX() - player.getSpeedX());
-                    imageView.setLayoutY(imageView.getLayoutY() + player.getSpeedY());
+                    if (OverworldController.hasControl) {
+                        player.setxOffset(getPlayerXOffset());
+                        player.setyOffset(getPlayerYOffset());
+                        imageView.setLayoutX(imageView.getLayoutX() - player.getSpeedX());
+                        imageView.setLayoutY(imageView.getLayoutY() + player.getSpeedY());
+                    }
                 }
                 lastUpdateTime.set(timestamp);
             }
@@ -507,8 +519,10 @@ class OverworldView {
                         stop();
                         return;
                     }
-                    pIVHashMap.get(p).relocate((float) (playerIV.getLayoutX() + ((p.getTileX() - player.getTileX()) * (mapTileSize / 2) + (p.getTileY() - player.getTileY()) * (-mapTileSize / 2) + p.getxOffset())) - player.getSpeedX(),
-                            (float) (playerIV.getLayoutY() - ((p.getTileY() - player.getTileY()) * (-mapTileSize / 4) + (p.getTileX() - player.getTileX()) * (-mapTileSize / 4) + p.getyOffset())) - player.getSpeedY());
+                    if (OverworldController.hasControl) {
+                        pIVHashMap.get(p).relocate((float) (playerIV.getLayoutX() + ((p.getTileX() - player.getTileX()) * (mapTileSize / 2) + (p.getTileY() - player.getTileY()) * (-mapTileSize / 2) + p.getxOffset())) - player.getSpeedX(),
+                                (float) (playerIV.getLayoutY() - ((p.getTileY() - player.getTileY()) * (-mapTileSize / 4) + (p.getTileX() - player.getTileX()) * (-mapTileSize / 4) + p.getyOffset())) - player.getSpeedY());
+                    }
                 }
                 lastUpdateTime.set(timestamp);
             }
@@ -529,8 +543,11 @@ class OverworldView {
                         stop();
                         return;
                     }
-                    pane.setLayoutX(pane.getLayoutX() - player.getSpeedX());
-                    pane.setLayoutY(pane.getLayoutY() + player.getSpeedY());
+
+                    if (OverworldController.hasControl) {
+                        pane.setLayoutX(pane.getLayoutX() - player.getSpeedX());
+                        pane.setLayoutY(pane.getLayoutY() + player.getSpeedY());
+                    }
                 }
                 lastUpdateTime.set(timestamp);
             }
