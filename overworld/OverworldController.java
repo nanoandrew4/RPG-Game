@@ -45,7 +45,7 @@ public class OverworldController implements Runnable {
     private Main main;
     private Scene scene;
 
-    static boolean debug = true;
+    static boolean debug = false;
 
     private long start; // for timing the creation of the Model and View
 
@@ -99,6 +99,12 @@ public class OverworldController implements Runnable {
         if (debug)
             System.out.println("Overworld thread started");
         setScene();
+
+        Main.running = true;
+
+        Thread inputStoreThread = new Thread(new ModelViewBridge(this, model, view));
+        inputStoreThread.setDaemon(true);
+        inputStoreThread.start();
 
         hasControl = true;
     }
@@ -165,10 +171,6 @@ public class OverworldController implements Runnable {
                 main.passControl(dungeonPoint);
             } else if (returnCode == 3)
                 view.showTileBorders(true);
-            else if (returnCode == 4) {
-                view.reDraw(model.getAngles(), model.getTiles(), model.getPlayer(), model.getParties());
-                setMouseEvents();
-            }
 
             event.consume();
         });
@@ -184,10 +186,6 @@ public class OverworldController implements Runnable {
                 return;
             else if (returnCode == 3)
                 view.showTileBorders(false);
-            else if (returnCode == 4) {
-                view.reDraw(model.getAngles(), model.getTiles(), model.getPlayer(), model.getParties());
-                setMouseEvents();
-            }
 
             event.consume();
         });
@@ -278,6 +276,35 @@ public class OverworldController implements Runnable {
                         }
                     }
                 });
+            }
+        }
+    }
+}
+
+class ModelViewBridge extends Thread {
+
+    private OverworldController controller;
+    private OverworldModel model;
+    private OverworldView view;
+
+    ModelViewBridge(OverworldController controller, OverworldModel model, OverworldView view) {
+        this.controller = controller;
+        this.model = model;
+        this.view = view;
+    }
+
+    @Override
+    public void run() {
+        while (Main.running) {
+            if (model.getPlayer().detectTileChange(OverworldView.mapTileSize, true)) {
+                view.reDraw(model.getAngles(), model.getTiles(), model.getPlayer(), model.getParties());
+                controller.setMouseEvents();
+            }
+
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }

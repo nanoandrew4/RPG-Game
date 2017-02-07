@@ -3,6 +3,7 @@ package overworld;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import main.Control;
+import main.Main;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -24,6 +25,8 @@ public class OverworldModel implements java.io.Serializable {
     private transient PartyAI partyAI;
     private long startTime = System.currentTimeMillis();
     private Random rand = new Random();
+
+    static boolean tileChange = false;
 
     private boolean controlsLocked = false;
     private boolean menuOpen = false;
@@ -70,6 +73,7 @@ public class OverworldModel implements java.io.Serializable {
     // starts PartyAI thread
     void startPartyAI() {
         partyAI = new PartyAI();
+        partyAI.setDaemon(true);
         // must set all objects
         partyAI.setMap(map);
         partyAI.setParties(parties);
@@ -139,7 +143,6 @@ public class OverworldModel implements java.io.Serializable {
             Return code 1 = open/close menu (depends on menuOpen boolean)
             Return code 2 = select
             Return code 3 = show tile borders
-            Return code 4 = player movement
          */
 
         // remove one menu from scene
@@ -209,11 +212,6 @@ public class OverworldModel implements java.io.Serializable {
                     verticalDir = Control.NULL;
                 }
             }
-
-            // detect if player has moved tiles, and if so, add and remove rows appropriately
-            if (getPlayer().detectTileChange(OverworldView.mapTileSize, true)) {
-                return 4;
-            }
         }
 
         return 0;
@@ -247,3 +245,4 @@ public class OverworldModel implements java.io.Serializable {
         return 0;
     }
 }
+

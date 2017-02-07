@@ -1,5 +1,7 @@
 package overworld;
 
+import main.Main;
+
 import java.util.ArrayList;
 
 class PartyAI extends Thread implements java.io.Serializable {
@@ -29,7 +31,7 @@ class PartyAI extends Thread implements java.io.Serializable {
 
     @Override
     public void run() {
-        while (running) {
+        while (Main.running) {
             long start = System.currentTimeMillis();
             for (Party p : parties)
                 p.nextMove(map.getTiles(), map.getBooleanMap(), parties);

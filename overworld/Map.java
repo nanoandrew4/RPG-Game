@@ -743,7 +743,7 @@ class Map implements java.io.Serializable {
 
         for (int a = y - radius; a < y + radius; a++)
             for (int b = x - radius; b < x + radius; b++)
-                if (a < 0 || b < 0 || a >= mapSize || b >= mapSize || tiles[a][b] != null)
+                if (a < 0 || b < 0 || a >= mapSize || b >= mapSize || tiles[b][a] != null)
                     return false;
         return true;
     }

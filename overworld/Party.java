@@ -232,29 +232,29 @@ class Party implements java.io.Serializable {
         //System.out.println();
 
         // changed tiles
-        if (Math.abs(leftAngle) > 27.5 || Math.abs(rightAngle) > 27.5 || Math.abs(xOffset) > mapTileSize / 2) {
-            if (rightAngle > 27.5) {
+        if (Math.abs(leftAngle) > 30.0 || Math.abs(rightAngle) > 30.0 || Math.abs(xOffset) > mapTileSize / 2) {
+            if (rightAngle > 30.0) {
                 if (!player) {
                     xOffset -= mapTileSize / 2;
                     yOffset -= mapTileSize / 4;
                 }
                 tileY--;
             }
-            if (rightAngle < -27.5) {
+            if (rightAngle < -30.0) {
                 if (!player) {
                     xOffset -= mapTileSize / 2;
                     yOffset += mapTileSize / 4;
                 }
                 tileX++;
             }
-            if (leftAngle > 27.5) {
+            if (leftAngle > 30.0) {
                 if (!player) {
                     xOffset += mapTileSize / 2;
                     yOffset -= mapTileSize / 4;
                 }
                 tileX--;
             }
-            if (leftAngle < -27.5) {
+            if (leftAngle < -30.0) {
                 if (!player) {
                     xOffset += mapTileSize / 2;
                     yOffset += mapTileSize / 4;

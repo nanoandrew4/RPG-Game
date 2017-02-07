@@ -52,14 +52,13 @@ public class Main extends Application {
     private OverworldController overworldController;
     private InMapController IMController;
 
-    public DBManager dbManager;
     //converts keycodes into control enums
     private HashMap<KeyCode, Control> keybindings;
     
     //important vars
-    public int mapSize;
     public double screenWidth, screenHeight;
-    
+    public static boolean running = false;
+
     //view vars
     private Stage stage;
     private Scene scene;

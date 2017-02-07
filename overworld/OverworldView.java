@@ -340,9 +340,9 @@ class OverworldView {
             setMoveAnim(banners[imgX][imgY], player);
         }
     }
-    
+
     // rename pls
-    void reDraw (double[] angles, Tile[][] tiles, Party player, ArrayList<Party> parties) {
+    void reDraw(double[] angles, Tile[][] tiles, Party player, ArrayList<Party> parties) {
         if (angles[0] > 22.5)
             addColumn(tiles, player, parties, false);
         if (angles[0] < -22.5)
@@ -569,7 +569,7 @@ class OverworldView {
             }
     }
 
-    void addPane (Pane p, boolean addToStack) {
+    void addPane(Pane p, boolean addToStack) {
 
         /*
             Adds pane to GUI
