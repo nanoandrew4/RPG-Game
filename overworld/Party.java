@@ -286,7 +286,7 @@ class Party implements java.io.Serializable {
             move(getRandDir(), tiles);
             System.out.println("wandering");
         } else
-            move(Control.NULL, tiles); // 27.5% chance they will stay stationary
+            move(Control.NULL, tiles); // 30% chance they will stay stationary
     }
 
     // returns a random direction for wandering AI
@@ -405,7 +405,7 @@ class Party implements java.io.Serializable {
             speed = 0f;
 
         double[] angles = calcAngles(xOffset + speed, yOffset + speed, OverworldView.mapTileSize);
-        if (Math.abs(angles[0]) > 27.5 || Math.abs(angles[1]) > 27.5) {
+        if (Math.abs(angles[0]) > 22.5 || Math.abs(angles[1]) > 22.5) {
             // if the tile the player would move onto is not trespassable, return 0 speed
             if (!canMove(tiles, angles)) {
                 speed = 0;
@@ -434,7 +434,7 @@ class Party implements java.io.Serializable {
             speed = 0f;
 
         double[] angles = calcAngles(xOffset + speed, yOffset + speed, OverworldView.mapTileSize);
-        if (Math.abs(angles[0]) > 27.5 || Math.abs(angles[1]) > 27.5) {
+        if (Math.abs(angles[0]) > 22.5 || Math.abs(angles[1]) > 22.5) {
             // if the tile the player would move onto is not trespassable, return 0 speed
             if (!canMove(tiles, angles)) {
                 speed = 0;
@@ -449,10 +449,10 @@ class Party implements java.io.Serializable {
     }
 
     private boolean canMove(Tile[][] tiles, double[] angles) {
-        return !(angles[0] > 27.5 && !tiles[getTileX() - 1][getTileY()].tresspassable ||
-                angles[0] < -27.5 && !tiles[getTileX()][getTileY() + 1].tresspassable ||
-                angles[1] > 27.5 && !tiles[getTileX()][getTileY() - 1].tresspassable ||
-                angles[1] < -27.5 && !tiles[getTileX() + 1][getTileY()].tresspassable);
+        return !(angles[0] > 22.5 && !tiles[getTileX() - 1][getTileY()].tresspassable ||
+                angles[0] < -22.5 && !tiles[getTileX()][getTileY() + 1].tresspassable ||
+                angles[1] > 22.5 && !tiles[getTileX()][getTileY() - 1].tresspassable ||
+                angles[1] < -22.5 && !tiles[getTileX() + 1][getTileY()].tresspassable);
     }
 
     // using a path and pathfinding, makes AI move towards a destination tile, as opposed ot wandering

@@ -2,17 +2,8 @@
     Controls all interactions between non-graphical and graphical components for the Overworld
 
     TODO LIST - IN ORDER OF BLOCK PRIORITY
-    Fix View scrolling in SW direction - Seems to have been self-fixed... Nov 17 2016
-    Fix mouse events not being set properly - Dec 7 2016
-    Player movement processed by the model completely - Nov 28 2016
-    Player moves when tile is clicked on - Partial Nov 30 2016
-    Fix Settlement banners - Done Dec 28 2016
-    Fix tile change detection
-    Fixed major bug in view regarding tile size
-    Input processed by model entirely - Dec 21 2016
-    Can't move on to non tresspasable tiles - Nov 30 2016 - Needs fixing - Depends on detectTileChange() being fixed to work
-    Fix world gen pls... Coastline gen, outOfBounds - Reviewed Dec 28 2016 - Done January 4 2017
-    Fix entering to towers - Fixed Jan 6 2016
+    Let player move away from non-tresspassable tile
+    View displaying wrong tiles again...
     Fix banners not displaying correctly after moving off tile
     Settlements and towers generate in water
     Settlements generate in mountains
@@ -31,11 +22,12 @@
 package overworld;
 
 import javafx.application.Platform;
-import javafx.event.EventHandler;
+import javafx.event.*;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import main.Control;
 import main.Main;
 
 import java.awt.*;
@@ -61,7 +53,9 @@ public class OverworldController implements Runnable {
     private int clickReturnCode;
     private Point dungeonPoint;
 
-    // constructor used when creating a new game
+    private boolean upPressed, downPressed, leftPressed, rightPressed;
+
+    // constructor used when creating a new game, initializes new model
     public OverworldController(Main main) {
         this.main = main;
         start = System.currentTimeMillis();
@@ -101,11 +95,6 @@ public class OverworldController implements Runnable {
         setScene();
 
         Main.running = true;
-
-        Thread inputStoreThread = new Thread(new ModelViewBridge(this, model, view));
-        inputStoreThread.setDaemon(true);
-        inputStoreThread.start();
-
         hasControl = true;
     }
 
@@ -149,13 +138,26 @@ public class OverworldController implements Runnable {
 
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
 
-            int returnCode = model.process(main.getControl(event.getCode()), false);
+            Control key;
+
+            int returnCode = model.process(key = main.getControl(event.getCode()), false);
+
+            // Sets movement key booleans to false if they are released, to track which are pressed
+            if (key == Control.UP)
+                upPressed = true;
+            else if (key == Control.DOWN)
+                downPressed = true;
+            else if (key == Control.LEFT)
+                leftPressed = true;
+            else if (key == Control.RIGHT)
+                rightPressed = true;
 
             if (returnCode == -1) {
                 if (!view.removePane())
                     model.setControlsLocked(false);
                 // lock controls
             } else if (returnCode == 1 || model.getMenuOpen()) {
+                // open menu or close menu
                 if (!model.getMenuOpen()) {
                     model.setMenuOpen(true);
                     model.setControlsLocked(true);
@@ -167,27 +169,87 @@ public class OverworldController implements Runnable {
                     view.removePane();
                 }
             } else if (returnCode == 2 && clickReturnCode == 12) {
+                // enter dungeon
                 hasControl = false;
                 main.passControl(dungeonPoint);
             } else if (returnCode == 3)
                 view.showTileBorders(true);
-
-            event.consume();
+            else if (returnCode == 4) {
+                // update view, tile change occured
+                view.reDraw(model.getAngles(), model.getTiles(), model.getPlayer(), model.getParties());
+                setMouseEvents();
+            }
         });
 
         scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
 
-            int returnCode = model.process(main.getControl(event.getCode()), true);
+            Control key;
+
+            int returnCode = model.process(key = main.getControl(event.getCode()), true);
+
+            /*
+                Sets movement key booleans to false if they are released, to track which are pressed
+                The reason for these booleans is that only one key press can be stored at a time, so if W is pressed
+                and D is subsequently pressed, and D is then released, tho W is still pressed the KEY_PRESSED event won't run
+                Essentially needed for tile change detection only, since it runs only when the process function is called
+                in the KEY_PRESSED or KEY_RELEASED events
+             */
+            if (key == Control.UP)
+                upPressed = false;
+            else if (key == Control.DOWN)
+                downPressed = false;
+            else if (key == Control.LEFT)
+                leftPressed = false;
+            else if (key == Control.RIGHT)
+                rightPressed = false;
 
             //System.out.println("XPos: " + model.getCurrPos(0));
             //System.out.println("YPos: " + model.getCurrPos(1));
+
+            /* if a movement key is released a "virtual" keypress is made by the Robot class to ensure that the
+                KEY_PRESSED event for keys that are still pressed run
+            */
+            if ((upPressed || downPressed || leftPressed || rightPressed) && Control.isMovementKey(key)) {
+                try {
+                    Robot r = new Robot();
+                    if (upPressed)
+                        r.keyPress(java.awt.event.KeyEvent.VK_W);
+                    else if (downPressed)
+                        r.keyPress(java.awt.event.KeyEvent.VK_S);
+                    else if (leftPressed)
+                        r.keyPress(java.awt.event.KeyEvent.VK_A);
+                    else if (rightPressed)
+                        r.keyPress(java.awt.event.KeyEvent.VK_D);
+                } catch (AWTException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // prevents weird bugs from occurring, like pressing a null key (K for example) while releasing which causes
+            // the player to keep moving even if all keys are released
+            try {
+                Robot r = new Robot();
+
+                if (!upPressed)
+                    r.keyRelease(java.awt.event.KeyEvent.VK_W);
+                if (!downPressed)
+                    r.keyRelease(java.awt.event.KeyEvent.VK_S);
+                if (!leftPressed)
+                    r.keyRelease(java.awt.event.KeyEvent.VK_A);
+                if (!rightPressed)
+                    r.keyRelease(java.awt.event.KeyEvent.VK_D);
+            } catch (AWTException e) {
+                e.printStackTrace();
+            }
 
             if (returnCode == 0)
                 return;
             else if (returnCode == 3)
                 view.showTileBorders(false);
-
-            event.consume();
+            else if (returnCode == 4) {
+                view.reDraw(model.getAngles(), model.getTiles(), model.getPlayer(), model.getParties());
+                setMouseEvents();
+            }
         });
     }
 
@@ -276,35 +338,6 @@ public class OverworldController implements Runnable {
                         }
                     }
                 });
-            }
-        }
-    }
-}
-
-class ModelViewBridge extends Thread {
-
-    private OverworldController controller;
-    private OverworldModel model;
-    private OverworldView view;
-
-    ModelViewBridge(OverworldController controller, OverworldModel model, OverworldView view) {
-        this.controller = controller;
-        this.model = model;
-        this.view = view;
-    }
-
-    @Override
-    public void run() {
-        while (Main.running) {
-            if (model.getPlayer().detectTileChange(OverworldView.mapTileSize, true)) {
-                view.reDraw(model.getAngles(), model.getTiles(), model.getPlayer(), model.getParties());
-                controller.setMouseEvents();
-            }
-
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         }
     }

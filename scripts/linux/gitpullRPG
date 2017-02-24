@@ -1,5 +1,0 @@
-#!/bin/bash
-
-cd ~/GitHub/Projects/RPG-Game
-git pull
-cp -r * ~/IdeaProjects/RPG-Game/src/

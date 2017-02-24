@@ -1,10 +1,12 @@
 package overworld;
 
+import com.sun.glass.ui.Screen;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import main.Control;
 import main.Main;
 
+import java.awt.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Random;
@@ -26,12 +28,15 @@ public class OverworldModel implements java.io.Serializable {
     private long startTime = System.currentTimeMillis();
     private Random rand = new Random();
 
-    static boolean tileChange = false;
-
     private boolean controlsLocked = false;
     private boolean menuOpen = false;
 
     private Control verticalDir, horizontalDir, dir;
+
+    static boolean upPressed = false;
+    static boolean downPresed = false;
+    static boolean leftPressed = false;
+    static boolean rightPressed = false;
 
     OverworldModel() {
         parties = new ArrayList<>();
@@ -179,12 +184,21 @@ public class OverworldModel implements java.io.Serializable {
 
         // movement on map processing
         if (key == Control.LEFT || key == Control.RIGHT || key == Control.UP || key == Control.DOWN) {
+
+            if (key == Control.UP)
+                upPressed = !released;
+            else if (key == Control.DOWN)
+                downPresed = !released;
+            else if (key == Control.LEFT)
+                leftPressed = !released;
+            else
+                rightPressed = !released;
+
             if (key == Control.UP || key == Control.DOWN)
                 verticalDir = key;
             else
                 horizontalDir = key;
 
-            Control dir;
             if (verticalDir == Control.UP && horizontalDir == Control.RIGHT)
                 dir = Control.UPRIGHT;
             else if (verticalDir == Control.UP && horizontalDir == Control.LEFT)
@@ -195,10 +209,8 @@ public class OverworldModel implements java.io.Serializable {
                 dir = Control.DOWNLEFT;
             else if (verticalDir == Control.UP || verticalDir == Control.DOWN)
                 dir = verticalDir;
-            else if (horizontalDir == Control.LEFT || horizontalDir == Control.RIGHT)
-                dir = horizontalDir;
             else
-                dir = Control.NULL;
+                dir = horizontalDir;
 
             if (!released) {
                 getPlayer().setSpeedY(getPlayer().getSpeedY(dir, getTiles()));
@@ -211,6 +223,10 @@ public class OverworldModel implements java.io.Serializable {
                     getPlayer().setSpeedY(0);
                     verticalDir = Control.NULL;
                 }
+            }
+
+            if (player.detectTileChange(OverworldView.mapTileSize, true)) {
+                return 4;
             }
         }
 

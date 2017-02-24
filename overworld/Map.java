@@ -39,14 +39,14 @@ class Map implements java.io.Serializable {
 
         booleanMap = new boolean[this.mapSize][this.mapSize];
 
-        MIN_MOUNTAIN = (int) (0.5 * mapSize);
-        MAX_MOUNTAIN = (int) (1.0 * mapSize);
-        MIN_FOREST = (int) (2.5 * mapSize);
-        MAX_FOREST = (int) (5.0 * mapSize);
-        MIN_SETTLEMENT = (int) (0.8 * mapSize);
-        MAX_SETTLEMENT = (int) (1.2 * mapSize);
-        MIN_DUNGEON = (int) (1.5 * mapSize);
-        MAX_DUNGEON = (int) (2.5 * mapSize);
+        MIN_MOUNTAIN = (int) (0.5 * mapSize); // smallest number of mountain chains (500)
+        MAX_MOUNTAIN = (int) (1.0 * mapSize); // most amount of mountain chains (1000)
+        MIN_FOREST = (int) (3.5 * mapSize); // least amount of forests (3500)
+        MAX_FOREST = (int) (7.5 * mapSize); // most amount of forests (5000)
+        MIN_SETTLEMENT = (int) (0.8 * mapSize);  // least amount of initial settlements (800)
+        MAX_SETTLEMENT = (int) (1.2 * mapSize); // most amount of initial settlements (1200)
+        MIN_DUNGEON = (int) (1.5 * mapSize); // least amount of dungeons (all types) (1500)
+        MAX_DUNGEON = (int) (2.5 * mapSize); // most amount of dungeons (all types) (2500)
 
         try {
             newMap();

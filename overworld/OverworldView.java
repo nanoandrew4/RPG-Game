@@ -115,6 +115,8 @@ class OverworldView {
 
     private HashMap<Party, ImageView> pIVHashMap; // when party is eliminated, delete from hashmap
 
+    int count = 0;
+
     OverworldView(double screenWidth, double screenHeight, ImageView playerIV) {
         imageViews = new ImageView[zoom * 2 + 1][zoom * 2 + 1][2];
         banners = new Pane[zoom * 2 + 1][zoom * 2 + 1];
@@ -330,7 +332,6 @@ class OverworldView {
         imageViews[imgX][imgY][1].setLayoutY(pixelY);
         imageViews[imgX][imgY][1].setVisible(false);
         overworldLayout.getChildren().add(imageViews[imgX][imgY][1]);
-
         setMoveAnim(imageViews[imgX][imgY][1], player);
 
         // add settlement banner
@@ -488,11 +489,15 @@ class OverworldView {
             public void handle(long timestamp) {
                 if (lastUpdateTime.get() > 0) {
                     if (imageView == null) {
+                        System.out.println("Animation handler quit");
                         stop();
                         return;
                     }
 
                     if (OverworldController.hasControl) {
+//                        if (player.detectTileChange(OverworldView.mapTileSize, true)) {
+//                            OverworldController.reload = true;
+//                        }
                         player.setxOffset(getPlayerXOffset());
                         player.setyOffset(getPlayerYOffset());
                         imageView.setLayoutX(imageView.getLayoutX() - player.getSpeedX());

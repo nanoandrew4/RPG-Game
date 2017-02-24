@@ -1,3 +1,21 @@
+------------------------23/02/2017------------------------
+
+++ Added animations for main menu, as well as in overworld for banners (for now)
+
+InMap:
+
+++ Dialogue added, as well as branching dialogue using some system Chen devised which is ingenious
++ City gen improved, still WIP
++ Item stacking implemented
++ NPC inventories
++ Trading implemented (between characters)
+
+Overworld:
+
++ Fixed most bugs
++ Added support for generation of all settlement types (just missing sprites)
++ Restructured Model and Controller
+
 ------------------------09/12/2016------------------------
 
 ++ City gen started

@@ -11,4 +11,8 @@ public enum Control {
     SELECT, BACK, TOGGLE, SWITCH, RUN, //other controls
     R, T, ALT, ESC,  //temporary
     NULL; //non-existent keybinding
+
+    public static boolean isMovementKey(Control key) {
+        return key == Control.UP || key == Control.DOWN || key == Control.LEFT || key == Control.RIGHT;
+    }
 }
