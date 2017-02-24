@@ -344,13 +344,13 @@ class OverworldView {
 
     // rename pls
     void reDraw(double[] angles, Tile[][] tiles, Party player, ArrayList<Party> parties) {
-        if (angles[0] > 22.5)
+        if (angles[0] > 30.0)
             addColumn(tiles, player, parties, false);
-        if (angles[0] < -22.5)
+        if (angles[0] < -30.0)
             addRow(tiles, player, parties, false);
-        if (angles[1] > 22.5)
+        if (angles[1] > 30.0)
             addRow(tiles, player, parties, true);
-        if (angles[1] < -22.5)
+        if (angles[1] < -30.0)
             addColumn(tiles, player, parties, true);
         if (Math.abs(getPlayerXOffset()) > getMapTileSize() / 2) {
             if (getPlayerXOffset() > 0) {

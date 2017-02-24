@@ -10,8 +10,6 @@ class PartyAI extends Thread implements java.io.Serializable {
     private Party player;
     private ArrayList<Party> parties;
 
-    private boolean running = true;
-
     PartyAI() {
         this.setDaemon(true);
     }
@@ -44,9 +42,5 @@ class PartyAI extends Thread implements java.io.Serializable {
                     e.printStackTrace();
                 }
         }
-    }
-
-    void stopThread() {
-        running = false;
     }
 }

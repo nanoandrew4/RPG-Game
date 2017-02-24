@@ -1,9 +1,5 @@
 package overworld;
 
-import javafx.scene.layout.Pane;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 class Tile implements java.io.Serializable {

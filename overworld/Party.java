@@ -223,13 +223,13 @@ class Party implements java.io.Serializable {
         double leftAngle = angles[0];
         double rightAngle = angles[1];
 
-        /*System.out.println("xPos: " + getTileX());
-        System.out.println("yPos: " + getTileY());
+//        System.out.println("xPos: " + getTileX());
+//        System.out.println("yPos: " + getTileY());
         System.out.println("Langle: " + leftAngle);
         System.out.println("Rangle: " + rightAngle);
-        System.out.println("xOffset: " + xOffset);
-        System.out.println("yOffset: " + yOffset);*/
-        //System.out.println();
+//        System.out.println("xOffset: " + xOffset);
+//        System.out.println("yOffset: " + yOffset);
+        System.out.println();
 
         // changed tiles
         if (Math.abs(leftAngle) > 30.0 || Math.abs(rightAngle) > 30.0 || Math.abs(xOffset) > mapTileSize / 2) {
@@ -404,17 +404,8 @@ class Party implements java.io.Serializable {
         else
             speed = 0f;
 
-        double[] angles = calcAngles(xOffset + speed, yOffset + speed, OverworldView.mapTileSize);
-        if (Math.abs(angles[0]) > 22.5 || Math.abs(angles[1]) > 22.5) {
-            // if the tile the player would move onto is not trespassable, return 0 speed
-            if (!canMove(tiles, angles)) {
-                speed = 0;
-                System.out.println("Non-tresspassable tile reached");
-            }
-        } else if (!tiles[getTileX()][getTileY()].tresspassable)
+        if (!canMove(tiles, calcAngles(xOffset, yOffset, OverworldView.mapTileSize), dir))
             speed = 0;
-
-        //setDir(dir);
 
         return speed;
     }
@@ -433,14 +424,7 @@ class Party implements java.io.Serializable {
         else
             speed = 0f;
 
-        double[] angles = calcAngles(xOffset + speed, yOffset + speed, OverworldView.mapTileSize);
-        if (Math.abs(angles[0]) > 22.5 || Math.abs(angles[1]) > 22.5) {
-            // if the tile the player would move onto is not trespassable, return 0 speed
-            if (!canMove(tiles, angles)) {
-                speed = 0;
-                System.out.println("Non-tresspassable tile reached");
-            }
-        } else if (!tiles[getTileX()][getTileY()].tresspassable)
+        if (!canMove(tiles, calcAngles(xOffset, yOffset, OverworldView.mapTileSize), dir))
             speed = 0;
 
         //setDir(yDir);
@@ -448,11 +432,35 @@ class Party implements java.io.Serializable {
         return speed;
     }
 
-    private boolean canMove(Tile[][] tiles, double[] angles) {
-        return !(angles[0] > 22.5 && !tiles[getTileX() - 1][getTileY()].tresspassable ||
-                angles[0] < -22.5 && !tiles[getTileX()][getTileY() + 1].tresspassable ||
-                angles[1] > 22.5 && !tiles[getTileX()][getTileY() - 1].tresspassable ||
-                angles[1] < -22.5 && !tiles[getTileX() + 1][getTileY()].tresspassable);
+    private boolean canMove(Tile[][] tiles, double[] angles, Control dir) {
+        /*
+            If player moves on to a tile that is not tresspassable, only allows the player to move away from the tile
+         */
+
+        System.out.println(dir);
+        System.out.println(tiles[getTileX()][getTileY()].type);
+
+        if (!tiles[getTileX()][getTileY()].tresspassable) {
+            if (Math.abs(angles[0]) > Math.abs(angles[1])) {
+                if (angles[0] >= 0) {
+                    if (!(dir == Control.UPLEFT || dir == Control.LEFT || dir == Control.UP))
+                        return false;
+                } else {
+                    if (!(dir == Control.DOWNLEFT || dir == Control.LEFT || dir == Control.DOWN))
+                        return false;
+                }
+            } else {
+                if (angles[1] >= 0) {
+                    if (!(dir == Control.UPRIGHT || dir == Control.RIGHT || dir == Control.UP))
+                        return false;
+                } else {
+                    if (!(dir == Control.DOWNRIGHT || dir == Control.RIGHT || dir == Control.DOWN))
+                        return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     // using a path and pathfinding, makes AI move towards a destination tile, as opposed ot wandering

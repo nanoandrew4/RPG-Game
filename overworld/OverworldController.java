@@ -126,8 +126,8 @@ public class OverworldController implements Runnable {
             System.out.println("Scene creation took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
     }
 
-    private float getBaseSpeed() {
-        return (float) (200 / view.getMapTileSize());
+    static float getBaseSpeed() {
+        return (float) (200 / OverworldView.mapTileSize);
     }
 
     private void setInput(Scene scene) {
@@ -141,6 +141,9 @@ public class OverworldController implements Runnable {
             Control key;
 
             int returnCode = model.process(key = main.getControl(event.getCode()), false);
+
+            if (key == Control.R)
+                System.out.println(model.getAngles()[0] + ", " + model.getAngles()[1]);
 
             // Sets movement key booleans to false if they are released, to track which are pressed
             if (key == Control.UP)
