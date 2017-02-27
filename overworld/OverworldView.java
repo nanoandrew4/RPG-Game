@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -343,14 +344,14 @@ class OverworldView {
     }
 
     // rename pls
-    void reDraw(double[] angles, Tile[][] tiles, Party player, ArrayList<Party> parties) {
-        if (angles[0] > 30.0)
+    void reDraw(Point2D angles, Tile[][] tiles, Party player, ArrayList<Party> parties) {
+        if (angles.getX() > 30.0)
             addColumn(tiles, player, parties, false);
-        if (angles[0] < -30.0)
+        if (angles.getX() < -30.0)
             addRow(tiles, player, parties, false);
-        if (angles[1] > 30.0)
+        if (angles.getY() > 30.0)
             addRow(tiles, player, parties, true);
-        if (angles[1] < -30.0)
+        if (angles.getY() < -30.0)
             addColumn(tiles, player, parties, true);
         if (Math.abs(getPlayerXOffset()) > getMapTileSize() / 2) {
             if (getPlayerXOffset() > 0) {
@@ -369,23 +370,21 @@ class OverworldView {
             Adds a row when a tile change on the y axis is detected
          */
 
-        if ((top && player.getTileY() + (zoom) + 1 < 1000) || (!top && player.getTileY() + (zoom) - 1 > 0)) {
-            for (int x = 0; x < zoom * 2 + 1; x++) {
-                if (!top)
-                    for (int y = 0; y < zoom * 2; y++) // move all images down
-                        imageViews[x][y][0].setImage(imageViews[x][y + 1][0].getImage());
-                else
-                    for (int y = zoom * 2; y > 0; y--)
-                        imageViews[x][y][0].setImage(imageViews[x][y - 1][0].getImage());
+        for (int x = 0; x < zoom * 2 + 1; x++) {
+            if (!top)
+                for (int y = 0; y < zoom * 2; y++) // move all images down
+                    imageViews[x][y][0].setImage(imageViews[x][y + 1][0].getImage());
+            else
+                for (int y = zoom * 2; y > 0; y--)
+                    imageViews[x][y][0].setImage(imageViews[x][y - 1][0].getImage());
 
-                int yPos = player.getTileY() + (!top ? -zoom : zoom);
-                int xPos = (player.getTileX() + x - zoom < 0 ? (player.getTileX() + x - zoom > 999 ? 999 : 0) : player.getTileX() + x - zoom);
+            int yPos = player.getTileY() + (top ? -zoom : zoom);
+            int xPos = (player.getTileX() + x - zoom > 0 ? (player.getTileX() + x - zoom < 1000 ? player.getTileX() + x - zoom : 999) : 0);
 
-                imageViews[x][!top ? 0 : zoom * 2][0].setImage(genTile(xPos, yPos, tiles));
-            }
-            moveSceneElements(top ? mapTileSize / 2 : -mapTileSize / 2, top ? -mapTileSize / 4 : mapTileSize / 4);
-            drawEntities(player, parties);
+            imageViews[x][top ? 0 : zoom * 2][0].setImage(genTile(xPos, yPos, tiles));
         }
+        moveSceneElements(top ? mapTileSize / 2 : -mapTileSize / 2, top ? -mapTileSize / 4 : mapTileSize / 4);
+        drawEntities(player, parties);
     }
 
     private void addColumn(Tile[][] tiles, Party player, ArrayList<Party> parties, boolean right) {
@@ -394,24 +393,21 @@ class OverworldView {
             Adds a column when a tile change on the x axis is detected
          */
 
-        //System.out.println("Adding column");
-        if ((right && player.getTileY() + (zoom) + 1 < 1000) || (!right && player.getTileY() + (zoom) - 1 > 0)) {
-            for (int y = 0; y < zoom * 2 + 1; y++) {
-                if (right)
-                    for (int x = 0; x < zoom * 2; x++)
-                        imageViews[x][y][0].setImage(imageViews[x + 1][y][0].getImage());
-                else
-                    for (int x = zoom * 2; x > 0; x--)
-                        imageViews[x][y][0].setImage(imageViews[x - 1][y][0].getImage());
+        for (int y = 0; y < zoom * 2 + 1; y++) {
+            if (right)
+                for (int x = 0; x < zoom * 2; x++)
+                    imageViews[x][y][0].setImage(imageViews[x + 1][y][0].getImage());
+            else
+                for (int x = zoom * 2; x > 0; x--)
+                    imageViews[x][y][0].setImage(imageViews[x - 1][y][0].getImage());
 
-                int xPos = player.getTileX() + (right ? -zoom : zoom);
-                int yPos = (player.getTileY() + y - zoom < 0 ? (player.getTileY() + y - zoom > 999 ? 999 : 0) : player.getTileY() + y - zoom);
+            int xPos = player.getTileX() + (!right ? -zoom: zoom);
+            int yPos = (player.getTileY() + y - zoom > 0 ? (player.getTileY() + y - zoom < 1000 ? player.getTileY() + y - zoom : 999) : 0);
 
-                imageViews[right ? 0 : zoom * 2][y][0].setImage(genTile(xPos, yPos, tiles));
-            }
-            moveSceneElements(right ? mapTileSize / 2 : -mapTileSize / 2, right ? mapTileSize / 4 : -mapTileSize / 4);
-            drawEntities(player, parties);
+            imageViews[!right ? 0 : zoom * 2][y][0].setImage(genTile(xPos, yPos, tiles));
         }
+        moveSceneElements(right ? mapTileSize / 2 : -mapTileSize / 2, right ? mapTileSize / 4 : -mapTileSize / 4);
+        drawEntities(player, parties);
     }
 
     ImageView getTileIV(int arrX, int arrY) {

@@ -1,5 +1,6 @@
 package overworld;
 
+import javafx.geometry.Point2D;
 import main.Control;
 import main.Path;
 
@@ -36,6 +37,7 @@ class Party implements java.io.Serializable {
     private short fov;
 
     private char state;
+    transient private Point2D prevAngles;
 
     Party(float xOffset, float yOffset, short tileX, short tileY, float speed, float hostility, ArrayList<String> members, String faction) {
         this.xOffset = xOffset;
@@ -47,6 +49,7 @@ class Party implements java.io.Serializable {
         this.maxSpeed = speed;
         this.members = members;
         this.faction = faction;
+        prevAngles = new Point2D(0,0);
     }
 
     int getTileX() {
@@ -199,18 +202,13 @@ class Party implements java.io.Serializable {
         return (float) ((p.getTileY() - getTileY()) * OverworldView.mapTileSize + getyOffset() + p.getyOffset());
     }
 
-    double[] calcAngles(double xOffset, double yOffset, double mapTileSize) {
+    Point2D calcAngles(double xOffset, double yOffset, double mapTileSize) {
 
         /*
-            Calculates and returns angles from current position on tile to leftmost and rightmost point
+            Calculates and returns angles from current position on tile to leftmost and rightmost point respectively
          */
 
-        double[] angles = new double[2]; // stores langle, rangle
-
-        angles[0] = Math.toDegrees(Math.atan(yOffset / (xOffset + (mapTileSize / 2)))); // left
-        angles[1] = Math.toDegrees(Math.atan(yOffset / ((mapTileSize / 2) - xOffset))); // right
-
-        return angles;
+        return new Point2D(Math.toDegrees(Math.atan(yOffset / (xOffset + (mapTileSize / 2)))), Math.toDegrees(Math.atan(yOffset / ((mapTileSize / 2) - xOffset))));
     }
 
     boolean detectTileChange(double mapTileSize, boolean player) {
@@ -219,20 +217,25 @@ class Party implements java.io.Serializable {
             Function to determine whether a change in tiles has occurred or not
          */
 
-        double[] angles = calcAngles(xOffset, yOffset, mapTileSize);
-        double leftAngle = angles[0];
-        double rightAngle = angles[1];
+        Point2D angles = calcAngles(xOffset, yOffset, mapTileSize);
+        double leftAngle = angles.getX();
+        double rightAngle = angles.getY();
 
 //        System.out.println("xPos: " + getTileX());
 //        System.out.println("yPos: " + getTileY());
-        System.out.println("Langle: " + leftAngle);
-        System.out.println("Rangle: " + rightAngle);
+//        System.out.println("Langle: " + leftAngle);
+//        System.out.println("Rangle: " + rightAngle);
 //        System.out.println("xOffset: " + xOffset);
 //        System.out.println("yOffset: " + yOffset);
-        System.out.println();
+//        System.out.println();
 
         // changed tiles
-        if (Math.abs(leftAngle) > 30.0 || Math.abs(rightAngle) > 30.0 || Math.abs(xOffset) > mapTileSize / 2) {
+        if ((Math.abs(leftAngle) > 30.0 || Math.abs(rightAngle) > 30.0 || Math.abs(xOffset) > mapTileSize / 2) && !angles.equals(prevAngles)) {
+            prevAngles = angles;
+            //System.out.println("Langle: " + leftAngle);
+            //System.out.println("Rangle: " + rightAngle);
+            System.out.println((System.currentTimeMillis() - OverworldController.start) + " - " + leftAngle + ", " + rightAngle + " - " + getTileX() + ", " + getTileY());
+
             if (rightAngle > 30.0) {
                 if (!player) {
                     xOffset -= mapTileSize / 2;
@@ -432,17 +435,14 @@ class Party implements java.io.Serializable {
         return speed;
     }
 
-    private boolean canMove(Tile[][] tiles, double[] angles, Control dir) {
+    private boolean canMove(Tile[][] tiles, Point2D angles, Control dir) {
         /*
             If player moves on to a tile that is not tresspassable, only allows the player to move away from the tile
          */
 
-        System.out.println(dir);
-        System.out.println(tiles[getTileX()][getTileY()].type);
-
         if (!tiles[getTileX()][getTileY()].tresspassable) {
-            if (Math.abs(angles[0]) > Math.abs(angles[1])) {
-                if (angles[0] >= 0) {
+            if (Math.abs(angles.getX()) > Math.abs(angles.getY())) {
+                if (angles.getX() >= 0) {
                     if (!(dir == Control.UPLEFT || dir == Control.LEFT || dir == Control.UP))
                         return false;
                 } else {
@@ -450,7 +450,7 @@ class Party implements java.io.Serializable {
                         return false;
                 }
             } else {
-                if (angles[1] >= 0) {
+                if (angles.getY() >= 0) {
                     if (!(dir == Control.UPRIGHT || dir == Control.RIGHT || dir == Control.UP))
                         return false;
                 } else {

@@ -1,12 +1,9 @@
 package overworld;
 
-import com.sun.glass.ui.Screen;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import main.Control;
-import main.Main;
 
-import java.awt.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Random;
@@ -32,11 +29,6 @@ public class OverworldModel implements java.io.Serializable {
     private boolean menuOpen = false;
 
     private Control verticalDir, horizontalDir, dir;
-
-    static boolean upPressed = false;
-    static boolean downPresed = false;
-    static boolean leftPressed = false;
-    static boolean rightPressed = false;
 
     OverworldModel() {
         parties = new ArrayList<>();
@@ -67,7 +59,7 @@ public class OverworldModel implements java.io.Serializable {
         do {
             int x = rand.nextInt(getMapSize() - 1);
             int y = rand.nextInt(getMapSize() - 1);
-            if (getTiles()[x][y].type.equals("InMap")) {
+            if (getTiles()[x][y].tresspassable) {
                 startPos[0] = x;
                 startPos[1] = y;
                 return startPos;
@@ -136,7 +128,7 @@ public class OverworldModel implements java.io.Serializable {
         map = new Map(mapSize);
     }
 
-    double[] getAngles() {
+    javafx.geometry.Point2D getAngles() {
         return player.calcAngles(player.getxOffset(), player.getyOffset(), OverworldView.mapTileSize);
     }
 
@@ -184,16 +176,6 @@ public class OverworldModel implements java.io.Serializable {
 
         // movement on map processing
         if (key == Control.LEFT || key == Control.RIGHT || key == Control.UP || key == Control.DOWN) {
-
-            if (key == Control.UP)
-                upPressed = !released;
-            else if (key == Control.DOWN)
-                downPresed = !released;
-            else if (key == Control.LEFT)
-                leftPressed = !released;
-            else
-                rightPressed = !released;
-
             if (key == Control.UP || key == Control.DOWN)
                 verticalDir = key;
             else

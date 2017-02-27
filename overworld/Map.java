@@ -39,17 +39,22 @@ class Map implements java.io.Serializable {
 
         booleanMap = new boolean[this.mapSize][this.mapSize];
 
-        MIN_MOUNTAIN = (int) (0.5 * mapSize); // smallest number of mountain chains (500)
-        MAX_MOUNTAIN = (int) (1.0 * mapSize); // most amount of mountain chains (1000)
-        MIN_FOREST = (int) (3.5 * mapSize); // least amount of forests (3500)
-        MAX_FOREST = (int) (7.5 * mapSize); // most amount of forests (5000)
-        MIN_SETTLEMENT = (int) (0.8 * mapSize);  // least amount of initial settlements (800)
-        MAX_SETTLEMENT = (int) (1.2 * mapSize); // most amount of initial settlements (1200)
+        MIN_MOUNTAIN = (int) (0.7 * mapSize); // smallest number of mountain chains (700)
+        MAX_MOUNTAIN = (int) (1.2 * mapSize); // most amount of mountain chains (1200)
+        MIN_FOREST = (int) (7.5 * mapSize); // least amount of forests (7500)
+        MAX_FOREST = (int) (12.5 * mapSize); // most amount of forests (12500)
+        MIN_SETTLEMENT = (int) (0.9 * mapSize);  // least amount of initial settlements (900)
+        MAX_SETTLEMENT = (int) (1.5 * mapSize); // most amount of initial settlements (1500)
         MIN_DUNGEON = (int) (1.5 * mapSize); // least amount of dungeons (all types) (1500)
         MAX_DUNGEON = (int) (2.5 * mapSize); // most amount of dungeons (all types) (2500)
 
         try {
             newMap();
+            int returnCode;
+            if ((returnCode = mapCheck()) != 0) {
+                System.out.println("Map contains error, error code " + returnCode);
+                System.exit(1);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -59,6 +64,30 @@ class Map implements java.io.Serializable {
 
     private void newMap() throws SQLException {
         genMap(mapSize);
+    }
+
+    private int mapCheck(){
+        /*
+            Checks integrity of map, returns true if no issues are found and false if there is something wrong
+            Error code table:
+
+            1 - InMap or Settlement tile exists outside coastline (in water)
+         */
+
+        long start = System.currentTimeMillis();
+
+        for (int y = 0; y < getMapSize(); y++)
+            for (int x = 0; x < getMapSize(); x++)
+                if (getTiles()[x][y].settlementTile != null)
+                    for (int b = y - 1; b < y + 1; b++)
+                        for (int a = x - 1; a < x + 1; a++)
+                            if (getTiles()[a][b].type.equals("WaterAll"))
+                                return 1;
+
+        if (OverworldController.debug)
+            System.out.println("Map check completed succesfully in " + (System.currentTimeMillis() - start) + "ms");
+
+        return 0;
     }
 
     int getMapSize() { // returns map size

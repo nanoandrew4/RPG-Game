@@ -37,9 +37,9 @@ public class OverworldController implements Runnable {
     private Main main;
     private Scene scene;
 
-    static boolean debug = false;
+    static boolean debug = true;
 
-    private long start; // for timing the creation of the Model and View
+    static long start; // for timing the creation of the Model and View
 
     private OverworldView view;
     private OverworldModel model;
@@ -49,11 +49,13 @@ public class OverworldController implements Runnable {
     private EventHandler<MouseEvent>[][][] eventHandlers;
 
     public static boolean hasControl;
+    private boolean autopilot;
 
     private int clickReturnCode;
     private Point dungeonPoint;
 
     private boolean upPressed, downPressed, leftPressed, rightPressed;
+    private long autopilotStart;
 
     // constructor used when creating a new game, initializes new model
     public OverworldController(Main main) {
@@ -126,7 +128,7 @@ public class OverworldController implements Runnable {
             System.out.println("Scene creation took: " + (double) (System.currentTimeMillis() - start) / 1000 + "s");
     }
 
-    static float getBaseSpeed() {
+    static private float getBaseSpeed() {
         return (float) (200 / OverworldView.mapTileSize);
     }
 
@@ -142,9 +144,6 @@ public class OverworldController implements Runnable {
 
             int returnCode = model.process(key = main.getControl(event.getCode()), false);
 
-            if (key == Control.R)
-                System.out.println(model.getAngles()[0] + ", " + model.getAngles()[1]);
-
             // Sets movement key booleans to false if they are released, to track which are pressed
             if (key == Control.UP)
                 upPressed = true;
@@ -154,6 +153,32 @@ public class OverworldController implements Runnable {
                 leftPressed = true;
             else if (key == Control.RIGHT)
                 rightPressed = true;
+
+            if (autopilot && System.currentTimeMillis() - autopilotStart > 1000 && key == Control.SELECT)
+                autopilot = false;
+
+//            if (key == Control.SELECT) {
+//                autopilot = true;
+//                autopilotStart = System.currentTimeMillis();
+//            }
+
+            if (autopilot) {
+                try {
+                    Robot r = new Robot();
+
+                    if (upPressed)
+                        r.keyRelease(java.awt.event.KeyEvent.VK_W);
+                    if (downPressed)
+                        r.keyRelease(java.awt.event.KeyEvent.VK_S);
+                    if (leftPressed)
+                        r.keyRelease(java.awt.event.KeyEvent.VK_A);
+                    if (rightPressed)
+                        r.keyRelease(java.awt.event.KeyEvent.VK_D);
+
+                } catch (AWTException e) {
+                    e.printStackTrace();
+                }
+            }
 
             if (returnCode == -1) {
                 if (!view.removePane())
@@ -190,6 +215,10 @@ public class OverworldController implements Runnable {
 
             int returnCode = model.process(key = main.getControl(event.getCode()), true);
 
+//            System.out.println(autopilot);
+//            System.out.println(key);
+//            System.out.println();
+
             /*
                 Sets movement key booleans to false if they are released, to track which are pressed
                 The reason for these booleans is that only one key press can be stored at a time, so if W is pressed
@@ -197,14 +226,17 @@ public class OverworldController implements Runnable {
                 Essentially needed for tile change detection only, since it runs only when the process function is called
                 in the KEY_PRESSED or KEY_RELEASED events
              */
-            if (key == Control.UP)
-                upPressed = false;
-            else if (key == Control.DOWN)
-                downPressed = false;
-            else if (key == Control.LEFT)
-                leftPressed = false;
-            else if (key == Control.RIGHT)
-                rightPressed = false;
+
+            if (!autopilot) {
+                if (key == Control.UP)
+                    upPressed = false;
+                else if (key == Control.DOWN)
+                    downPressed = false;
+                else if (key == Control.LEFT)
+                    leftPressed = false;
+                else if (key == Control.RIGHT)
+                    rightPressed = false;
+            }
 
             //System.out.println("XPos: " + model.getCurrPos(0));
             //System.out.println("YPos: " + model.getCurrPos(1));
@@ -212,7 +244,7 @@ public class OverworldController implements Runnable {
             /* if a movement key is released a "virtual" keypress is made by the Robot class to ensure that the
                 KEY_PRESSED event for keys that are still pressed run
             */
-            if ((upPressed || downPressed || leftPressed || rightPressed) && Control.isMovementKey(key)) {
+            if ((upPressed || downPressed || leftPressed || rightPressed) && Control.isMovementKey(key) && !autopilot) {
                 try {
                     Robot r = new Robot();
                     if (upPressed)
@@ -230,19 +262,46 @@ public class OverworldController implements Runnable {
 
             // prevents weird bugs from occurring, like pressing a null key (K for example) while releasing which causes
             // the player to keep moving even if all keys are released
-            try {
-                Robot r = new Robot();
+            if (!autopilot) {
+                try {
+                    Robot r = new Robot();
 
-                if (!upPressed)
-                    r.keyRelease(java.awt.event.KeyEvent.VK_W);
-                if (!downPressed)
-                    r.keyRelease(java.awt.event.KeyEvent.VK_S);
-                if (!leftPressed)
-                    r.keyRelease(java.awt.event.KeyEvent.VK_A);
-                if (!rightPressed)
-                    r.keyRelease(java.awt.event.KeyEvent.VK_D);
-            } catch (AWTException e) {
-                e.printStackTrace();
+                    if (!upPressed)
+                        r.keyRelease(java.awt.event.KeyEvent.VK_W);
+                    if (!downPressed)
+                        r.keyRelease(java.awt.event.KeyEvent.VK_S);
+                    if (!leftPressed)
+                        r.keyRelease(java.awt.event.KeyEvent.VK_A);
+                    if (!rightPressed)
+                        r.keyRelease(java.awt.event.KeyEvent.VK_D);
+                } catch (AWTException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (autopilot) {
+                try {
+                    Robot r = new Robot();
+
+                    if (upPressed) {
+                        //r.keyRelease(java.awt.event.KeyEvent.VK_W);
+                        r.keyPress(java.awt.event.KeyEvent.VK_W);
+                    }
+                    if (downPressed) {
+                        //r.keyRelease(java.awt.event.KeyEvent.VK_S);
+                        r.keyPress(java.awt.event.KeyEvent.VK_S);
+                    }
+                    if (leftPressed) {
+                        //r.keyRelease(java.awt.event.KeyEvent.VK_A);
+                        r.keyPress(java.awt.event.KeyEvent.VK_A);
+                    }
+                    if (rightPressed) {
+                        //r.keyRelease(java.awt.event.KeyEvent.VK_D);
+                        r.keyPress(java.awt.event.KeyEvent.VK_D);
+                    }
+                } catch (AWTException e) {
+                    e.printStackTrace();
+                }
             }
 
             if (returnCode == 0)
