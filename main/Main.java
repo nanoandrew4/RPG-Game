@@ -8,9 +8,6 @@ import inmap.Images;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
@@ -34,11 +31,12 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.awt.Point;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -54,6 +52,7 @@ import overworld.OverworldModel;
 public class Main extends Application {
     //controllers
     private OverworldController overworldController;
+    private Thread overworldThread;
     private InMapController IMController;
 
     //converts keycodes into control enums
@@ -61,7 +60,6 @@ public class Main extends Application {
     
     //important vars
     public double screenWidth, screenHeight;
-    public static boolean running = false;
 
     //view vars
     private Stage stage;
@@ -193,7 +191,7 @@ public class Main extends Application {
         //loadPane
         File folder = new File("src/saves");
         listOfFiles = folder.listFiles();
-        saveFileHM = new HashMap();
+        saveFileHM = new HashMap<>();
 
         for (int x = 0; x < listOfFiles.length; x++) {
             if(listOfFiles[0].getName().equals(".DS_Store") && !listOfFiles[x].getName().equals(".DS_Store"))
@@ -886,8 +884,8 @@ public class Main extends Application {
     //load a game
     public void loadGame(int slot) {
         try {
-
             OverworldController.hasControl = false;
+            OverworldController.running = false;
 
             Object[] models;
             if (listOfFiles[0].getName().equals(".DS_Store"))
@@ -929,16 +927,29 @@ public class Main extends Application {
             IMController = new InMapController(this, inMapModel);
     }
 
-    public void saveModel(int slot) throws IOException {
+    public void saveModel(int slot) throws IOException, ClassNotFoundException {
 
         System.out.println("Saving game...");
         long start = System.currentTimeMillis();
+
+        FSTObjectInput in = null;
+        SaveFile s = null;
+
+        if (Files.exists(Paths.get("src/saves/save" + slot + ".sav"))) {
+            in = new FSTObjectInput(new FileInputStream("src/saves/save"
+                    + slot + ".sav"));
+            s = (SaveFile) in.readObject();
+        }
+
+        if (in != null)
+            in.close();
+
         FSTObjectOutput out = new FSTObjectOutput(new FileOutputStream("src/saves/save"
                 + slot + ".sav"));
         out.writeObject(new SaveFile("src/saves/save" + slot + ".sav",
                 IMController.getModel().getParty()[0].getName(), "/media/graphics/inmap/trump.png",
                 IMController.getModel().getParty()[0].getLVL(), 
-                (double)(System.currentTimeMillis() - overworldController.getModel().getStartTime()) / 3600000d, slot));
+                (double)(System.currentTimeMillis() - overworldController.getStart()) / 3600000d + (s == null ? 0 : s.playtime), slot));
         out.writeObject(keybindings);
         out.writeObject(overworldController.getModel());
         out.writeObject(IMController.getModel());

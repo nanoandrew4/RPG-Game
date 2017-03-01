@@ -3,9 +3,6 @@
 
     TODO LIST - IN ORDER OF BLOCK PRIORITY
     Let player move away from non-tresspassable tile
-    View displaying wrong tiles again...
-    Fix banners not displaying correctly after moving off tile
-    Settlements and towers generate in water
     Settlements generate in mountains
 
     Design and implement Economy
@@ -33,7 +30,7 @@ import main.Main;
 
 import java.awt.*;
 
-public class OverworldController implements Runnable {
+public class OverworldController extends Thread {
 
     private Main main;
     private Scene scene;
@@ -50,6 +47,7 @@ public class OverworldController implements Runnable {
     private EventHandler<MouseEvent>[][][] eventHandlers;
 
     public static boolean hasControl;
+    public static boolean running = true;
     private boolean autopilot;
 
     private int clickReturnCode;
@@ -93,6 +91,10 @@ public class OverworldController implements Runnable {
     @Override
     public void run() {
         start = System.currentTimeMillis();
+
+        model.setMenuOpen(false);
+        model.setControlsLocked(false);
+
         if (debug)
             System.out.println("Overworld thread started");
         setScene();
@@ -108,7 +110,7 @@ public class OverworldController implements Runnable {
             e.printStackTrace();
         }
 
-        Main.running = true;
+        running = true;
         hasControl = true;
     }
 
@@ -121,6 +123,10 @@ public class OverworldController implements Runnable {
 
     public OverworldModel getModel() {
         return model;
+    }
+
+    public long getStart() {
+        return start;
     }
 
     private void setScene() {
@@ -207,7 +213,7 @@ public class OverworldController implements Runnable {
                     model.setControlsLocked(true);
                     view.addPane(main.getMenuPane(), true);
                 }
-                if (model.getMenuOpen() && main.processMenuInput(main.getControl(event.getCode()))) {
+                if (running && model.getMenuOpen() && main.processMenuInput(main.getControl(event.getCode()))) {
                     model.setMenuOpen(false);
                     model.setControlsLocked(false);
                     view.removePane();

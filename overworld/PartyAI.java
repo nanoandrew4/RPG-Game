@@ -29,7 +29,7 @@ class PartyAI extends Thread implements java.io.Serializable {
 
     @Override
     public void run() {
-        while (Main.running) {
+        while (OverworldController.running) {
             long start = System.currentTimeMillis();
             for (Party p : parties)
                 p.nextMove(map.getTiles(), map.getBooleanMap(), parties);

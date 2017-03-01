@@ -22,7 +22,6 @@ public class OverworldModel implements java.io.Serializable {
     private Party player;
     private ArrayList<Party> parties;
     private transient PartyAI partyAI;
-    private long startTime = System.currentTimeMillis();
     private Random rand = new Random();
 
     private boolean controlsLocked = false;
@@ -40,10 +39,6 @@ public class OverworldModel implements java.io.Serializable {
         }
 
         startPartyAI();
-    }
-
-    public long getStartTime() {
-        return startTime;
     }
 
     // creates player party

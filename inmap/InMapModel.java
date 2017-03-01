@@ -72,7 +72,7 @@ public class InMapModel implements java.io.Serializable {
         //create character
         party[0] = new Character(1, VIT, INT, 90, STR, WIS, LUK, CHA, 
                 name, race, AIType.NONE, NPCType.NA, new Path(), false);
-        party[0].id = 99;
+        party[0].id = 0;
         this.name = name;
         this.sprite = sprite;
         this.portrait = portrait;
@@ -136,7 +136,7 @@ public class InMapModel implements java.io.Serializable {
                 AIType.NONE, NPCType.NA, new Path(), false);
         party[0].id = 99;
         name = party[0].name;
-        sprite = 99;
+        sprite = 0;
         portrait = "/media/graphics/inmap/portrait.jpg";
         currentMap = new Point(-1, -1);
         gold = 500;

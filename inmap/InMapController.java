@@ -154,7 +154,7 @@ public class InMapController implements Runnable {
         if(model.saveGame != -1) {
             try {
                 main.saveModel(model.saveGame);
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
 
@@ -196,8 +196,10 @@ public class InMapController implements Runnable {
                     main.saveModel(model.saveGame);
                 } catch (IOException e) {
                     System.out.println("Failed to save model.");
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
                 }
-                
+
                 model.saveGame = -1;
                 
                 main.refreshSaveInfo();

@@ -145,11 +145,15 @@ class OverworldView {
 
     // returns coordinate of player omn tile on the x axis
     float getPlayerXOffset() {
+        if (centerTile.screenToLocal(24, 72) == null)
+            return 0;
         return (float) (centerTile.screenToLocal(playerIV.localToScreen(24, 72)).getX() - getMapTileSize() / 2);
     }
 
     // returns coordinate of player on tile on the y axis
     float getPlayerYOffset() {
+        if (centerTile.screenToLocal(24, 72) == null)
+            return 0;
         return (float) (-centerTile.screenToLocal(playerIV.localToScreen(24, 72)).getY() + getMapTileSize() * 3 / 4);
     }
 
@@ -466,18 +470,8 @@ class OverworldView {
         }
     }
 
-//    Pane getBanner(Tile tile, int arrX, int arrY) {
-//        if (banners[arrX][arrY] == null)
-//            genBanner(tile, arrX, arrY, imageViews[arrX][arrY][0].getLayoutX(), imageViews[arrX][arrY][0].getLayoutY());
-//        return banners[arrX][arrY];
-//    }
-
     Pane getBanner() {
         return banner;
-    }
-
-    void showBanner(int arrX, int arrY, boolean show) {
-        banners[arrX][arrY].setVisible(show);
     }
 
     private void setMoveAnim(ImageView imageView, Party player) {
@@ -491,8 +485,7 @@ class OverworldView {
             @Override
             public void handle(long timestamp) {
                 if (lastUpdateTime.get() > 0) {
-                    if (imageView == null) {
-                        System.out.println("Animation handler quit");
+                    if (imageView == null || !OverworldController.running) {
                         stop();
                         return;
                     }
@@ -523,7 +516,7 @@ class OverworldView {
             @Override
             public void handle(long timestamp) {
                 if (lastUpdateTime.get() > 0) {
-                    if (pIVHashMap.get(p) == null) {
+                    if (pIVHashMap.get(p) == null || !OverworldController.running) {
                         stop();
                         return;
                     }
@@ -547,7 +540,7 @@ class OverworldView {
             @Override
             public void handle(long timestamp) {
                 if (lastUpdateTime.get() > 0) {
-                    if (pane == null) {
+                    if (pane == null || !OverworldController.running) {
                         stop();
                         return;
                     }
