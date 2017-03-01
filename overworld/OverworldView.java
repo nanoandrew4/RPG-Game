@@ -109,14 +109,13 @@ class OverworldView {
     private Images images;
     private ImageView[][][] imageViews; // for controller to access and add click events
     private Pane[][] banners;
+    private Pane banner;
 
     private Stack<Node> nodeStack = new Stack<>(); // makes returning to previous window easier
     private Pane overworldLayout, infoBox;
     private ImageView centerTile, playerIV;
 
     private HashMap<Party, ImageView> pIVHashMap; // when party is eliminated, delete from hashmap
-
-    int count = 0;
 
     OverworldView(double screenWidth, double screenHeight, ImageView playerIV) {
         imageViews = new ImageView[zoom * 2 + 1][zoom * 2 + 1][2];
@@ -198,6 +197,7 @@ class OverworldView {
         if (playerIV == null)
             playerIV = genPartyImage();
         playerIV.relocate(screenWidth / 2 - 24, screenHeight / 2 - 72);
+        playerIV.setMouseTransparent(true); // might change
         overworldLayout.getChildren().add(playerIV);
 
         // draw all entities that are within visible range
@@ -338,7 +338,7 @@ class OverworldView {
         // add settlement banner
 
         if (tiles[xPos][yPos].type.equalsIgnoreCase("Settlement")) {
-            genBanner(tiles[xPos][yPos], imgX, imgY, imageViews[imgX][imgY][0].getLayoutX(), imageViews[imgX][imgY][0].getLayoutY());
+            //genBanner(tiles[xPos][yPos], imgX, imgY, imageViews[imgX][imgY][0].getLayoutX(), imageViews[imgX][imgY][0].getLayoutY());
             setMoveAnim(banners[imgX][imgY], player);
         }
     }
@@ -372,11 +372,15 @@ class OverworldView {
 
         for (int x = 0; x < zoom * 2 + 1; x++) {
             if (!top)
-                for (int y = 0; y < zoom * 2; y++) // move all images down
+                for (int y = 0; y < zoom * 2; y++) {// move all images down
                     imageViews[x][y][0].setImage(imageViews[x][y + 1][0].getImage());
+                    banners[x][y] = banners[x][y + 1];
+                }
             else
-                for (int y = zoom * 2; y > 0; y--)
+                for (int y = zoom * 2; y > 0; y--) {
                     imageViews[x][y][0].setImage(imageViews[x][y - 1][0].getImage());
+                    banners[x][y] = banners[x][y - 1];
+                }
 
             int yPos = player.getTileY() + (top ? -zoom : zoom);
             int xPos = (player.getTileX() + x - zoom > 0 ? (player.getTileX() + x - zoom < 1000 ? player.getTileX() + x - zoom : 999) : 0);
@@ -424,7 +428,7 @@ class OverworldView {
         }
     }
 
-    private void genBanner(Tile tile, int arrX, int arrY, double parentPixelX, double parentPixelY) {
+    void genBanner(Tile tile, Party player, int arrX, int arrY) {
 
         /*
             Generates the banner graphical element to overlay over each settlement
@@ -433,21 +437,24 @@ class OverworldView {
         double width = images.banner.getWidth();
         double height = images.banner.getHeight();
 
-        banners[arrX][arrY] = new Pane();
+        banner = new Pane();
+        banner.setMouseTransparent(true);
 
-        ImageView banner = new ImageView(images.banner);
+        ImageView bannerIV = new ImageView(images.banner);
 
         Text name = new Text(tile.settlementTile.settlementName);
         name.setFont(Font.font("Luminari", FontWeight.NORMAL, (screenWidth / 1680) * 14));
 
-        banner.relocate(0, height / 3);
-        name.relocate((width / 2) - name.getBoundsInLocal().getWidth() / 2, banner.getLayoutY() + height / 3);
+        bannerIV.relocate(0, height / 3);
+        name.relocate((width / 2) - name.getBoundsInLocal().getWidth() / 2, bannerIV.getLayoutY() + height / 3);
 
-        banners[arrX][arrY].getChildren().addAll(banner, name);
-        banners[arrX][arrY].setVisible(false);
+        banner.getChildren().addAll(bannerIV, name);
+        banner.setVisible(true);
 
-        banners[arrX][arrY].setLayoutX((parentPixelX + (mapTileSize / 2) - (width / 2)));
-        banners[arrX][arrY].setLayoutY((parentPixelY + (mapTileSize / 2) + (height / 8)));
+        banner.setLayoutX((imageViews[arrX][arrY][0].getLayoutX() + (mapTileSize / 2) - (width / 2)));
+        banner.setLayoutY((imageViews[arrX][arrY][1].getLayoutY() + (mapTileSize / 2) + (height / 8)));
+
+        setMoveAnim(banner, player);
     }
 
     private void drawBanners() {
@@ -459,14 +466,14 @@ class OverworldView {
         }
     }
 
-    Pane getBanner(Tile tile, int arrX, int arrY) {
-        if (banners[arrX][arrY] == null)
-            genBanner(tile, arrX, arrY, imageViews[arrX][arrY][0].getLayoutX(), imageViews[arrX][arrY][0].getLayoutY());
-        return banners[arrX][arrY];
-    }
+//    Pane getBanner(Tile tile, int arrX, int arrY) {
+//        if (banners[arrX][arrY] == null)
+//            genBanner(tile, arrX, arrY, imageViews[arrX][arrY][0].getLayoutX(), imageViews[arrX][arrY][0].getLayoutY());
+//        return banners[arrX][arrY];
+//    }
 
-    Pane getBanner(int arrX, int arrY) {
-        return banners[arrX][arrY];
+    Pane getBanner() {
+        return banner;
     }
 
     void showBanner(int arrX, int arrY, boolean show) {
@@ -584,7 +591,7 @@ class OverworldView {
     boolean removePane() {
 
         /*
-            Removes a pane (window) from the stack
+            Removes a pane (window) from the stack and view
          */
 
         if (!nodeStack.empty()) {
@@ -604,8 +611,8 @@ class OverworldView {
         float scaleFactor = 8f;
 
         ImageView banner = new ImageView(images.banner);
-        banner.setLayoutX(banners[arrX][arrY].getLayoutX());
-        banner.setLayoutY(banners[arrX][arrY].getLayoutY());
+        banner.setLayoutX(imageViews[arrX][arrY][0].getLayoutX() + (mapTileSize / 2) - (images.banner.getWidth() / 2));
+        banner.setLayoutY(imageViews[arrX][arrY][0].getLayoutY() + (mapTileSize / 2) + (images.banner.getHeight() / 8));
         overworldLayout.getChildren().add(banner);
 
         ScaleTransition scaleTransition = new ScaleTransition(Duration.millis(150), banner);
@@ -618,9 +625,11 @@ class OverworldView {
         infoBox = new Pane();
 
         scaleTransition.setOnFinished(event -> {
-            nodeStack.push(infoBox);
 
-            overworldLayout.getChildren().remove(scaleTransition.getNode());
+            if (nodeStack.size() > 0)
+                overworldLayout.getChildren().remove(nodeStack.pop());
+
+            nodeStack.push(infoBox);
 
             ImageView newBanner = new ImageView(new Image("/media/graphics/overworld/banner/banner.png", banner.getImage().getWidth() * scaleFactor, banner.getImage().getHeight() * scaleFactor, false, false));
             newBanner.setLayoutX(screenWidth / 2 - newBanner.getImage().getWidth() / 2);
@@ -636,7 +645,10 @@ class OverworldView {
                                     tile.resources[1] + " stone, " + tile.resources[2] + " iron and " + tile.resources[3] + " gold in it's warehouse/s",
                             Font.font("Luminari", FontWeight.NORMAL, ((screenWidth / 1680) * 16)), screenWidth)
             );
+
             overworldLayout.getChildren().add(infoBox);
+
+            overworldLayout.getChildren().remove(scaleTransition.getNode());
         });
     }
 

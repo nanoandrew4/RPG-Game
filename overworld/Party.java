@@ -234,7 +234,8 @@ class Party implements java.io.Serializable {
             prevAngles = angles;
             //System.out.println("Langle: " + leftAngle);
             //System.out.println("Rangle: " + rightAngle);
-            System.out.println((System.currentTimeMillis() - OverworldController.start) + " - " + leftAngle + ", " + rightAngle + " - " + getTileX() + ", " + getTileY());
+            if (OverworldController.debug)
+                System.out.println((System.currentTimeMillis() - OverworldController.start) + " - " + leftAngle + ", " + rightAngle + " - " + getTileX() + ", " + getTileY());
 
             if (rightAngle > 30.0) {
                 if (!player) {

@@ -59,7 +59,7 @@ public class OverworldModel implements java.io.Serializable {
         do {
             int x = rand.nextInt(getMapSize() - 1);
             int y = rand.nextInt(getMapSize() - 1);
-            if (getTiles()[x][y].tresspassable) {
+            if (getTiles()[x][y].settlementTile != null) {
                 startPos[0] = x;
                 startPos[1] = y;
                 return startPos;
@@ -227,8 +227,11 @@ public class OverworldModel implements java.io.Serializable {
             if (getTiles()[xPos][yPos].type.equalsIgnoreCase("Settlement") || getTiles()[xPos][yPos].type.equalsIgnoreCase("InMap")) {
                 // display additional menus if dungeon or settlement
                 // lock controls to prevent moving on world map while scrolling menu
+                // stops player to prevent the controls locking from causing the player to move by itself
                 if (player.getTileX() - xPos == 0 && player.getTileY() - yPos == 0) {
                     controlsLocked = true;
+                    player.setSpeedX(0);
+                    player.setSpeedY(0);
                     if (getTiles()[xPos][yPos].type.equalsIgnoreCase("Settlement"))
                         return 11;
                     else if (getTiles()[xPos][yPos].type.equalsIgnoreCase("InMap"))
