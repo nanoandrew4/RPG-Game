@@ -127,6 +127,7 @@ public class Main extends Application {
         keybindings.put(KeyCode.X, Control.BACK);
         keybindings.put(KeyCode.TAB, Control.TOGGLE);
         keybindings.put(KeyCode.F, Control.SWITCH);
+        keybindings.put(KeyCode.M, Control.HIDEMENU);
         //temporary keybindings
         keybindings.put(KeyCode.SHIFT, Control.RUN);
         keybindings.put(KeyCode.ESCAPE, Control.ESC);

@@ -202,7 +202,13 @@ public class OverworldController extends Thread {
                 }
             }
 
-            if (returnCode == -1) {
+            if (returnCode == -2) {
+                // shows or hides minimap, depending on whether it is shown now (shown = !shown)
+                model.setMinimapVisible();
+                view.getMinimapPane().setVisible(model.getMiniMapVisible());
+                view.getMinimapFrame().setVisible(model.getMiniMapVisible());
+            }
+            else if (returnCode == -1) {
                 if (!view.removePane() || view.isNodeStackEmpty())
                     model.setControlsLocked(false);
                 // lock controls

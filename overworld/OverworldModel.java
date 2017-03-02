@@ -26,18 +26,17 @@ public class OverworldModel implements java.io.Serializable {
 
     private boolean controlsLocked = false;
     private boolean menuOpen = false;
+    private boolean minimapVisible = true;
 
     private Control verticalDir, horizontalDir, dir;
 
     OverworldModel() {
         parties = new ArrayList<>();
 
-        try {
-            newGame(1000);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        // create map
+        newGame();
 
+        // start all party AI's
         startPartyAI();
     }
 
@@ -118,9 +117,17 @@ public class OverworldModel implements java.io.Serializable {
         return menuOpen;
     }
 
+    boolean getMiniMapVisible() {
+        return minimapVisible;
+    }
+
+    void setMinimapVisible() {
+        this.minimapVisible = !minimapVisible;
+    }
+
     // generates new map
-    private void newGame(int mapSize) throws SQLException {
-        map = new Map(mapSize);
+    private void newGame() {
+        map = new Map(1000);
     }
 
     javafx.geometry.Point2D getAngles() {
@@ -130,12 +137,16 @@ public class OverworldModel implements java.io.Serializable {
     int process(Control key, boolean released) {
 
         /*
+            Return code -2 = hide minimap
             Return code -1 = remove pane from stack
             Return code 0 = controls locked, do nothing
             Return code 1 = open/close menu (depends on menuOpen boolean)
             Return code 2 = select
             Return code 3 = show tile borders
          */
+
+        if (key == Control.HIDEMENU)
+            return  -2;
 
         // remove one menu from scene
         if (key == Control.BACK && !menuOpen)

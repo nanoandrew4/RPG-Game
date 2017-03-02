@@ -21,9 +21,11 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
 import org.omg.CORBA.BAD_CONTEXT;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.time.Year;
 import java.util.*;
@@ -35,32 +37,34 @@ class Images {
         TODO: WIDTH AND HEIGHT FOR BANNER ITEMS MUST BE CALCULATED BEFORE IMAGES CLASS IS CREATED
      */
 
-    Image tileBorder;
+    static Image tileBorder;
 
-    Image forestLight;
-    Image forestHeavy;
-    Image village;
-    Image tower;
-    Image mountain;
-    Image grass;
+    static Image forestLight;
+    static Image forestHeavy;
+    static Image village;
+    static Image tower;
+    static Image mountain;
+    static Image grass;
 
-    Image banner;
+    static Image banner;
 
-    Image waterAll;
-    Image waterE;
-    Image waterN;
-    Image waterNE;
-    Image waterNESE;
-    Image waterNW;
-    Image waterNWNE;
-    Image waterNWSW;
-    Image waterS;
-    Image waterSE;
-    Image waterSW;
-    Image waterSWSE;
-    Image waterW;
+    static Image minimapFrame;
 
-    Images(double width, double height) {
+    static Image waterAll;
+    static Image waterE;
+    static Image waterN;
+    static Image waterNE;
+    static Image waterNESE;
+    static Image waterNW;
+    static Image waterNWNE;
+    static Image waterNWSW;
+    static Image waterS;
+    static Image waterSE;
+    static Image waterSW;
+    static Image waterSWSE;
+    static Image waterW;
+
+    Images(double width, double height, double screenWidth) {
         tileBorder = new Image("/media/graphics/overworld/TileBorder.png", width, height, true, false);
 
         forestLight = new Image("/media/graphics/overworld/ForestLight.png", width, height, true, false);
@@ -71,6 +75,8 @@ class Images {
         grass = new Image("/media/graphics/overworld/Grass.png", width, height, true, false);
 
         banner = new Image("/media/graphics/overworld/banner/banner.png", width / 1.2, height / 4, false, false);
+
+        minimapFrame = new Image("/media/graphics/overworld/minimap/minimapFrame.png", screenWidth / 8, screenWidth / 8, true, false);
 
         waterAll = new Image("/media/graphics/overworld/water/WaterAll.png", width, height, true, false);
         waterE = new Image("/media/graphics/overworld/water/WaterE.png", width, height, true, false);
@@ -106,10 +112,10 @@ class OverworldView {
 
     private final LongProperty lastUpdateTime = new SimpleLongProperty();
 
-    private Images images;
     private ImageView[][][] imageViews; // for controller to access and add click events
-    private Pane[][] banners;
     private Pane banner;
+
+    private Minimap minimap;
 
     private Stack<Node> nodeStack = new Stack<>(); // makes returning to previous window easier
     private Pane overworldLayout, infoBox;
@@ -119,7 +125,6 @@ class OverworldView {
 
     OverworldView(double screenWidth, double screenHeight, ImageView playerIV) {
         imageViews = new ImageView[zoom * 2 + 1][zoom * 2 + 1][2];
-        banners = new Pane[zoom * 2 + 1][zoom * 2 + 1];
         pIVHashMap = new HashMap<>();
 
         this.screenWidth = screenWidth;
@@ -161,6 +166,14 @@ class OverworldView {
         return nodeStack;
     }
 
+    Pane getMinimapPane() {
+        return minimap.getMinimapPane();
+    }
+
+    ImageView getMinimapFrame() {
+        return minimap.getMinimapFrame();
+    }
+
     boolean isNodeStackEmpty() {
         return nodeStack.empty();
     }
@@ -172,7 +185,7 @@ class OverworldView {
          */
 
         //images = new Images(mapTileSize + (mapTileSize / (zoom * 4)), mapTileSize + (mapTileSize / (zoom * 4)));
-        images = new Images(mapTileSize, mapTileSize);
+        new Images(mapTileSize, mapTileSize, screenWidth);
 
         long start = System.currentTimeMillis();
 
@@ -207,8 +220,10 @@ class OverworldView {
         // draw all entities that are within visible range
         drawEntities(player, parties);
 
-        // draw banners for settlements (must be on top of players)
-        drawBanners();
+        // draw minimap
+        minimap = new Minimap(screenWidth, screenHeight, 10);
+        overworldLayout.getChildren().add(minimap.getMinimapFrame());
+        overworldLayout.getChildren().add(minimap.drawMiniMap(tiles, player));
 
         if (OverworldController.debug) {
             System.out.println("Center tile " + centerTile.getLayoutX() + ", " + centerTile.getLayoutY());
@@ -272,46 +287,46 @@ class OverworldView {
 
         if (type.equalsIgnoreCase("Settlement")) {
             if (tiles[xPos][yPos].settlementTile.subType.equalsIgnoreCase("Village"))
-                return images.village;
+                return Images.village;
             else
-                return images.village;
+                return Images.village;
         } else if (type.equalsIgnoreCase("InMap")) {
             if (tiles[xPos][yPos].inMapTile.inmapType.equalsIgnoreCase("Tower"))
-                return images.tower;
+                return Images.tower;
         } else if (type.equalsIgnoreCase("ForestLight"))
-            return images.forestLight;
+            return Images.forestLight;
         else if (type.equalsIgnoreCase("ForestHeavy"))
-            return images.forestHeavy;
+            return Images.forestHeavy;
         else if (type.equalsIgnoreCase("Grass"))
-            return images.grass;
+            return Images.grass;
         else if (type.equalsIgnoreCase("Mountain"))
-            return images.mountain;
+            return Images.mountain;
         else if (type.equalsIgnoreCase("WaterAll"))
-            return images.waterAll;
+            return Images.waterAll;
         else if (type.equalsIgnoreCase("WaterE"))
-            return images.waterE;
+            return Images.waterE;
         else if (type.equalsIgnoreCase("WaterN"))
-            return images.waterN;
+            return Images.waterN;
         else if (type.equalsIgnoreCase("WaterNE"))
-            return images.waterNE;
+            return Images.waterNE;
         else if (type.equalsIgnoreCase("WaterNESE"))
-            return images.waterNESE;
+            return Images.waterNESE;
         else if (type.equalsIgnoreCase("WaterNW"))
-            return images.waterNW;
+            return Images.waterNW;
         else if (type.equalsIgnoreCase("WaterNWNE"))
-            return images.waterNWNE;
+            return Images.waterNWNE;
         else if (type.equalsIgnoreCase("WaterNWSW"))
-            return images.waterNWSW;
+            return Images.waterNWSW;
         else if (type.equalsIgnoreCase("WaterS"))
-            return images.waterS;
+            return Images.waterS;
         else if (type.equalsIgnoreCase("WaterSE"))
-            return images.waterSE;
+            return Images.waterSE;
         else if (type.equalsIgnoreCase("WaterSW"))
-            return images.waterSW;
+            return Images.waterSW;
         else if (type.equalsIgnoreCase("WaterSWSE"))
-            return images.waterSWSE;
+            return Images.waterSWSE;
         else if (type.equalsIgnoreCase("WaterW"))
-            return images.waterW;
+            return Images.waterW;
 
         return null;
     }
@@ -332,19 +347,12 @@ class OverworldView {
 
         // add tile border
 
-        imageViews[imgX][imgY][1] = new ImageView(images.tileBorder);
+        imageViews[imgX][imgY][1] = new ImageView(Images.tileBorder);
         imageViews[imgX][imgY][1].setLayoutX(pixelX);
         imageViews[imgX][imgY][1].setLayoutY(pixelY);
         imageViews[imgX][imgY][1].setVisible(false);
         overworldLayout.getChildren().add(imageViews[imgX][imgY][1]);
         setMoveAnim(imageViews[imgX][imgY][1], player);
-
-        // add settlement banner
-
-        if (tiles[xPos][yPos].type.equalsIgnoreCase("Settlement")) {
-            //genBanner(tiles[xPos][yPos], imgX, imgY, imageViews[imgX][imgY][0].getLayoutX(), imageViews[imgX][imgY][0].getLayoutY());
-            setMoveAnim(banners[imgX][imgY], player);
-        }
     }
 
     // rename pls
@@ -366,6 +374,8 @@ class OverworldView {
                 addRow(tiles, player, parties, false);
             }
         }
+
+        minimap.drawMiniMap(tiles, player); // redraws the minimap
     }
 
     private void addRow(Tile[][] tiles, Party player, ArrayList<Party> parties, boolean top) {
@@ -376,15 +386,11 @@ class OverworldView {
 
         for (int x = 0; x < zoom * 2 + 1; x++) {
             if (!top)
-                for (int y = 0; y < zoom * 2; y++) {// move all images down
+                for (int y = 0; y < zoom * 2; y++) // move all images down
                     imageViews[x][y][0].setImage(imageViews[x][y + 1][0].getImage());
-                    banners[x][y] = banners[x][y + 1];
-                }
             else
-                for (int y = zoom * 2; y > 0; y--) {
+                for (int y = zoom * 2; y > 0; y--)
                     imageViews[x][y][0].setImage(imageViews[x][y - 1][0].getImage());
-                    banners[x][y] = banners[x][y - 1];
-                }
 
             int yPos = player.getTileY() + (top ? -zoom : zoom);
             int xPos = (player.getTileX() + x - zoom > 0 ? (player.getTileX() + x - zoom < 1000 ? player.getTileX() + x - zoom : 999) : 0);
@@ -438,13 +444,13 @@ class OverworldView {
             Generates the banner graphical element to overlay over each settlement
          */
 
-        double width = images.banner.getWidth();
-        double height = images.banner.getHeight();
+        double width = Images.banner.getWidth();
+        double height = Images.banner.getHeight();
 
         banner = new Pane();
         banner.setMouseTransparent(true);
 
-        ImageView bannerIV = new ImageView(images.banner);
+        ImageView bannerIV = new ImageView(Images.banner);
 
         Text name = new Text(tile.settlementTile.settlementName);
         name.setFont(Font.font("Luminari", FontWeight.NORMAL, (screenWidth / 1680) * 14));
@@ -459,15 +465,6 @@ class OverworldView {
         banner.setLayoutY((imageViews[arrX][arrY][1].getLayoutY() + (mapTileSize / 2) + (height / 8)));
 
         setMoveAnim(banner, player);
-    }
-
-    private void drawBanners() {
-        for (int y = 0; y <= zoom * 2; y++) {
-            for (int x = 0; x <= zoom * 2; x++) {
-                if (banners[x][y] != null)
-                    overworldLayout.getChildren().add(banners[x][y]);
-            }
-        }
     }
 
     Pane getBanner() {
@@ -603,9 +600,9 @@ class OverworldView {
 
         float scaleFactor = 8f;
 
-        ImageView banner = new ImageView(images.banner);
-        banner.setLayoutX(imageViews[arrX][arrY][0].getLayoutX() + (mapTileSize / 2) - (images.banner.getWidth() / 2));
-        banner.setLayoutY(imageViews[arrX][arrY][0].getLayoutY() + (mapTileSize / 2) + (images.banner.getHeight() / 8));
+        ImageView banner = new ImageView(Images.banner);
+        banner.setLayoutX(imageViews[arrX][arrY][0].getLayoutX() + (mapTileSize / 2) - (Images.banner.getWidth() / 2));
+        banner.setLayoutY(imageViews[arrX][arrY][0].getLayoutY() + (mapTileSize / 2) + (Images.banner.getHeight() / 8));
         overworldLayout.getChildren().add(banner);
 
         ScaleTransition scaleTransition = new ScaleTransition(Duration.millis(150), banner);
@@ -697,5 +694,90 @@ class OverworldView {
         text.setTextAlignment(TextAlignment.CENTER);
 
         return text;
+    }
+}
+
+class Minimap {
+
+    /*
+        Contains all data related to Overworld Minimap
+
+        Is accessed by view to add minimapPane and minimapFrame
+
+        Can be hidden or shown through HIDEMENU key (default M) (default visible)
+
+        Minimap color legend:
+        Red - Settlement
+        Purple - Dungeon
+        Lime green - Grass
+        Green - Light forest
+        Dark green - Heavy forest
+        Blue - Water (All water tiles)
+     */
+
+    private Pane minimapPane;
+    private ImageView minimapFrame;
+
+    private Rectangle[][] minimap;
+
+    private int radius;
+
+    Minimap(double screenWidth, double screenHeight, int radius) {
+        this.radius = radius;
+
+        minimapPane = new Pane();
+        minimapPane.relocate(screenWidth - Images.minimapFrame.getWidth() / 1.25, screenHeight / 16);
+        minimapPane.getTransforms().add(new Rotate(45, Rotate.Z_AXIS));
+        minimap = new Rectangle[radius * 2 + 1][radius * 2 + 1];
+
+        minimapFrame = new ImageView(Images.minimapFrame);
+        minimapFrame.getTransforms().add(new Rotate(45, Rotate.Z_AXIS));
+        minimapFrame.relocate(minimapPane.getLayoutX(), minimapPane.getLayoutY() - (1020 / Images.minimapFrame.getWidth()) / 2);
+    }
+
+    Pane getMinimapPane() {
+        return minimapPane;
+    }
+
+    public ImageView getMinimapFrame() {
+        return minimapFrame;
+    }
+
+    Pane drawMiniMap(Tile[][] tiles, Party player) {
+
+        long start = System.currentTimeMillis();
+
+        for (int y = 0; y < radius * 2 + 1; y++) {
+            // yPos in tile array
+            int yPos = player.getTileY() > 0 ? (player.getTileY() < 1000 ? player.getTileY() - radius + y : 999) : 0;
+            for (int x = 0; x < radius * 2 + 1; x++) {
+                // xPos in tile array
+                int xPos = player.getTileX() > 0 ? (player.getTileX() < 1000 ? player.getTileX() - radius + x : 999) : 0;
+                String tile = tiles[xPos][yPos].type;
+                double size = (Images.minimapFrame.getWidth() - (1020 / Images.minimapFrame.getWidth()) / 2) / (radius * 2 + 1);
+                if (x == radius && y == radius)
+                    minimap[x][y] = new Rectangle(size, size, Paint.valueOf("white"));
+                else if (tile.equals("Grass"))
+                    minimap[x][y] = new Rectangle(size, size, Paint.valueOf("2cce38"));
+                else if (tile.equals("ForestLight"))
+                    minimap[x][y] = new Rectangle(size, size, Paint.valueOf("0c8d15"));
+                else if (tile.equals("ForestHeavy"))
+                    minimap[x][y] = new Rectangle(size, size, Paint.valueOf("125d17"));
+                else if (tile.equals("Mountain"))
+                    minimap[x][y] = new Rectangle(size, size, Paint.valueOf("a5a5a5"));
+                else if (tile.contains("Water"))
+                    minimap[x][y] = new Rectangle(size, size, Paint.valueOf("0b50b7"));
+                else if (tile.equals("Settlement"))
+                    minimap[x][y] = new Rectangle(size, size, Paint.valueOf("red"));
+                else if (tile.equals("InMap"))
+                    minimap[x][y] = new Rectangle(size, size, Paint.valueOf("violet"));
+                minimap[x][y].relocate(x * size, y * size);
+                minimapPane.getChildren().add(minimap[x][y]);
+            }
+        }
+
+        System.out.println("Minimap init took " + (System.currentTimeMillis() - start) + "ms");
+
+        return minimapPane;
     }
 }

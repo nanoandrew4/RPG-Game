@@ -32,7 +32,7 @@ class Map implements java.io.Serializable {
     private final int MIN_DUNGEON;
     private final int MAX_DUNGEON;
 
-    Map(int mapSize) throws SQLException {
+    Map(int mapSize) {
         rand = new Random(System.currentTimeMillis());
 
         this.mapSize = mapSize;
