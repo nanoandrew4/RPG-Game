@@ -1,5 +1,7 @@
 # RPG-Game
 
+NOTE: DEVELOPMENT PAUSED UNTIL MORE DEVELOPERS CAN BE FOUND
+
 NOTE: THE GAME IS STILL IN VERY EARLY STAGES OF DEVELOPMENT, THE CONTENTS OF THIS FILE ARE THE FINAL GOALS THAT THE GAME WILL HAVE ATTAINED FOR RELEASE
 
 This repository contains all the code, art and sounds for the game Rising Legend (subject to change). The game is of the RPG genre, where you will play as a character and help develop yourself to pursue your own final objective. 
